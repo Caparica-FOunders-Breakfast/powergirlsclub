@@ -90,7 +90,11 @@ const Rewards = () => {
     const start = new Date(profile.challenge_start + "T00:00:00");
     const now = new Date();
     const daysDiff = differenceInDays(now, start);
-    if (daysDiff < 0) return null;
+    // Before challenge starts or during first cycle: week N starts at challenge_start + (N-1)*7
+    if (daysDiff < 0) {
+      const targetDate = addDays(start, (weekNum - 1) * 7);
+      return format(targetDate, "yyyy-MM-dd");
+    }
     const currentAbsoluteWeek = Math.floor(daysDiff / 7);
     const currentCycleStart = currentAbsoluteWeek - ((currentAbsoluteWeek) % 4);
     const targetAbsoluteWeek = currentCycleStart + (weekNum - 1);
