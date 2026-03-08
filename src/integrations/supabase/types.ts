@@ -99,6 +99,7 @@ export type Database = {
           chosen_by: string
           created_at: string
           id: string
+          reward_details: Json | null
           reward_type: string
           reward_value: string
           team_id: string | null
@@ -109,6 +110,7 @@ export type Database = {
           chosen_by: string
           created_at?: string
           id?: string
+          reward_details?: Json | null
           reward_type: string
           reward_value: string
           team_id?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           chosen_by?: string
           created_at?: string
           id?: string
+          reward_details?: Json | null
           reward_type?: string
           reward_value?: string
           team_id?: string | null
@@ -141,18 +144,21 @@ export type Database = {
           created_by: string
           id: string
           name: string
+          team_code: string | null
         }
         Insert: {
           created_at?: string
           created_by: string
           id?: string
           name: string
+          team_code?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string
           id?: string
           name?: string
+          team_code?: string | null
         }
         Relationships: []
       }
