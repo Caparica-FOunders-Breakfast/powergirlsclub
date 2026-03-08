@@ -77,19 +77,21 @@ const CurrentWeek = () => {
     return map;
   }, [prevLogs]);
 
-  // Build rewards-by-day map — only include rewards whose week_start falls within the viewed week
+  // Build rewards-by-day map — match rewards whose week_number matches the viewed week's cycle number
   const rewardsByDay = useMemo(() => {
     const map: Record<number, any[]> = {};
-    const viewedStart = weekStart; // "yyyy-MM-dd" string
+
+    // Determine which cycle week (1-4) the viewed week corresponds to
+    if (!profile?.challenge_start) return map;
+    const start = new Date(profile.challenge_start + "T00:00:00");
+    const viewedDate = new Date(weekStart + "T00:00:00");
+    const daysDiff = differenceInDays(viewedDate, start);
+    if (daysDiff < 0) return map;
+    const viewedCycleWeek = ((Math.floor(daysDiff / 7)) % 4) + 1;
 
     myRewards?.forEach((r: any) => {
-      // Compare as strings (both are "yyyy-MM-dd" format)
-      const rewardWeekStart = r.week_start;
-      // Check if the reward's week_start is within 6 days of the viewed week start
-      const viewedStartDate = new Date(viewedStart + "T00:00:00");
-      const viewedEndDate = addDays(viewedStartDate, 6);
-      const rewardDate = new Date(rewardWeekStart + "T00:00:00");
-      if (rewardDate < viewedStartDate || rewardDate > viewedEndDate) return;
+      // Show reward if its week_number matches this cycle week
+      if (r.week_number !== viewedCycleWeek) return;
 
       const details = r.reward_details as Record<string, any> | null;
       let days: number[] = [];
@@ -105,7 +107,7 @@ const CurrentWeek = () => {
       });
     });
     return map;
-  }, [myRewards, weekStart]);
+  }, [myRewards, weekStart, profile]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
