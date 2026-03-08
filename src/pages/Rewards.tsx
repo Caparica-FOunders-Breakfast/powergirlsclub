@@ -135,6 +135,10 @@ const Rewards = () => {
 
     try {
       const cycleWeekStart = getCycleWeekStart(selectedWeek!);
+      if (!cycleWeekStart) {
+        toast({ title: "Set your challenge start date first", variant: "destructive" });
+        return;
+      }
       await setReward.mutateAsync({
         weekStart: cycleWeekStart,
         weekNumber: selectedWeek!,
