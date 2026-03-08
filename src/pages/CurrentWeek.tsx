@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
-import { startOfWeek, addWeeks, format, isSameWeek } from "date-fns";
+import { startOfWeek, addWeeks, addDays, format, isSameWeek, isWithinInterval } from "date-fns";
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
@@ -75,12 +75,18 @@ const CurrentWeek = () => {
     return map;
   }, [prevLogs]);
 
-  // Build rewards-by-day map (dayIdx -> reward[])
+  // Build rewards-by-day map — only include rewards whose week_start falls within the viewed week
   const rewardsByDay = useMemo(() => {
     const map: Record<number, any[]> = {};
+    const viewedWeekStart = new Date(weekStart);
+    const viewedWeekEnd = addDays(viewedWeekStart, 6);
+
     myRewards?.forEach((r: any) => {
+      // Check if this reward's week_start falls within the currently viewed week
+      const rewardStart = new Date(r.week_start);
+      if (rewardStart < viewedWeekStart || rewardStart > viewedWeekEnd) return;
+
       const details = r.reward_details as Record<string, any> | null;
-      // Support both scheduled_days (array/JSON string) and legacy scheduled_day (single)
       let days: number[] = [];
       if (details?.scheduled_days) {
         const parsed = typeof details.scheduled_days === "string" ? JSON.parse(details.scheduled_days) : details.scheduled_days;
