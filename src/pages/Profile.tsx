@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { LogOut, Dumbbell, Flame, Trophy, Gift, CalendarIcon } from "lucide-react";
-import { format, differenceInDays, differenceInWeeks } from "date-fns";
+import { format, differenceInDays, differenceInWeeks, addDays } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
 import { useMyTeam } from "@/hooks/useTeams";
@@ -52,12 +52,14 @@ const Profile = () => {
     } catch {}
   };
 
-  const handleDateChange = async (field: "challenge_start" | "challenge_end", date: Date | undefined) => {
+  const handleStartDateChange = async (date: Date | undefined) => {
     try {
-      await updateProfile.mutateAsync({
-        [field]: date ? format(date, "yyyy-MM-dd") : null,
-      });
-      toast({ title: `Challenge ${field === "challenge_start" ? "start" : "end"} date updated! 📅` });
+      const updates: any = {
+        challenge_start: date ? format(date, "yyyy-MM-dd") : null,
+        challenge_end: date ? format(addDays(date, 28), "yyyy-MM-dd") : null,
+      };
+      await updateProfile.mutateAsync(updates);
+      toast({ title: "Challenge period updated! 📅" });
     } catch {
       toast({ title: "Error updating date", variant: "destructive" });
     }
@@ -169,7 +171,7 @@ const Profile = () => {
                 <Calendar
                   mode="single"
                   selected={challengeStart}
-                  onSelect={(date) => { handleDateChange("challenge_start", date); setStartOpen(false); }}
+                  onSelect={(date) => { handleStartDateChange(date); setStartOpen(false); }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
@@ -177,33 +179,17 @@ const Profile = () => {
             </Popover>
           </div>
 
-          {/* End Date */}
+          {/* End Date (auto-calculated) */}
           <div>
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">End Date</label>
-            <Popover open={endOpen} onOpenChange={setEndOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-bold text-sm h-10 mt-1",
-                    !challengeEnd && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
-                  {challengeEnd ? format(challengeEnd, "MMM d, yyyy") : "Pick end"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={challengeEnd}
-                  onSelect={(date) => { handleDateChange("challenge_end", date); setEndOpen(false); }}
-                  disabled={(date) => challengeStart ? date < challengeStart : false}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
+            <Button
+              variant="outline"
+              disabled
+              className="w-full justify-start text-left font-bold text-sm h-10 mt-1"
+            >
+              <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
+              {challengeEnd ? format(challengeEnd, "MMM d, yyyy") : "Auto (start + 4 wks)"}
+            </Button>
           </div>
         </div>
 
