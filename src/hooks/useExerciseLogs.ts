@@ -1,11 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrentWeekStart } from "./useWorkouts";
 
-export const useExerciseLogs = () => {
+export const useExerciseLogs = (weekStart: string) => {
   const { user } = useAuth();
-  const weekStart = useCurrentWeekStart();
 
   return useQuery({
     queryKey: ["exercise-logs", user?.id, weekStart],
@@ -17,21 +15,19 @@ export const useExerciseLogs = () => {
         .eq("week_start", weekStart);
       if (error) throw error;
 
-      // Build a lookup map: "dayIndex-exerciseIndex" -> log
       const map: Record<string, typeof data[number]> = {};
       data.forEach((log) => {
         map[`${log.day_index}-${log.exercise_index}`] = log;
       });
       return map;
     },
-    enabled: !!user,
+    enabled: !!user && !!weekStart,
   });
 };
 
-export const useSaveExerciseLog = () => {
+export const useSaveExerciseLog = (weekStart: string) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const weekStart = useCurrentWeekStart();
 
   return useMutation({
     mutationFn: async ({

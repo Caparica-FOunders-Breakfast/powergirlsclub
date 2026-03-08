@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, Dumbbell, Music, Zap, TrendingUp } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp } from "lucide-react";
 import { useCurrentReward } from "@/hooks/useRewards";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { Button } from "@/components/ui/button";
@@ -10,22 +10,44 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
+import { startOfWeek, addWeeks, format, isSameWeek } from "date-fns";
+
+const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 const CurrentWeek = () => {
   const { data: reward } = useCurrentReward();
-  const { data: logs, isLoading: logsLoading } = useExerciseLogs();
-  const saveLog = useSaveExerciseLog();
   const { toast } = useToast();
 
-  const today = new Date().getDay();
+  const now = new Date();
+  const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const selectedWeekDate = addWeeks(currentWeekDate, weekOffset);
+  const weekStart = getWeekStart(selectedWeekDate);
+  const prevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -1));
+  const isCurrentWeek = weekOffset === 0;
+
+  const { data: logs, isLoading: logsLoading } = useExerciseLogs(weekStart);
+  const { data: prevLogs } = useExerciseLogs(prevWeekStart);
+  const saveLog = useSaveExerciseLog(weekStart);
+
+  const today = now.getDay();
   const todayIndex = today === 0 ? 6 : today - 1;
 
-  const [expandedDay, setExpandedDay] = useState<number | null>(todayIndex);
+  const [expandedDay, setExpandedDay] = useState<number | null>(isCurrentWeek ? todayIndex : null);
   const [localWeights, setLocalWeights] = useState<Record<string, string>>({});
   const [localCompleted, setLocalCompleted] = useState<Record<string, boolean>>({});
   const [initialized, setInitialized] = useState(false);
 
-  // Hydrate local state from DB once
+  // Reset state when week changes
+  useEffect(() => {
+    setInitialized(false);
+    setLocalWeights({});
+    setLocalCompleted({});
+    setExpandedDay(isCurrentWeek ? todayIndex : null);
+  }, [weekStart, isCurrentWeek, todayIndex]);
+
+  // Hydrate local state from DB
   useEffect(() => {
     if (logs && !initialized) {
       const w: Record<string, string> = {};
@@ -39,6 +61,17 @@ const CurrentWeek = () => {
       setInitialized(true);
     }
   }, [logs, initialized]);
+
+  // Build previous week weight map
+  const prevWeightMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (prevLogs) {
+      Object.entries(prevLogs).forEach(([key, log]) => {
+        if (log.weight_used != null) map[key] = Number(log.weight_used);
+      });
+    }
+    return map;
+  }, [prevLogs]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
@@ -113,15 +146,56 @@ const CurrentWeek = () => {
     toast({ title: "DAY CRUSHED! 💪🔥" });
   };
 
+  const weekLabel = isCurrentWeek
+    ? "This Week"
+    : weekOffset === -1
+    ? "Last Week"
+    : weekOffset === 1
+    ? "Next Week"
+    : format(selectedWeekDate, "MMM d, yyyy");
+
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
       {/* Header */}
       <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-4">
         <h1 className="text-4xl font-display text-foreground">
           <Dumbbell className="inline w-8 h-8 text-neon-teal mr-2" />
-          This Week
+          {weekLabel}
         </h1>
-        <p className="text-muted-foreground font-bold text-sm mt-1">Your strength training program</p>
+
+        {/* Week navigation */}
+        <div className="flex items-center justify-center gap-4 mt-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setWeekOffset((o) => o - 1)}
+            className="h-8 w-8"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <span className="text-sm font-bold text-muted-foreground">
+            {format(selectedWeekDate, "MMM d")} – {format(addWeeks(selectedWeekDate, 1), "MMM d")}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setWeekOffset((o) => o + 1)}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {!isCurrentWeek && (
+          <Button
+            variant="link"
+            size="sm"
+            onClick={() => setWeekOffset(0)}
+            className="text-xs text-primary mt-1"
+          >
+            Go to current week
+          </Button>
+        )}
       </motion.div>
 
       {/* Weekly progress */}
@@ -141,7 +215,7 @@ const CurrentWeek = () => {
       </motion.div>
 
       {/* Reward card */}
-      {reward && (
+      {reward && isCurrentWeek && (
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -192,7 +266,7 @@ const CurrentWeek = () => {
           {weeklyPlan.map((day, dayIdx) => {
             const expanded = expandedDay === dayIdx;
             const completion = getDayCompletion(dayIdx, day);
-            const isToday = dayIdx === todayIndex;
+            const isToday = isCurrentWeek && dayIdx === todayIndex;
 
             return (
               <motion.div
@@ -277,6 +351,7 @@ const CurrentWeek = () => {
                             {day.exercises.map((ex, exIdx) => {
                               const key = getExKey(dayIdx, exIdx);
                               const isDone = localCompleted[key] || false;
+                              const lastWeekWeight = prevWeightMap[key];
 
                               return (
                                 <ExerciseCard
@@ -284,6 +359,7 @@ const CurrentWeek = () => {
                                   exercise={ex}
                                   isDone={isDone}
                                   weight={localWeights[key] || ""}
+                                  lastWeekWeight={lastWeekWeight}
                                   onWeightChange={(val) => handleWeightChange(dayIdx, exIdx, ex.name, val)}
                                   onWeightBlur={() => handleWeightBlur(dayIdx, exIdx, ex.name)}
                                   onToggle={() => toggleExercise(dayIdx, exIdx, ex.name)}
@@ -318,6 +394,7 @@ function ExerciseCard({
   exercise,
   isDone,
   weight,
+  lastWeekWeight,
   onWeightChange,
   onWeightBlur,
   onToggle,
@@ -325,10 +402,13 @@ function ExerciseCard({
   exercise: Exercise;
   isDone: boolean;
   weight: string;
+  lastWeekWeight?: number;
   onWeightChange: (val: string) => void;
   onWeightBlur: () => void;
   onToggle: () => void;
 }) {
+  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + 2 : null;
+
   return (
     <motion.div
       layout
@@ -358,6 +438,19 @@ function ExerciseCard({
             </span>
             <span className="text-xs font-semibold text-muted-foreground">{exercise.suggestedWeight}</span>
           </div>
+
+          {/* Last week weight + recommendation */}
+          {lastWeekWeight != null && !exercise.isBodyweight && !exercise.isTimeBased && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+              <span className="text-[11px] font-semibold text-muted-foreground">
+                Last week: {lastWeekWeight} kg
+              </span>
+              <span className="text-[11px] font-bold text-neon-teal">
+                → Try {recommendedWeight} kg 💪
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center gap-1 mt-1">
             <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
             <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
@@ -368,7 +461,7 @@ function ExerciseCard({
           <div className="shrink-0">
             <Input
               type="number"
-              placeholder="kg"
+              placeholder={recommendedWeight != null ? `${recommendedWeight}` : "kg"}
               value={weight}
               onChange={(e) => onWeightChange(e.target.value)}
               onBlur={onWeightBlur}
