@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp } from "lucide-react";
-import { useCurrentReward } from "@/hooks/useRewards";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift } from "lucide-react";
+import { useCurrentReward, useMyCurrentWeekReward, useMyRewards } from "@/hooks/useRewards";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
