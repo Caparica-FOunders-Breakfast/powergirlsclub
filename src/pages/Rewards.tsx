@@ -101,9 +101,8 @@ const Rewards = () => {
   // Build a map of weekNumber -> reward for the current cycle
   const rewardsByWeek = new Map<number, any>();
   myRewards?.forEach((r: any) => {
-    // Only match rewards whose week_start matches the current cycle's week_start
     const expectedWeekStart = getCycleWeekStart(r.week_number);
-    if (r.week_start === expectedWeekStart && !rewardsByWeek.has(r.week_number)) {
+    if (expectedWeekStart && r.week_start === expectedWeekStart && !rewardsByWeek.has(r.week_number)) {
       rewardsByWeek.set(r.week_number, r);
     }
   });
