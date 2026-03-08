@@ -372,72 +372,7 @@ const CurrentWeek = () => {
                           )}
                         </AnimatePresence>
 
-                        {/* Scheduled reward for this day */}
-                        {editingDay !== dayIdx && dayRewards.length > 0 && dayRewards.map((dayReward: any, ri: number) => {
-                          const details = dayReward.reward_details as Record<string, any> | null;
-                          const completedDays: number[] = details?.completed_days
-                            ? (typeof details.completed_days === "string" ? JSON.parse(details.completed_days) : details.completed_days)
-                            : [];
-                          const isRewardDone = completedDays.includes(dayIdx);
 
-                          return (
-                            <div key={ri} className={cn(
-                              "mb-3 p-3 rounded-xl border transition-all",
-                              isRewardDone
-                                ? "bg-secondary/10 border-secondary/40"
-                                : "bg-gradient-to-r from-accent/20 to-primary/10 border-accent/30"
-                            )}>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => toggleRewardDay.mutate({
-                                    rewardId: dayReward.id,
-                                    dayIndex: dayIdx,
-                                    currentDetails: details || {},
-                                  })}
-                                  className={cn(
-                                    "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
-                                    isRewardDone ? "bg-secondary border-secondary text-secondary-foreground" : "border-primary/40 hover:border-primary"
-                                  )}
-                                >
-                                  {isRewardDone && <Check className="w-3.5 h-3.5" />}
-                                </button>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] font-bold uppercase text-muted-foreground">
-                                    {dayReward.reward_type === "song" ? "🎵 Song" : dayReward.reward_type === "challenge" ? "⚡ Challenge" : dayReward.reward_type === "recovery" ? "🧘 Recovery" : "🍽️ Dinner"}
-                                  </p>
-                                  <p className={cn("text-sm font-extrabold text-foreground", isRewardDone && "line-through opacity-50")}>{dayReward.reward_value}</p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {editingDay !== dayIdx && (day.isRest || day.isRecovery) && day.restNote && (
-                          <div className="p-4 rounded-xl bg-muted/50 text-center">
-                            <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>
-                            <p className="font-bold text-foreground text-sm">{day.restNote}</p>
-                          </div>
-                        )}
-
-                        {editingDay !== dayIdx && day.exercises.length > 0 && (
-                          <div className="space-y-2.5">
-                            {day.exercises.map((ex, exIdx) => {
-                              const key = getExKey(dayIdx, exIdx);
-                              const isDone = localCompleted[key] || false;
-                              const lastWeekWeight = prevWeightMap[key];
-
-                              return (
-                                <ExerciseCard
-                                  key={key}
-                                  exercise={ex}
-                                  isDone={isDone}
-                                  weight={localWeights[key] || ""}
-                                  lastWeekWeight={lastWeekWeight}
-                                  onWeightChange={(val) => handleWeightChange(dayIdx, exIdx, ex.name, val)}
-                                  onWeightBlur={() => handleWeightBlur(dayIdx, exIdx, ex.name)}
-                                  onToggle={() => toggleExercise(dayIdx, exIdx, ex.name)}
-                                />
-                              );
-                            })}
 
                             {completion < 100 && (
                               <Button
