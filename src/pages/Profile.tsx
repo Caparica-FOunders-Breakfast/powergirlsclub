@@ -257,34 +257,6 @@ const Profile = () => {
       </div>
 
       {/* My Rewards */}
-      {recentRewards.length > 0 && (
-        <>
-          <h2 className="font-display text-2xl text-foreground mb-3">
-            <Gift className="inline w-6 h-6 mr-1 text-primary" /> My Rewards
-          </h2>
-          <div className="space-y-2 mb-6">
-            {recentRewards.map((reward: any, i: number) => (
-              <motion.div
-                key={reward.id}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: i * 0.05 }}
-                className="p-3 rounded-xl bg-card border-2 border-border"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{REWARD_EMOJIS[reward.reward_type] || "🎁"}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground font-bold">
-                      Week {reward.week_number} • {reward.week_start}
-                    </p>
-                    <p className="font-bold text-sm text-foreground truncate">{reward.reward_value}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </>
-      )}
 
       <Button
         onClick={signOut}
