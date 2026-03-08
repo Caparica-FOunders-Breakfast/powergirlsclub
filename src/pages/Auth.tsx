@@ -23,7 +23,7 @@ const Auth = () => {
       } else {
         await signUp(email, password, displayName);
         toast({
-          title: "Welcome to FitSquad! 💪",
+          title: "Welcome to Power Girls Club! 💪",
           description: "Check your email to confirm your account.",
         });
       }
@@ -52,7 +52,7 @@ const Auth = () => {
         className="text-center mb-8 relative z-10"
       >
         <h1 className="text-6xl font-display text-primary-foreground drop-shadow-lg tracking-wider">
-          FitSquad
+          Power Girls Club
         </h1>
         <p className="text-primary-foreground/80 font-bold text-lg mt-2">
           💥 Squad Goals, Crushed Daily 💥
