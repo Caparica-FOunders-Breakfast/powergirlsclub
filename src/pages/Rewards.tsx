@@ -84,11 +84,27 @@ const Rewards = () => {
     return ((weekNum - 1) % 4) + 1; // cycle 1-4
   })();
 
+  // Calculate the actual week_start date for each cycle week (1-4) based on challenge_start
+  const getCycleWeekStart = (weekNum: number): string => {
+    if (!profile?.challenge_start) return weekStart;
+    const start = new Date(profile.challenge_start);
+    const now = new Date();
+    const daysDiff = differenceInDays(now, start);
+    if (daysDiff < 0) return weekStart;
+    // Find which absolute week we're in, then find the start of the cycle
+    const currentAbsoluteWeek = Math.floor(daysDiff / 7); // 0-indexed
+    const currentCycleStart = currentAbsoluteWeek - ((currentAbsoluteWeek) % 4); // start of current 4-week cycle
+    const targetAbsoluteWeek = currentCycleStart + (weekNum - 1);
+    const targetDate = addDays(start, targetAbsoluteWeek * 7);
+    return format(targetDate, "yyyy-MM-dd");
+  };
+
   // Build a map of weekNumber -> reward for the current cycle
   const rewardsByWeek = new Map<number, any>();
   myRewards?.forEach((r: any) => {
-    // Only include rewards from the recent cycle (last 4 entries max per week_number)
-    if (!rewardsByWeek.has(r.week_number)) {
+    // Only match rewards whose week_start matches the current cycle's week_start
+    const expectedWeekStart = getCycleWeekStart(r.week_number);
+    if (r.week_start === expectedWeekStart && !rewardsByWeek.has(r.week_number)) {
       rewardsByWeek.set(r.week_number, r);
     }
   });
