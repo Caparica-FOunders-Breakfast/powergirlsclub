@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { startOfWeek, addWeeks, format } from "date-fns";
 
 export interface ChallengeReward {
   id: string;
@@ -62,12 +63,28 @@ export const useChallengeRewards = (challengeId: string | null) => {
   });
 };
 
-/** Get the winner of a specific week in the challenge */
-export const useWeeklyWinner = (challengeId: string | null, weekNumber: number) => {
+/**
+ * Get the real-time winner for a specific challenge week.
+ * Maps challenge week number to calendar week_start, then finds the
+ * highest scorer among challenge participants for that week.
+ */
+export const useWeeklyWinner = (
+  challengeId: string | null,
+  challengeStartDate: string | null,
+  challengeWeek: number
+) => {
   return useQuery({
-    queryKey: ["weekly-winner", challengeId, weekNumber],
+    queryKey: ["weekly-winner", challengeId, challengeWeek],
     queryFn: async () => {
-      // Get all participants of this challenge
+      // Calculate the week_start for this challenge week
+      const challengeStart = new Date(challengeStartDate! + "T00:00:00");
+      const weekDate = addWeeks(
+        startOfWeek(challengeStart, { weekStartsOn: 1 }),
+        challengeWeek - 1
+      );
+      const weekStart = format(weekDate, "yyyy-MM-dd");
+
+      // Get challenge participants
       const { data: participants, error: pErr } = await supabase
         .from("profiles")
         .select("user_id")
@@ -77,22 +94,21 @@ export const useWeeklyWinner = (challengeId: string | null, weekNumber: number) 
 
       const userIds = participants.map((p) => p.user_id);
 
-      // Find highest scorer among participants for any week
-      // We need to find the week_start that corresponds to this challenge week
+      // Find highest scorer for this specific week among participants
       const { data: scores, error: sErr } = await supabase
         .from("weekly_scores")
-        .select("*")
+        .select("user_id, points")
+        .eq("week_start", weekStart)
         .in("user_id", userIds)
-        .order("points", { ascending: false });
+        .order("points", { ascending: false })
+        .limit(1);
       if (sErr) throw sErr;
 
-      // Group by week and find best per week, return the winner for the requested week number
-      // For simplicity, get the overall top scorer among participants
-      if (!scores?.length) return null;
-
-      return scores[0]?.user_id || null;
+      if (!scores?.length || scores[0].points === 0) return null;
+      return scores[0].user_id as string;
     },
-    enabled: !!challengeId && weekNumber > 0,
+    enabled: !!challengeId && !!challengeStartDate && challengeWeek > 0,
+    refetchInterval: 30000, // Re-check every 30s for real-time feel
   });
 };
 
