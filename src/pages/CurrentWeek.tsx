@@ -371,7 +371,33 @@ const CurrentWeek = () => {
                           )}
                         </AnimatePresence>
 
+                        {editingDay !== dayIdx && (day.isRest || day.isRecovery) && day.restNote && (
+                          <div className="p-4 rounded-xl bg-muted/50 text-center">
+                            <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>
+                            <p className="font-bold text-foreground text-sm">{day.restNote}</p>
+                          </div>
+                        )}
 
+                        {editingDay !== dayIdx && day.exercises.length > 0 && (
+                          <div className="space-y-2.5">
+                            {day.exercises.map((ex, exIdx) => {
+                              const key = getExKey(dayIdx, exIdx);
+                              const isDone = localCompleted[key] || false;
+                              const lastWeekWeight = prevWeightMap[key];
+
+                              return (
+                                <ExerciseCard
+                                  key={key}
+                                  exercise={ex}
+                                  isDone={isDone}
+                                  weight={localWeights[key] || ""}
+                                  lastWeekWeight={lastWeekWeight}
+                                  onWeightChange={(val) => handleWeightChange(dayIdx, exIdx, ex.name, val)}
+                                  onWeightBlur={() => handleWeightBlur(dayIdx, exIdx, ex.name)}
+                                  onToggle={() => toggleExercise(dayIdx, exIdx, ex.name)}
+                                />
+                              );
+                            })}
 
                             {completion < 100 && (
                               <Button
