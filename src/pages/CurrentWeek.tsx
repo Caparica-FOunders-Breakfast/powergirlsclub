@@ -78,13 +78,16 @@ const CurrentWeek = () => {
   // Build rewards-by-day map — only include rewards whose week_start falls within the viewed week
   const rewardsByDay = useMemo(() => {
     const map: Record<number, any[]> = {};
-    const viewedWeekStart = new Date(weekStart);
-    const viewedWeekEnd = addDays(viewedWeekStart, 6);
+    const viewedStart = weekStart; // "yyyy-MM-dd" string
 
     myRewards?.forEach((r: any) => {
-      // Check if this reward's week_start falls within the currently viewed week
-      const rewardStart = new Date(r.week_start);
-      if (rewardStart < viewedWeekStart || rewardStart > viewedWeekEnd) return;
+      // Compare as strings (both are "yyyy-MM-dd" format)
+      const rewardWeekStart = r.week_start;
+      // Check if the reward's week_start is within 6 days of the viewed week start
+      const viewedStartDate = new Date(viewedStart + "T00:00:00");
+      const viewedEndDate = addDays(viewedStartDate, 6);
+      const rewardDate = new Date(rewardWeekStart + "T00:00:00");
+      if (rewardDate < viewedStartDate || rewardDate > viewedEndDate) return;
 
       const details = r.reward_details as Record<string, any> | null;
       let days: number[] = [];
@@ -100,7 +103,7 @@ const CurrentWeek = () => {
       });
     });
     return map;
-  }, [myRewards]);
+  }, [myRewards, weekStart]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
