@@ -4,12 +4,14 @@ import { Gift, Music, Zap, Sparkles, UtensilsCrossed, Check, ExternalLink, Chevr
 import { useMyRewards, useSetReward } from "@/hooks/useRewards";
 import { useCurrentWeekStart } from "@/hooks/useWorkouts";
 import { useMyTeam } from "@/hooks/useTeams";
+import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { differenceInDays } from "date-fns";
 
 const DAYS_OF_WEEK = [
   { value: "0", label: "Monday" },
@@ -62,6 +64,7 @@ const Rewards = () => {
   const { user } = useAuth();
   const { data: myRewards } = useMyRewards();
   const { data: team } = useMyTeam();
+  const { data: profile } = useProfile();
   const weekStart = useCurrentWeekStart();
   const setReward = useSetReward();
   const { toast } = useToast();
@@ -70,10 +73,16 @@ const Rewards = () => {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
 
-  const weekOfYear = Math.ceil(
-    (new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000)
-  );
-  const currentWeekNumber = ((weekOfYear - 1) % 4) + 1;
+  // Calculate current week number based on challenge_start from profile
+  const currentWeekNumber = (() => {
+    if (!profile?.challenge_start) return 1;
+    const start = new Date(profile.challenge_start);
+    const now = new Date();
+    const daysDiff = differenceInDays(now, start);
+    if (daysDiff < 0) return 1;
+    const weekNum = Math.floor(daysDiff / 7) + 1;
+    return ((weekNum - 1) % 4) + 1; // cycle 1-4
+  })();
 
   // Build a map of weekNumber -> reward for the current cycle
   const rewardsByWeek = new Map<number, any>();
