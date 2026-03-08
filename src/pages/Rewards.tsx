@@ -324,6 +324,14 @@ const Rewards = () => {
 };
 
 function RewardDisplay({ type, details, value }: { type: string; details: Record<string, any>; value: string }) {
+  const scheduledDay = details.scheduled_day != null ? DAYS_OF_WEEK[Number(details.scheduled_day)]?.label : null;
+
+  const dayBadge = scheduledDay ? (
+    <p className="text-xs font-bold text-accent-foreground bg-accent/20 px-2 py-0.5 rounded-full inline-block mt-2">
+      📅 Scheduled: {scheduledDay}
+    </p>
+  ) : null;
+
   if (type === "song") {
     return (
       <div>
@@ -334,6 +342,7 @@ function RewardDisplay({ type, details, value }: { type: string; details: Record
             <ExternalLink className="w-3 h-3" /> Open link
           </a>
         )}
+        {dayBadge}
       </div>
     );
   }
@@ -343,6 +352,7 @@ function RewardDisplay({ type, details, value }: { type: string; details: Record
         <p className="font-extrabold text-foreground text-lg">{details.challenge_title || value}</p>
         {details.description && <p className="text-sm text-muted-foreground mt-1">{details.description}</p>}
         {details.target && <p className="text-xs font-bold text-primary mt-1">🎯 {details.target}</p>}
+        {dayBadge}
       </div>
     );
   }
@@ -351,6 +361,7 @@ function RewardDisplay({ type, details, value }: { type: string; details: Record
       <div>
         <p className="font-extrabold text-foreground text-lg">{details.ritual || value}</p>
         {details.description && <p className="text-sm text-muted-foreground mt-1">{details.description}</p>}
+        {dayBadge}
       </div>
     );
   }
@@ -360,6 +371,7 @@ function RewardDisplay({ type, details, value }: { type: string; details: Record
         <p className="font-extrabold text-foreground text-lg">🎉 Fancy Dinner Unlocked!</p>
         {details.restaurant && <p className="text-sm font-bold text-foreground mt-1">📍 {details.restaurant}</p>}
         {details.note && <p className="text-sm text-muted-foreground mt-1">{details.note}</p>}
+        {dayBadge}
       </div>
     );
   }
