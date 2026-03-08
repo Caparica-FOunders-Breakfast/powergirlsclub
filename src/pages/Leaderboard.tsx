@@ -47,7 +47,7 @@ const Leaderboard = () => {
       ) : (
         <div className="space-y-3">
           {scores.map((score, index) => {
-            const profile = score.profiles as any;
+            const profile = score.profile as any;
             const isWinner = index === 0 && score.points > 0;
 
             return (
