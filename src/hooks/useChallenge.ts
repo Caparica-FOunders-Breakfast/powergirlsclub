@@ -151,11 +151,10 @@ export const useChallengeProgress = (startDate: string | null) => {
   }
 
   if (daysDiff >= 28) {
-    return { week: 4, day: 7, daysDiff, status: "completed" as const, daysUntilStart: 0 };
+    return { week: 4, daysDiff, status: "completed" as const, daysUntilStart: 0 };
   }
 
   const week = Math.floor(daysDiff / 7) + 1;
-  const day = (daysDiff % 7) + 1;
 
-  return { week, day, daysDiff, status: "active" as const, daysLeft: 28 - daysDiff };
+  return { week, daysDiff, status: "active" as const, daysLeft: 28 - daysDiff };
 };

@@ -157,7 +157,7 @@ const TeamManagement = () => {
             {progress?.status === "active" && (
               <div>
                 <div className="flex justify-between text-xs font-bold text-muted-foreground mb-1">
-                  <span>Week {progress.week} • Day {progress.day}</span>
+                  <span>Week {((progress.week - 1) % 4) + 1}</span>
                   <span>{progress.daysLeft} days left</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">

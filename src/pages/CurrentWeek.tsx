@@ -178,7 +178,7 @@ const CurrentWeek = () => {
         </h1>
         {challengeWeekNum != null && (
           <span className="inline-block mt-1 text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-            Week {challengeWeekNum} • Day {challengeDayNum}
+            Week {challengeWeekNum}
           </span>
         )}
 
