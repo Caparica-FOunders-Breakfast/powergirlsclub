@@ -167,17 +167,20 @@ const CurrentWeek = () => {
     toast({ title: "DAY CRUSHED! 💪🔥" });
   };
 
-  // Calculate challenge week number for the viewed week
-  const challengeWeekNum = progress?.status === "active" ? progress.week : null;
-  const challengeDayNum = progress?.status === "active" ? progress.day : null;
+  // Challenge week/day for the VIEWED week
+  const viewedChallengeWeek = challengeStart ? viewedWeekIdx + 1 : null;
+  const challengeWeekNum = viewedChallengeWeek && viewedChallengeWeek >= 1 && viewedChallengeWeek <= 4 ? viewedChallengeWeek : null;
+  const challengeDayNum = progress?.status === "active" && isCurrentWeek ? progress.day : null;
 
-  const weekLabel = isCurrentWeek
+  const weekLabel = challengeWeekNum
+    ? `Week ${challengeWeekNum}`
+    : isCurrentWeek
     ? "This Week"
     : weekOffset === -1
     ? "Last Week"
     : weekOffset === 1
     ? "Next Week"
-    : format(selectedWeekDate, "MMM d, yyyy");
+    : format(viewedWeekStart, "MMM d, yyyy");
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
