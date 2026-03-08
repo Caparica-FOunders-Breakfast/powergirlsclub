@@ -187,7 +187,8 @@ const CurrentWeek = () => {
     const viewedDate = new Date(weekStart + "T00:00:00");
     const daysDiff = differenceInDays(viewedDate, start);
     if (daysDiff < 0) return null;
-    return Math.floor(daysDiff / 7) + 1;
+    const absoluteWeek = Math.floor(daysDiff / 7);
+    return ((absoluteWeek) % 4) + 1; // cycle 1-4
   })();
 
   const weekLabel = isCurrentWeek
