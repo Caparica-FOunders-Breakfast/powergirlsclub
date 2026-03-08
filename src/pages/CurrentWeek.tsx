@@ -155,10 +155,14 @@ const CurrentWeek = () => {
   };
 
   // Calculate challenge week number for the viewed week
-  // Cycle weeks 1-4 continuously
-  const challengeWeekNum = progress?.status === "active"
-    ? ((progress.week - 1) % 4) + 1
-    : null;
+  // Calculate which challenge week the viewed week falls into (cycling 1-4)
+  const challengeWeekNum = useMemo(() => {
+    if (!challenge?.start_date) return null;
+    const challengeStart = startOfWeek(new Date(challenge.start_date + "T00:00:00"), { weekStartsOn: 1 });
+    const weeksDiff = Math.round(differenceInDays(selectedWeekDate, challengeStart) / 7);
+    if (weeksDiff < 0) return null;
+    return ((weeksDiff % 4) + 1);
+  }, [challenge?.start_date, selectedWeekDate]);
 
   const weekLabel = isCurrentWeek
     ? "This Week"
