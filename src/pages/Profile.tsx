@@ -31,6 +31,7 @@ const Profile = () => {
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
+  const [name, setName] = useState("");
   const [startOpen, setStartOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
 
