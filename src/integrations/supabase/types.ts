@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      exercise_logs: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          day_index: number
+          exercise_index: number
+          exercise_name: string
+          id: string
+          updated_at: string
+          user_id: string
+          week_start: string
+          weight_used: number | null
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_index: number
+          exercise_index: number
+          exercise_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          week_start: string
+          weight_used?: number | null
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_index?: number
+          exercise_index?: number
+          exercise_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+          weight_used?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string
