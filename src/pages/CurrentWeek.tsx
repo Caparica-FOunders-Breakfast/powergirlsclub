@@ -399,8 +399,52 @@ const CurrentWeek = () => {
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4">
+                        {/* Edit button */}
+                        {!day.isRest && !day.isRecovery && editingDay !== dayIdx && (
+                          <div className="flex justify-end mb-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingDay(dayIdx)}
+                              className="text-xs text-muted-foreground font-bold h-7"
+                            >
+                              <Pencil className="w-3 h-3 mr-1" /> Edit Exercises
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Exercise Editor */}
+                        <AnimatePresence>
+                          {editingDay === dayIdx && (
+                            <ExerciseEditor
+                              day={day}
+                              dayIndex={dayIdx}
+                              hasCustom={hasCustom(dayIdx)}
+                              onSave={(exercises) => {
+                                savePersonalDay.mutate({
+                                  dayIndex: dayIdx,
+                                  exercises,
+                                  label: day.label,
+                                  emoji: day.emoji,
+                                  isRest: day.isRest,
+                                  isRecovery: day.isRecovery,
+                                  restNote: day.restNote,
+                                });
+                                setEditingDay(null);
+                                toast({ title: "Exercises updated! 💪" });
+                              }}
+                              onReset={() => {
+                                resetPersonalDay.mutate(dayIdx);
+                                setEditingDay(null);
+                                toast({ title: "Reset to default exercises" });
+                              }}
+                              onClose={() => setEditingDay(null)}
+                            />
+                          )}
+                        </AnimatePresence>
+
                         {/* Scheduled reward for this day */}
-                        {dayRewards.length > 0 && dayRewards.map((dayReward: any, ri: number) => {
+                        {editingDay !== dayIdx && dayRewards.length > 0 && dayRewards.map((dayReward: any, ri: number) => {
                           const details = dayReward.reward_details as Record<string, any> | null;
                           const completedDays: number[] = details?.completed_days
                             ? (typeof details.completed_days === "string" ? JSON.parse(details.completed_days) : details.completed_days)
@@ -438,14 +482,14 @@ const CurrentWeek = () => {
                             </div>
                           );
                         })}
-                        {(day.isRest || day.isRecovery) && day.restNote && (
+                        {editingDay !== dayIdx && (day.isRest || day.isRecovery) && day.restNote && (
                           <div className="p-4 rounded-xl bg-muted/50 text-center">
                             <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>
                             <p className="font-bold text-foreground text-sm">{day.restNote}</p>
                           </div>
                         )}
 
-                        {day.exercises.length > 0 && (
+                        {editingDay !== dayIdx && day.exercises.length > 0 && (
                           <div className="space-y-2.5">
                             {day.exercises.map((ex, exIdx) => {
                               const key = getExKey(dayIdx, exIdx);
