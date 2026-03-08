@@ -118,7 +118,7 @@ const CurrentWeek = () => {
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
   const getDayCompletion = (dayIdx: number, day: WorkoutDay) => {
-    if (day.isRest || day.isRecovery || day.exercises.length === 0) return 100;
+    if (day.exercises.length === 0) return day.isRest || day.isRecovery ? 100 : 0;
     const total = day.exercises.length;
     const done = day.exercises.filter((_, i) => localCompleted[getExKey(dayIdx, i)]).length;
     return Math.round((done / total) * 100);
