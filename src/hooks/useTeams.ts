@@ -39,6 +39,23 @@ export const useMyTeam = () => {
   });
 };
 
+export const useTeamMembers = () => {
+  const { data: team } = useMyTeam();
+
+  return useQuery({
+    queryKey: ["team-members", team?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("team_id", team!.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!team,
+  });
+};
+
 export const useCreateTeam = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -51,10 +68,48 @@ export const useCreateTeam = () => {
         .select()
         .single();
       if (error) throw error;
+
+      // Auto-join the team
+      await supabase
+        .from("profiles")
+        .update({ team_id: data.id } as any)
+        .eq("user_id", user!.id);
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["my-team"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+    },
+  });
+};
+
+export const useJoinTeamByCode = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (code: string) => {
+      const { data: team, error } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("team_code", code.trim().toLowerCase())
+        .single();
+      if (error || !team) throw new Error("Team not found. Check the code and try again.");
+
+      const { error: updateErr } = await supabase
+        .from("profiles")
+        .update({ team_id: team.id } as any)
+        .eq("user_id", user!.id);
+      if (updateErr) throw updateErr;
+
+      return team;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-team"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["team-members"] });
     },
   });
 };
@@ -74,6 +129,7 @@ export const useAssignTeam = () => {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["my-team"] });
       queryClient.invalidateQueries({ queryKey: ["scores"] });
+      queryClient.invalidateQueries({ queryKey: ["team-members"] });
     },
   });
 };

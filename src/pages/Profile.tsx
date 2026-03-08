@@ -1,18 +1,30 @@
 import { motion } from "framer-motion";
-import { LogOut, Dumbbell, Flame, Trophy } from "lucide-react";
+import { LogOut, Dumbbell, Flame, Trophy, Gift } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
+import { useMyTeam } from "@/hooks/useTeams";
+import { useMyRewards } from "@/hooks/useRewards";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const AVATAR_COLORS = ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF", "#FF6B35", "#A855F7"];
+
+const REWARD_EMOJIS: Record<string, string> = {
+  song: "🎵",
+  challenge: "⚡",
+  recovery: "🧘",
+  dinner: "🍽️",
+};
 
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { data: profile, isLoading } = useProfile();
   const { data: role } = useUserRole();
+  const { data: team } = useMyTeam();
+  const { data: myRewards } = useMyRewards();
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
@@ -36,6 +48,9 @@ const Profile = () => {
   };
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+
+  // Get recent rewards (last 4 weeks)
+  const recentRewards = myRewards?.slice(0, 4) || [];
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -70,11 +85,19 @@ const Profile = () => {
         )}
 
         <p className="text-sm text-muted-foreground font-bold">{user?.email}</p>
-        {role === "admin" && (
-          <span className="inline-block mt-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold uppercase">
-            Admin 👑
-          </span>
-        )}
+        
+        <div className="flex items-center justify-center gap-2 mt-2">
+          {team && (
+            <span className="inline-block px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-extrabold">
+              {team.name}
+            </span>
+          )}
+          {role === "admin" && (
+            <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold uppercase">
+              Admin 👑
+            </span>
+          )}
+        </div>
 
         {/* Avatar color picker */}
         <div className="flex justify-center gap-2 mt-4">
@@ -92,9 +115,9 @@ const Profile = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { icon: Dumbbell, label: "Workouts", value: "—", color: "text-neon-teal" },
-          { icon: Flame, label: "Best Streak", value: "—", color: "text-neon-yellow" },
-          { icon: Trophy, label: "Weeks Won", value: "—", color: "text-neon-pink" },
+          { icon: Dumbbell, label: "Workouts", value: "—", color: "text-secondary" },
+          { icon: Flame, label: "Best Streak", value: "—", color: "text-accent" },
+          { icon: Trophy, label: "Weeks Won", value: "—", color: "text-primary" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -109,6 +132,36 @@ const Profile = () => {
           </motion.div>
         ))}
       </div>
+
+      {/* My Rewards */}
+      {recentRewards.length > 0 && (
+        <>
+          <h2 className="font-display text-2xl text-foreground mb-3">
+            <Gift className="inline w-6 h-6 mr-1 text-primary" /> My Rewards
+          </h2>
+          <div className="space-y-2 mb-6">
+            {recentRewards.map((reward: any, i: number) => (
+              <motion.div
+                key={reward.id}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: i * 0.05 }}
+                className="p-3 rounded-xl bg-card border-2 border-border"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{REWARD_EMOJIS[reward.reward_type] || "🎁"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground font-bold">
+                      Week {reward.week_number} • {reward.week_start}
+                    </p>
+                    <p className="font-bold text-sm text-foreground truncate">{reward.reward_value}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </>
+      )}
 
       <Button
         onClick={signOut}
