@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { LogOut, Dumbbell, Flame, Trophy, CalendarIcon } from "lucide-react";
-import { format, differenceInDays, differenceInWeeks, addDays } from "date-fns";
+import { LogOut, Dumbbell, Flame, Trophy, CalendarIcon, Copy, Users, Plus, ArrowRight, X } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
 import { useMyTeam } from "@/hooks/useTeams";
+import { useActiveChallenge, useChallengeParticipants, useCreateChallenge, useJoinChallenge, useLeaveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,13 +21,25 @@ const Profile = () => {
   const { data: profile, isLoading } = useProfile();
   const { data: role } = useUserRole();
   const { data: team } = useMyTeam();
-  
+  const { data: challenge } = useActiveChallenge();
+  const { data: participants } = useChallengeParticipants(profile?.challenge_id ?? null);
+
   const updateProfile = useUpdateProfile();
+  const createChallenge = useCreateChallenge();
+  const joinChallenge = useJoinChallenge();
+  const leaveChallenge = useLeaveChallenge();
   const { toast } = useToast();
+
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
+  const [challengeName, setChallengeName] = useState("Fitness Challenge");
   const [startOpen, setStartOpen] = useState(false);
-  const [endOpen, setEndOpen] = useState(false);
+  const [selectedStart, setSelectedStart] = useState<Date | undefined>();
+  const [joinCode, setJoinCode] = useState("");
+
+  const progress = useChallengeProgress(challenge?.start_date ?? null);
 
   const handleSave = async () => {
     if (!name.trim()) return;
@@ -45,31 +58,47 @@ const Profile = () => {
     } catch {}
   };
 
-  const handleStartDateChange = async (date: Date | undefined) => {
+  const handleCreateChallenge = async () => {
+    if (!selectedStart || !challengeName.trim()) return;
     try {
-      const updates: any = {
-        challenge_start: date ? format(date, "yyyy-MM-dd") : null,
-        challenge_end: date ? format(addDays(date, 28), "yyyy-MM-dd") : null,
-      };
-      await updateProfile.mutateAsync(updates);
-      toast({ title: "Challenge period updated! 📅" });
+      const ch = await createChallenge.mutateAsync({ name: challengeName.trim(), startDate: selectedStart });
+      setShowCreate(false);
+      setSelectedStart(undefined);
+      toast({ title: `Challenge created! 🎉 Code: ${ch.invite_code}` });
     } catch {
-      toast({ title: "Error updating date", variant: "destructive" });
+      toast({ title: "Error creating challenge", variant: "destructive" });
+    }
+  };
+
+  const handleJoinChallenge = async () => {
+    if (!joinCode.trim()) return;
+    try {
+      await joinChallenge.mutateAsync(joinCode);
+      setShowJoin(false);
+      setJoinCode("");
+      toast({ title: "Joined challenge! 💪" });
+    } catch (e: any) {
+      toast({ title: e.message || "Could not join", variant: "destructive" });
+    }
+  };
+
+  const handleLeave = async () => {
+    try {
+      await leaveChallenge.mutateAsync();
+      toast({ title: "Left the challenge" });
+    } catch {
+      toast({ title: "Error", variant: "destructive" });
+    }
+  };
+
+  const copyCode = () => {
+    if (challenge?.invite_code) {
+      navigator.clipboard.writeText(challenge.invite_code);
+      toast({ title: "Code copied! 📋" });
     }
   };
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-
-  
-
-  const challengeStart = (profile as any)?.challenge_start ? new Date((profile as any).challenge_start) : undefined;
-  const challengeEnd = (profile as any)?.challenge_end ? new Date((profile as any).challenge_end) : undefined;
-
-  const now = new Date();
-  const isActive = challengeStart && challengeEnd && now >= challengeStart && now <= challengeEnd;
-  const daysLeft = challengeEnd ? differenceInDays(challengeEnd, now) : null;
-  const totalWeeks = challengeStart && challengeEnd ? differenceInWeeks(challengeEnd, challengeStart) : null;
-  const weeksCompleted = challengeStart ? differenceInWeeks(now, challengeStart) : null;
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -118,7 +147,6 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Avatar color picker */}
         <div className="flex justify-center gap-2 mt-4">
           {AVATAR_COLORS.map((c) => (
             <button
@@ -131,7 +159,7 @@ const Profile = () => {
         </div>
       </motion.div>
 
-      {/* Challenge Duration */}
+      {/* Challenge Section */}
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -139,99 +167,207 @@ const Profile = () => {
         className="mb-6 p-5 rounded-2xl bg-card border-2 border-border"
       >
         <h2 className="font-display text-xl text-foreground mb-1">
-          <CalendarIcon className="inline w-5 h-5 mr-1 text-primary" /> Challenge Period
+          <CalendarIcon className="inline w-5 h-5 mr-1 text-primary" /> Challenge
         </h2>
-        <p className="text-xs text-muted-foreground font-bold mb-4">Set when your fitness challenge starts and ends</p>
 
-        <div className="grid grid-cols-2 gap-3">
-          {/* Start Date */}
-          <div>
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Start Date</label>
-            <Popover open={startOpen} onOpenChange={setStartOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-bold text-sm h-10 mt-1",
-                    !challengeStart && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
-                  {challengeStart ? format(challengeStart, "MMM d, yyyy") : "Pick start"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={challengeStart}
-                  onSelect={(date) => { handleStartDateChange(date); setStartOpen(false); }}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+        {/* Active challenge */}
+        {challenge ? (
+          <div className="space-y-4 mt-3">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-extrabold text-foreground">{challenge.name}</h3>
+                <span className={cn(
+                  "text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full",
+                  progress?.status === "active" ? "bg-secondary/20 text-secondary" :
+                  progress?.status === "completed" ? "bg-muted text-muted-foreground" :
+                  "bg-accent/20 text-accent-foreground"
+                )}>
+                  {progress?.status === "active" ? "🔥 Active" : progress?.status === "completed" ? "✅ Completed" : "📅 Upcoming"}
+                </span>
+              </div>
 
-          {/* End Date (auto-calculated) */}
-          <div>
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">End Date</label>
-            <Button
-              variant="outline"
-              disabled
-              className="w-full justify-start text-left font-bold text-sm h-10 mt-1"
-            >
-              <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
-              {challengeEnd ? format(challengeEnd, "MMM d, yyyy") : "—"}
-            </Button>
-          </div>
-        </div>
+              <div className="text-sm font-bold text-muted-foreground mb-2">
+                {format(new Date(challenge.start_date + "T00:00:00"), "MMM d")} → {format(new Date(challenge.end_date + "T00:00:00"), "MMM d, yyyy")}
+              </div>
 
-        {/* Challenge status */}
-        {challengeStart && challengeEnd && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            className="mt-4 p-3 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className={cn(
-                "text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full",
-                isActive
-                  ? "bg-secondary/20 text-secondary"
-                  : daysLeft !== null && daysLeft < 0
-                  ? "bg-muted text-muted-foreground"
-                  : "bg-accent/20 text-accent-foreground"
-              )}>
-                {isActive ? "🔥 Active" : daysLeft !== null && daysLeft < 0 ? "✅ Completed" : "📅 Upcoming"}
-              </span>
-              {totalWeeks !== null && (
-                <span className="text-xs font-bold text-muted-foreground">{totalWeeks} weeks total</span>
+              {progress?.status === "active" && (
+                <div>
+                  <div className="flex justify-between text-xs font-bold text-muted-foreground mb-1">
+                    <span>Week {progress.week} • Day {progress.day}</span>
+                    <span>{progress.daysLeft} days left</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full gradient-primary rounded-full transition-all"
+                      style={{ width: `${(progress.daysDiff / 28) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {progress?.status === "upcoming" && (
+                <p className="text-xs font-bold text-accent-foreground">
+                  Starts in {progress.daysUntilStart} day{progress.daysUntilStart !== 1 ? "s" : ""}
+                </p>
               )}
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-bold text-foreground">
-                {format(challengeStart, "MMM d")} → {format(challengeEnd, "MMM d, yyyy")}
-              </span>
+            {/* Invite code */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 p-3 rounded-xl bg-muted text-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Invite Code</p>
+                <p className="font-display text-2xl text-foreground tracking-widest">{challenge.invite_code?.toUpperCase()}</p>
+              </div>
+              <Button variant="outline" size="icon" onClick={copyCode} className="h-12 w-12 shrink-0">
+                <Copy className="w-4 h-4" />
+              </Button>
             </div>
 
-            {isActive && daysLeft !== null && (
-              <div className="mt-2">
-                <div className="flex justify-between text-xs font-bold text-muted-foreground mb-1">
-                  <span>Week {(weeksCompleted ?? 0) + 1}</span>
-                  <span>{daysLeft} days left</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full gradient-primary rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(100, totalWeeks && weeksCompleted !== null ? ((weeksCompleted) / totalWeeks) * 100 : 0)}%`,
-                    }}
-                  />
+            {/* Participants */}
+            {participants && participants.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">
+                  <Users className="inline w-3 h-3 mr-1" /> {participants.length} Participant{participants.length !== 1 ? "s" : ""}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {participants.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted"
+                    >
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground"
+                        style={{ backgroundColor: p.avatar_color }}
+                      >
+                        {p.display_name?.[0]?.toUpperCase()}
+                      </div>
+                      <span className="text-xs font-bold text-foreground">{p.display_name}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
-          </motion.div>
+
+            <Button
+              variant="outline"
+              onClick={handleLeave}
+              className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 font-bold text-sm"
+            >
+              <X className="w-4 h-4 mr-1" /> Leave Challenge
+            </Button>
+          </div>
+        ) : (
+          /* No active challenge — show create/join */
+          <div className="space-y-3 mt-3">
+            <p className="text-xs text-muted-foreground font-bold">Create a new 4-week challenge or join one with a code</p>
+
+            {!showCreate && !showJoin && (
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => setShowCreate(true)}
+                  className="gradient-primary text-primary-foreground font-bold"
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Create
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowJoin(true)}
+                  className="font-bold border-primary/30"
+                >
+                  <ArrowRight className="w-4 h-4 mr-1" /> Join
+                </Button>
+              </div>
+            )}
+
+            {/* Create form */}
+            {showCreate && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                className="space-y-3 p-4 rounded-xl border-2 border-primary/20 bg-primary/5"
+              >
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Challenge Name</label>
+                  <Input
+                    value={challengeName}
+                    onChange={(e) => setChallengeName(e.target.value)}
+                    placeholder="e.g. Spring Shred"
+                    className="mt-1 border-primary/20 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Start Date</label>
+                  <Popover open={startOpen} onOpenChange={setStartOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-bold text-sm h-10 mt-1",
+                          !selectedStart && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
+                        {selectedStart ? format(selectedStart, "MMM d, yyyy") : "Pick start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedStart}
+                        onSelect={(d) => { setSelectedStart(d); setStartOpen(false); }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleCreateChallenge}
+                    disabled={!selectedStart || !challengeName.trim() || createChallenge.isPending}
+                    className="flex-1 gradient-primary text-primary-foreground font-bold"
+                  >
+                    {createChallenge.isPending ? "Creating..." : "Create Challenge 🚀"}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowCreate(false)} className="font-bold">
+                    Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Join form */}
+            {showJoin && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                className="space-y-3 p-4 rounded-xl border-2 border-secondary/20 bg-secondary/5"
+              >
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Invite Code</label>
+                  <Input
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value)}
+                    placeholder="e.g. a3f2b1"
+                    className="mt-1 border-secondary/20 font-bold text-center text-lg tracking-widest uppercase"
+                    maxLength={6}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleJoinChallenge}
+                    disabled={!joinCode.trim() || joinChallenge.isPending}
+                    className="flex-1 bg-secondary text-secondary-foreground font-bold hover:bg-secondary/90"
+                  >
+                    {joinChallenge.isPending ? "Joining..." : "Join Challenge 💪"}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowJoin(false)} className="font-bold">
+                    Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </div>
         )}
       </motion.div>
 
@@ -255,8 +391,6 @@ const Profile = () => {
           </motion.div>
         ))}
       </div>
-
-      {/* My Rewards */}
 
       <Button
         onClick={signOut}

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      challenges: {
+        Row: {
+          created_at: string
+          created_by: string
+          end_date: string
+          id: string
+          invite_code: string | null
+          name: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          end_date: string
+          id?: string
+          invite_code?: string | null
+          name?: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          end_date?: string
+          id?: string
+          invite_code?: string | null
+          name?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       exercise_logs: {
         Row: {
           completed: boolean
@@ -60,6 +90,7 @@ export type Database = {
         Row: {
           avatar_color: string
           challenge_end: string | null
+          challenge_id: string | null
           challenge_start: string | null
           created_at: string
           display_name: string
@@ -71,6 +102,7 @@ export type Database = {
         Insert: {
           avatar_color?: string
           challenge_end?: string | null
+          challenge_id?: string | null
           challenge_start?: string | null
           created_at?: string
           display_name: string
@@ -82,6 +114,7 @@ export type Database = {
         Update: {
           avatar_color?: string
           challenge_end?: string | null
+          challenge_id?: string | null
           challenge_start?: string | null
           created_at?: string
           display_name?: string
@@ -91,6 +124,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_team_id_fkey"
             columns: ["team_id"]

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, TrendingUp } from "lucide-react";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
-import { useProfile } from "@/hooks/useProfile";
+import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
 import ExerciseEditor from "@/components/ExerciseEditor";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,8 @@ import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 const CurrentWeek = () => {
-  const { data: profile } = useProfile();
+  const { data: challenge } = useActiveChallenge();
+  const progress = useChallengeProgress(challenge?.start_date ?? null);
   const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
@@ -153,15 +154,8 @@ const CurrentWeek = () => {
   };
 
   // Calculate challenge week number for the viewed week
-  const challengeWeekNum = (() => {
-    if (!profile?.challenge_start) return null;
-    const start = new Date(profile.challenge_start + "T00:00:00");
-    const viewedDate = new Date(weekStart + "T00:00:00");
-    const daysDiff = differenceInDays(viewedDate, start);
-    if (daysDiff < 0) return null;
-    const absoluteWeek = Math.floor(daysDiff / 7);
-    return ((absoluteWeek) % 4) + 1; // cycle 1-4
-  })();
+  const challengeWeekNum = progress?.status === "active" ? progress.week : null;
+  const challengeDayNum = progress?.status === "active" ? progress.day : null;
 
   const weekLabel = isCurrentWeek
     ? "This Week"
@@ -181,7 +175,7 @@ const CurrentWeek = () => {
         </h1>
         {challengeWeekNum != null && (
           <span className="inline-block mt-1 text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-            Week {challengeWeekNum}
+            Week {challengeWeekNum} • Day {challengeDayNum}
           </span>
         )}
 
