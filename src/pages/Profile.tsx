@@ -32,6 +32,8 @@ const Profile = () => {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
+  const [startOpen, setStartOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
 
   const handleSave = async () => {
     if (!name.trim()) return;
@@ -150,7 +152,7 @@ const Profile = () => {
           {/* Start Date */}
           <div>
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Start Date</label>
-            <Popover>
+            <Popover open={startOpen} onOpenChange={setStartOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -167,7 +169,7 @@ const Profile = () => {
                 <Calendar
                   mode="single"
                   selected={challengeStart}
-                  onSelect={(date) => handleDateChange("challenge_start", date)}
+                  onSelect={(date) => { handleDateChange("challenge_start", date); setStartOpen(false); }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
@@ -178,7 +180,7 @@ const Profile = () => {
           {/* End Date */}
           <div>
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">End Date</label>
-            <Popover>
+            <Popover open={endOpen} onOpenChange={setEndOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -195,7 +197,7 @@ const Profile = () => {
                 <Calendar
                   mode="single"
                   selected={challengeEnd}
-                  onSelect={(date) => handleDateChange("challenge_end", date)}
+                  onSelect={(date) => { handleDateChange("challenge_end", date); setEndOpen(false); }}
                   disabled={(date) => challengeStart ? date < challengeStart : false}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
