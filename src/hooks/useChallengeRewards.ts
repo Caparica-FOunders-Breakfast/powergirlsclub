@@ -29,7 +29,7 @@ export const DEFAULT_REWARDS = [
   {
     week: 2,
     type: "outfit",
-    title: "Outfit Challenge",
+    title: "Outfit of the Week",
     description: "Rock a fun outfit during your workout and snap a photo 👗",
     emoji: "👗",
     color: "from-amber-500/20 to-orange-500/20",
