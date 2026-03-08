@@ -58,7 +58,8 @@ const RewardWeekItem = ({
   const completed = reward?.unlocked === true;
   const isExpanded = expandedWeek === config.week;
   const isCurrent = currentWeek === config.week && status === "active";
-  const isWinner = winnerId === user?.id;
+  const isWinner = winnerIds?.includes(user?.id ?? "") ?? false;
+  const isTiedReward = (winnerIds?.length ?? 0) > 1;
   const isChosenBy = reward?.chosen_by === user?.id;
 
   const handleSetReward = async () => {
