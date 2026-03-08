@@ -316,6 +316,7 @@ const Rewards = () => {
         {WEEK_REWARDS.map((reward, i) => {
           const weekNum = i + 1;
           const isCurrent = weekNum === currentWeekNumber;
+          const isPast = weekNum < currentWeekNumber;
           const hasReward = rewardsByWeek.has(weekNum);
 
           return (
@@ -333,6 +334,8 @@ const Rewards = () => {
                 "p-4 rounded-xl border-2 transition-all text-left cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
                 isCurrent
                   ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                  : isPast
+                  ? "border-muted bg-muted/30 opacity-70"
                   : hasReward
                   ? "border-secondary/40 bg-secondary/5"
                   : "border-border bg-card hover:border-primary/30"
@@ -350,9 +353,9 @@ const Rewards = () => {
               <p className="font-bold text-sm text-foreground">{reward.label}</p>
               <p className={cn(
                 "text-[10px] font-bold uppercase mt-1",
-                isCurrent ? "text-primary" : hasReward ? "text-secondary" : "text-muted-foreground"
+                isCurrent ? "text-primary" : isPast ? "text-muted-foreground" : hasReward ? "text-secondary" : "text-muted-foreground"
               )}>
-                {isCurrent ? "Current" : hasReward ? "Done ✓" : "Upcoming"}
+                {isCurrent ? "Current" : isPast ? (hasReward ? "Completed ✓" : "Past") : hasReward ? "Set ✓" : "Upcoming"}
               </p>
             </motion.button>
           );
