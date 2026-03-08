@@ -220,24 +220,37 @@ const Rewards = () => {
                     )}
                   </div>
                 ))}
-                {/* Day of week selector */}
+                {/* Day of week multi-selector */}
                 <div>
                   <label className="text-xs font-bold text-muted-foreground uppercase">
-                    Scheduled Day *
+                    Scheduled Days *
                   </label>
-                  <Select
-                    value={formData.scheduled_day || ""}
-                    onValueChange={(val) => setFormData((prev) => ({ ...prev, scheduled_day: val }))}
-                  >
-                    <SelectTrigger className="mt-1 border-2 border-primary/20">
-                      <SelectValue placeholder="Pick a day for this reward" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS_OF_WEEK.map((d) => (
-                        <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {DAYS_OF_WEEK.map((d) => {
+                      const selectedDays: string[] = formData.scheduled_days ? JSON.parse(formData.scheduled_days) : [];
+                      const isSelected = selectedDays.includes(d.value);
+                      return (
+                        <button
+                          key={d.value}
+                          type="button"
+                          onClick={() => {
+                            const newDays = isSelected
+                              ? selectedDays.filter((v) => v !== d.value)
+                              : [...selectedDays, d.value];
+                            setFormData((prev) => ({ ...prev, scheduled_days: JSON.stringify(newDays) }));
+                          }}
+                          className={cn(
+                            "px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all",
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                          )}
+                        >
+                          {d.label.slice(0, 3)}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
