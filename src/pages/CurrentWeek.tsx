@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp } from "lucide-react";
-import { useCurrentReward } from "@/hooks/useRewards";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift } from "lucide-react";
+import { useCurrentReward, useMyCurrentWeekReward, useMyRewards } from "@/hooks/useRewards";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 
 
 const CurrentWeek = () => {
   const { data: reward } = useCurrentReward();
+  const { data: myRewards } = useMyRewards();
   const { toast } = useToast();
 
   const now = new Date();
@@ -72,6 +73,18 @@ const CurrentWeek = () => {
     }
     return map;
   }, [prevLogs]);
+
+  // Build rewards-by-day map (dayIdx -> reward)
+  const rewardsByDay = useMemo(() => {
+    const map: Record<number, any> = {};
+    myRewards?.forEach((r: any) => {
+      const details = r.reward_details as Record<string, any> | null;
+      if (details?.scheduled_day != null) {
+        map[Number(details.scheduled_day)] = r;
+      }
+    });
+    return map;
+  }, [myRewards]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
@@ -267,6 +280,7 @@ const CurrentWeek = () => {
             const expanded = expandedDay === dayIdx;
             const completion = getDayCompletion(dayIdx, day);
             const isToday = isCurrentWeek && dayIdx === todayIndex;
+            const dayReward = rewardsByDay[dayIdx];
 
             return (
               <motion.div
@@ -307,6 +321,7 @@ const CurrentWeek = () => {
                     <p className="text-xs text-muted-foreground font-bold">
                       {day.label}
                       {!day.isRest && !day.isRecovery && day.exercises.length > 0 && ` • ${day.exercises.length} exercises`}
+                      {dayReward && ` • 🎁 ${dayReward.reward_value}`}
                     </p>
                     {!day.isRest && !day.isRecovery && day.exercises.length > 0 && (
                       <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -339,6 +354,20 @@ const CurrentWeek = () => {
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4">
+                        {/* Scheduled reward for this day */}
+                        {dayReward && (
+                          <div className="mb-3 p-3 rounded-xl bg-gradient-to-r from-accent/20 to-primary/10 border border-accent/30">
+                            <div className="flex items-center gap-2">
+                              <Gift className="w-4 h-4 text-primary shrink-0" />
+                              <div>
+                                <p className="text-[10px] font-bold uppercase text-muted-foreground">
+                                  {dayReward.reward_type === "song" ? "🎵 Song" : dayReward.reward_type === "challenge" ? "⚡ Challenge" : dayReward.reward_type === "recovery" ? "🧘 Recovery" : "🍽️ Dinner"}
+                                </p>
+                                <p className="text-sm font-extrabold text-foreground">{dayReward.reward_value}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         {(day.isRest || day.isRecovery) && day.restNote && (
                           <div className="p-4 rounded-xl bg-muted/50 text-center">
                             <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>
