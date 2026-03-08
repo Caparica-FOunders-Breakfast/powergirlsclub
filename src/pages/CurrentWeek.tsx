@@ -154,15 +154,8 @@ const CurrentWeek = () => {
   };
 
   // Calculate challenge week number for the viewed week
-  const challengeWeekNum = (() => {
-    if (!profile?.challenge_start) return null;
-    const start = new Date(profile.challenge_start + "T00:00:00");
-    const viewedDate = new Date(weekStart + "T00:00:00");
-    const daysDiff = differenceInDays(viewedDate, start);
-    if (daysDiff < 0) return null;
-    const absoluteWeek = Math.floor(daysDiff / 7);
-    return ((absoluteWeek) % 4) + 1; // cycle 1-4
-  })();
+  const challengeWeekNum = progress?.status === "active" ? progress.week : null;
+  const challengeDayNum = progress?.status === "active" ? progress.day : null;
 
   const weekLabel = isCurrentWeek
     ? "This Week"
