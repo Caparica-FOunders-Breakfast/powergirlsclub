@@ -180,7 +180,7 @@ const Profile = () => {
           {/* End Date */}
           <div>
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">End Date</label>
-            <Popover>
+            <Popover open={endOpen} onOpenChange={setEndOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -197,7 +197,7 @@ const Profile = () => {
                 <Calendar
                   mode="single"
                   selected={challengeEnd}
-                  onSelect={(date) => handleDateChange("challenge_end", date)}
+                  onSelect={(date) => { handleDateChange("challenge_end", date); setEndOpen(false); }}
                   disabled={(date) => challengeStart ? date < challengeStart : false}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
