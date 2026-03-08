@@ -40,7 +40,8 @@ function PowerSparkline({ data, color }: { data: number[]; color: string }) {
         <path d={linePath} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         {/* Current point dot */}
         {data.length > 0 && (() => {
-          const lastIdx = data.findLastIndex((v) => v > 0);
+          let lastIdx = -1;
+          for (let i = data.length - 1; i >= 0; i--) { if (data[i] > 0) { lastIdx = i; break; } }
           if (lastIdx < 0) return null;
           const cx = padding + (lastIdx / (data.length - 1)) * (w - padding * 2);
           const cy = h - padding - (data[lastIdx] / max) * (h - padding * 2);
