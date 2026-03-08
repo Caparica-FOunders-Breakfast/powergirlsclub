@@ -127,7 +127,7 @@ const RewardWeekItem = ({
             )}
             {isCurrent && isWinner && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary">
-                🏆 You're winning!
+                {isTiedReward ? "🤝 Shared reward!" : "🏆 You're winning!"}
               </span>
             )}
           </div>
