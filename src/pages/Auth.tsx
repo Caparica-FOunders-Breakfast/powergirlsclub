@@ -23,7 +23,7 @@ const Auth = () => {
       } else {
         await signUp(email, password, displayName);
         toast({
-          title: "Welcome to Fit Girls Club! 💜",
+          title: "Welcome to Power Girls Club! 💜",
           description: "Check your email to confirm your account.",
         });
       }
