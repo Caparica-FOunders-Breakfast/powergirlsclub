@@ -1,16 +1,18 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Check, Music, Shirt, Coffee, Upload, ChevronRight, Sparkles } from "lucide-react";
+import { Lock, Check, ChevronRight, Sparkles, Upload, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
 import {
-  REWARD_CONFIG,
+  DEFAULT_REWARDS,
   useChallengeRewards,
-  useUnlockReward,
+  useSetReward,
   useUpdateRewardPhoto,
+  useWeeklyWinner,
   type ChallengeReward,
 } from "@/hooks/useChallengeRewards";
 
@@ -20,16 +22,16 @@ interface RewardJourneyProps {
   status: "upcoming" | "active" | "completed";
 }
 
-const WEEK_ICONS = [Music, Shirt, Coffee];
-
 const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps) => {
+  const { user } = useAuth();
   const { data: rewards } = useChallengeRewards(challengeId);
-  const unlockReward = useUnlockReward();
+  const setReward = useSetReward();
   const updatePhoto = useUpdateRewardPhoto();
   const { toast } = useToast();
 
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
-  const [songInput, setSongInput] = useState("");
+  const [rewardInput, setRewardInput] = useState("");
+  const [editingWeek, setEditingWeek] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getReward = (week: number): ChallengeReward | undefined =>
@@ -40,61 +42,33 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
     return currentWeek >= week;
   };
 
-  const handleUnlockSong = async () => {
-    if (!songInput.trim()) return;
+  const handleSetReward = async (weekNumber: number, defaultType: string, defaultTitle: string) => {
+    const value = rewardInput.trim() || defaultTitle;
     try {
-      await unlockReward.mutateAsync({
+      await setReward.mutateAsync({
         challengeId,
-        weekNumber: 1,
-        rewardType: "song",
-        rewardValue: songInput.trim(),
+        weekNumber,
+        rewardType: defaultType,
+        rewardValue: value,
       });
-      setSongInput("");
+      setRewardInput("");
       setExpandedWeek(null);
+      setEditingWeek(null);
       confetti({ particleCount: 60, spread: 60, colors: ["#FF2D87", "#A855F7", "#5271FF"] });
-      toast({ title: "🎵 Song of the Week set!" });
+      toast({ title: `🎉 Reward set: ${value}` });
     } catch {
-      toast({ title: "Error saving song", variant: "destructive" });
+      toast({ title: "Error saving reward", variant: "destructive" });
     }
   };
 
-  const handleUnlockOutfit = async () => {
-    try {
-      await unlockReward.mutateAsync({
-        challengeId,
-        weekNumber: 2,
-        rewardType: "outfit",
-      });
-      confetti({ particleCount: 60, spread: 60, colors: ["#FFE600", "#FF6B35", "#FF2D87"] });
-      toast({ title: "👗 Outfit challenge activated!" });
-    } catch {
-      toast({ title: "Error", variant: "destructive" });
-    }
-  };
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, weekNumber: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      await updatePhoto.mutateAsync({ challengeId, weekNumber: 2, file });
+      await updatePhoto.mutateAsync({ challengeId, weekNumber, file });
       toast({ title: "📸 Photo uploaded!" });
     } catch {
       toast({ title: "Error uploading photo", variant: "destructive" });
-    }
-  };
-
-  const handleUnlockBrunch = async () => {
-    try {
-      await unlockReward.mutateAsync({
-        challengeId,
-        weekNumber: 3,
-        rewardType: "brunch",
-        rewardValue: "Team Brunch unlocked!",
-      });
-      confetti({ particleCount: 100, spread: 80, colors: ["#00F5D4", "#FFE600", "#FF2D87"] });
-      toast({ title: "🥂 Team Brunch unlocked!" });
-    } catch {
-      toast({ title: "Error", variant: "destructive" });
     }
   };
 
@@ -103,8 +77,10 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
       <h3 className="font-display text-lg text-foreground flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-primary" /> Reward Journey
       </h3>
+      <p className="text-xs text-muted-foreground font-bold">
+        The week's winner picks the reward for everyone! 🏆
+      </p>
 
-      {/* Progress line */}
       <div className="relative">
         {/* Connector line */}
         <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-border z-0" />
@@ -117,13 +93,14 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
         />
 
         <div className="relative z-20 space-y-4">
-          {REWARD_CONFIG.map((config, idx) => {
+          {DEFAULT_REWARDS.map((config, idx) => {
             const reward = getReward(config.week);
             const unlocked = isWeekUnlocked(config.week);
             const completed = reward?.unlocked === true;
             const isExpanded = expandedWeek === config.week;
-            const Icon = WEEK_ICONS[idx];
             const isCurrent = currentWeek === config.week && status === "active";
+            const isWinner = reward?.chosen_by === user?.id;
+            const isEditing = editingWeek === config.week;
 
             return (
               <motion.div
@@ -132,7 +109,6 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                {/* Node button */}
                 <button
                   onClick={() => unlocked ? setExpandedWeek(isExpanded ? null : config.week) : null}
                   className={cn(
@@ -142,7 +118,6 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
                     completed && "bg-secondary/5"
                   )}
                 >
-                  {/* Circle node */}
                   <div
                     className={cn(
                       "w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0 border-2 transition-all",
@@ -177,11 +152,11 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
                       "font-extrabold text-sm",
                       completed ? "text-secondary" : unlocked ? "text-foreground" : "text-muted-foreground"
                     )}>
-                      {config.title}
+                      {completed && reward?.reward_value ? reward.reward_value : config.title}
                     </p>
-                    {completed && reward?.reward_value && (
-                      <p className="text-xs text-muted-foreground font-bold truncate">
-                        {reward.reward_value}
+                    {completed && (
+                      <p className="text-[10px] text-muted-foreground font-bold">
+                        Chosen by winner 🏆
                       </p>
                     )}
                   </div>
@@ -196,7 +171,6 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
                   )}
                 </button>
 
-                {/* Expanded content */}
                 <AnimatePresence>
                   {isExpanded && unlocked && (
                     <motion.div
@@ -213,101 +187,114 @@ const RewardJourney = ({ challengeId, currentWeek, status }: RewardJourneyProps)
                         <p className="text-xs text-muted-foreground font-bold mb-3">
                           {config.description}
                         </p>
+                        <p className="text-[10px] text-muted-foreground font-bold mb-2 italic">
+                          This is a suggestion — the winner can choose any reward!
+                        </p>
 
-                        {/* Week 1 — Song */}
-                        {config.week === 1 && !completed && (
+                        {/* Not yet set — winner can set it */}
+                        {!completed && (
                           <div className="space-y-2">
                             <Input
-                              value={songInput}
-                              onChange={(e) => setSongInput(e.target.value)}
-                              placeholder="e.g. Eye of the Tiger"
+                              value={rewardInput}
+                              onChange={(e) => setRewardInput(e.target.value)}
+                              placeholder={`e.g. ${config.title}`}
                               className="border-primary/20 font-bold text-sm"
                             />
                             <Button
-                              onClick={handleUnlockSong}
-                              disabled={!songInput.trim() || unlockReward.isPending}
+                              onClick={() => handleSetReward(config.week, config.type, config.title)}
+                              disabled={setReward.isPending}
                               className="w-full gradient-primary text-primary-foreground font-bold text-sm"
                             >
-                              <Music className="w-4 h-4 mr-1" />
-                              {unlockReward.isPending ? "Saving..." : "Set My Song 🎵"}
+                              {setReward.isPending ? "Saving..." : `Set Reward ${config.emoji}`}
                             </Button>
                           </div>
                         )}
-                        {config.week === 1 && completed && (
-                          <div className="flex items-center gap-2 p-3 rounded-lg bg-background/50">
-                            <Music className="w-5 h-5 text-pink-400 shrink-0" />
-                            <span className="font-extrabold text-foreground">{reward?.reward_value}</span>
-                          </div>
-                        )}
 
-                        {/* Week 2 — Outfit */}
-                        {config.week === 2 && !completed && (
-                          <Button
-                            onClick={handleUnlockOutfit}
-                            disabled={unlockReward.isPending}
-                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm"
-                          >
-                            <Shirt className="w-4 h-4 mr-1" />
-                            {unlockReward.isPending ? "Activating..." : "Accept Challenge 👗"}
-                          </Button>
-                        )}
-                        {config.week === 2 && completed && (
+                        {/* Already set */}
+                        {completed && (
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 p-3 rounded-lg bg-background/50">
-                              <Check className="w-5 h-5 text-secondary shrink-0" />
-                              <span className="font-bold text-foreground text-sm">Challenge accepted!</span>
-                            </div>
-                            {reward?.photo_url ? (
-                              <div className="rounded-lg overflow-hidden border">
-                                <img
-                                  src={reward.photo_url}
-                                  alt="Outfit photo"
-                                  className="w-full h-48 object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <>
-                                <input
-                                  type="file"
-                                  ref={fileInputRef}
-                                  onChange={handlePhotoUpload}
-                                  accept="image/*"
-                                  className="hidden"
-                                />
+                              <span className="text-2xl">{config.emoji}</span>
+                              <span className="font-extrabold text-foreground text-sm flex-1">
+                                {reward?.reward_value}
+                              </span>
+                              {isWinner && !isEditing && (
                                 <Button
-                                  variant="outline"
-                                  onClick={() => fileInputRef.current?.click()}
-                                  disabled={updatePhoto.isPending}
-                                  className="w-full border-dashed border-2 border-amber-500/30 text-amber-500 font-bold text-sm"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingWeek(config.week);
+                                    setRewardInput(reward?.reward_value || "");
+                                  }}
                                 >
-                                  <Upload className="w-4 h-4 mr-1" />
-                                  {updatePhoto.isPending ? "Uploading..." : "Upload Outfit Photo (optional)"}
+                                  <Pencil className="w-3 h-3" />
                                 </Button>
+                              )}
+                            </div>
+
+                            {/* Edit mode for winner */}
+                            {isWinner && isEditing && (
+                              <div className="space-y-2">
+                                <Input
+                                  value={rewardInput}
+                                  onChange={(e) => setRewardInput(e.target.value)}
+                                  placeholder="Update reward..."
+                                  className="border-primary/20 font-bold text-sm"
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleSetReward(config.week, config.type, config.title)}
+                                    disabled={setReward.isPending}
+                                    className="flex-1 gradient-primary text-primary-foreground font-bold text-sm"
+                                  >
+                                    {setReward.isPending ? "Saving..." : "Update"}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => { setEditingWeek(null); setRewardInput(""); }}
+                                    className="font-bold text-sm"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Photo upload for outfit week */}
+                            {config.type === "outfit" && (
+                              <>
+                                {reward?.photo_url ? (
+                                  <div className="rounded-lg overflow-hidden border">
+                                    <img
+                                      src={reward.photo_url}
+                                      alt="Outfit photo"
+                                      className="w-full h-48 object-cover"
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <input
+                                      type="file"
+                                      ref={fileInputRef}
+                                      onChange={(e) => handlePhotoUpload(e, config.week)}
+                                      accept="image/*"
+                                      className="hidden"
+                                    />
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => fileInputRef.current?.click()}
+                                      disabled={updatePhoto.isPending}
+                                      className="w-full border-dashed border-2 border-amber-500/30 text-amber-500 font-bold text-sm"
+                                    >
+                                      <Upload className="w-4 h-4 mr-1" />
+                                      {updatePhoto.isPending ? "Uploading..." : "Upload Photo (optional)"}
+                                    </Button>
+                                  </>
+                                )}
                               </>
                             )}
-                          </div>
-                        )}
-
-                        {/* Week 3 — Brunch */}
-                        {config.week === 3 && !completed && (
-                          <Button
-                            onClick={handleUnlockBrunch}
-                            disabled={unlockReward.isPending}
-                            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm"
-                          >
-                            <Coffee className="w-4 h-4 mr-1" />
-                            {unlockReward.isPending ? "Unlocking..." : "Claim Brunch Reward 🥂"}
-                          </Button>
-                        )}
-                        {config.week === 3 && completed && (
-                          <div className="flex items-center gap-2 p-3 rounded-lg bg-background/50">
-                            <span className="text-2xl">🥂</span>
-                            <div>
-                              <p className="font-extrabold text-foreground text-sm">Brunch Unlocked!</p>
-                              <p className="text-xs text-muted-foreground font-bold">
-                                Time to celebrate with your team ☕
-                              </p>
-                            </div>
                           </div>
                         )}
                       </div>
