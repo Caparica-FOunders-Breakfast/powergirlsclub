@@ -85,15 +85,14 @@ const Rewards = () => {
   })();
 
   // Calculate the actual week_start date for each cycle week (1-4) based on challenge_start
-  const getCycleWeekStart = (weekNum: number): string => {
-    if (!profile?.challenge_start) return weekStart;
-    const start = new Date(profile.challenge_start);
+  const getCycleWeekStart = (weekNum: number): string | null => {
+    if (!profile?.challenge_start) return null;
+    const start = new Date(profile.challenge_start + "T00:00:00");
     const now = new Date();
     const daysDiff = differenceInDays(now, start);
-    if (daysDiff < 0) return weekStart;
-    // Find which absolute week we're in, then find the start of the cycle
-    const currentAbsoluteWeek = Math.floor(daysDiff / 7); // 0-indexed
-    const currentCycleStart = currentAbsoluteWeek - ((currentAbsoluteWeek) % 4); // start of current 4-week cycle
+    if (daysDiff < 0) return null;
+    const currentAbsoluteWeek = Math.floor(daysDiff / 7);
+    const currentCycleStart = currentAbsoluteWeek - ((currentAbsoluteWeek) % 4);
     const targetAbsoluteWeek = currentCycleStart + (weekNum - 1);
     const targetDate = addDays(start, targetAbsoluteWeek * 7);
     return format(targetDate, "yyyy-MM-dd");
@@ -102,9 +101,8 @@ const Rewards = () => {
   // Build a map of weekNumber -> reward for the current cycle
   const rewardsByWeek = new Map<number, any>();
   myRewards?.forEach((r: any) => {
-    // Only match rewards whose week_start matches the current cycle's week_start
     const expectedWeekStart = getCycleWeekStart(r.week_number);
-    if (r.week_start === expectedWeekStart && !rewardsByWeek.has(r.week_number)) {
+    if (expectedWeekStart && r.week_start === expectedWeekStart && !rewardsByWeek.has(r.week_number)) {
       rewardsByWeek.set(r.week_number, r);
     }
   });
@@ -137,6 +135,10 @@ const Rewards = () => {
 
     try {
       const cycleWeekStart = getCycleWeekStart(selectedWeek!);
+      if (!cycleWeekStart) {
+        toast({ title: "Set your challenge start date first", variant: "destructive" });
+        return;
+      }
       await setReward.mutateAsync({
         weekStart: cycleWeekStart,
         weekNumber: selectedWeek!,
