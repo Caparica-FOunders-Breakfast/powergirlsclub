@@ -52,12 +52,14 @@ const Profile = () => {
     } catch {}
   };
 
-  const handleDateChange = async (field: "challenge_start" | "challenge_end", date: Date | undefined) => {
+  const handleStartDateChange = async (date: Date | undefined) => {
     try {
-      await updateProfile.mutateAsync({
-        [field]: date ? format(date, "yyyy-MM-dd") : null,
-      });
-      toast({ title: `Challenge ${field === "challenge_start" ? "start" : "end"} date updated! 📅` });
+      const updates: any = {
+        challenge_start: date ? format(date, "yyyy-MM-dd") : null,
+        challenge_end: date ? format(addDays(date, 28), "yyyy-MM-dd") : null,
+      };
+      await updateProfile.mutateAsync(updates);
+      toast({ title: "Challenge period updated! 📅" });
     } catch {
       toast({ title: "Error updating date", variant: "destructive" });
     }
