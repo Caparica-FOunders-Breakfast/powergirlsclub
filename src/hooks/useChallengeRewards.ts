@@ -68,7 +68,8 @@ export const useChallengeRewards = (challengeId: string | null) => {
  * Maps challenge week number to calendar week_start, then finds the
  * highest scorer among challenge participants for that week.
  */
-export const useWeeklyWinner = (
+/** Returns all tied winner IDs (array) for shared reward support */
+export const useWeeklyWinners = (
   challengeId: string | null,
   challengeStartDate: string | null,
   challengeWeek: number
@@ -76,7 +77,6 @@ export const useWeeklyWinner = (
   return useQuery({
     queryKey: ["weekly-winner", challengeId, challengeWeek],
     queryFn: async () => {
-      // Calculate the week_start for this challenge week
       const challengeStart = new Date(challengeStartDate! + "T00:00:00");
       const weekDate = addWeeks(
         startOfWeek(challengeStart, { weekStartsOn: 1 }),
@@ -84,31 +84,32 @@ export const useWeeklyWinner = (
       );
       const weekStart = format(weekDate, "yyyy-MM-dd");
 
-      // Get challenge participants
       const { data: participants, error: pErr } = await supabase
         .from("profiles")
         .select("user_id")
         .eq("challenge_id", challengeId!);
       if (pErr) throw pErr;
-      if (!participants?.length) return null;
+      if (!participants?.length) return [];
 
       const userIds = participants.map((p) => p.user_id);
 
-      // Find highest scorer for this specific week among participants
+      // Get all scores for this week among participants
       const { data: scores, error: sErr } = await supabase
         .from("weekly_scores")
         .select("user_id, points")
         .eq("week_start", weekStart)
         .in("user_id", userIds)
-        .order("points", { ascending: false })
-        .limit(1);
+        .order("points", { ascending: false });
       if (sErr) throw sErr;
 
-      if (!scores?.length || scores[0].points === 0) return null;
-      return scores[0].user_id as string;
+      if (!scores?.length || scores[0].points === 0) return [];
+
+      // Return all users tied at the top score
+      const topPoints = scores[0].points;
+      return scores.filter((s) => s.points === topPoints).map((s) => s.user_id as string);
     },
     enabled: !!challengeId && !!challengeStartDate && challengeWeek > 0,
-    refetchInterval: 30000, // Re-check every 30s for real-time feel
+    refetchInterval: 30000,
   });
 };
 
