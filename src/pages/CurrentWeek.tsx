@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift } from "lucide-react";
 import { useCurrentReward, useMyCurrentWeekReward, useMyRewards, useToggleRewardDay } from "@/hooks/useRewards";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
+import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -10,13 +11,14 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
-import { startOfWeek, addWeeks, addDays, format, isSameWeek, isWithinInterval } from "date-fns";
+import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } from "date-fns";
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 const CurrentWeek = () => {
   const { data: reward } = useCurrentReward();
   const { data: myRewards } = useMyRewards();
+  const { data: profile } = useProfile();
   const toggleRewardDay = useToggleRewardDay();
   const { toast } = useToast();
 
@@ -178,6 +180,16 @@ const CurrentWeek = () => {
     toast({ title: "DAY CRUSHED! 💪🔥" });
   };
 
+  // Calculate challenge week number for the viewed week
+  const challengeWeekNum = (() => {
+    if (!profile?.challenge_start) return null;
+    const start = new Date(profile.challenge_start + "T00:00:00");
+    const viewedDate = new Date(weekStart + "T00:00:00");
+    const daysDiff = differenceInDays(viewedDate, start);
+    if (daysDiff < 0) return null;
+    return Math.floor(daysDiff / 7) + 1;
+  })();
+
   const weekLabel = isCurrentWeek
     ? "This Week"
     : weekOffset === -1
@@ -194,6 +206,11 @@ const CurrentWeek = () => {
           <Dumbbell className="inline w-8 h-8 text-neon-teal mr-2" />
           {weekLabel}
         </h1>
+        {challengeWeekNum != null && (
+          <span className="inline-block mt-1 text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+            Week {challengeWeekNum}
+          </span>
+        )}
 
         {/* Week navigation */}
         <div className="flex items-center justify-center gap-4 mt-2">
