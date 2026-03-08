@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift, Pencil } from "lucide-react";
 import { useCurrentReward, useMyCurrentWeekReward, useMyRewards, useToggleRewardDay } from "@/hooks/useRewards";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useProfile } from "@/hooks/useProfile";
+import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
+import ExerciseEditor from "@/components/ExerciseEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
-import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
+import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } from "date-fns";
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
