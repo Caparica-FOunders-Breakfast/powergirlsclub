@@ -81,38 +81,6 @@ const CurrentWeek = () => {
     return map;
   }, [prevLogs]);
 
-  // Build rewards-by-day map — match rewards whose week_number matches the viewed week's cycle number
-  const rewardsByDay = useMemo(() => {
-    const map: Record<number, any[]> = {};
-
-    // Determine which cycle week (1-4) the viewed week corresponds to
-    if (!profile?.challenge_start) return map;
-    const start = new Date(profile.challenge_start + "T00:00:00");
-    const viewedDate = new Date(weekStart + "T00:00:00");
-    const daysDiff = differenceInDays(viewedDate, start);
-    if (daysDiff < 0) return map;
-    const viewedCycleWeek = ((Math.floor(daysDiff / 7)) % 4) + 1;
-
-    myRewards?.forEach((r: any) => {
-      // Show reward if its week_number matches this cycle week
-      if (r.week_number !== viewedCycleWeek) return;
-
-      const details = r.reward_details as Record<string, any> | null;
-      let days: number[] = [];
-      if (details?.scheduled_days) {
-        const parsed = typeof details.scheduled_days === "string" ? JSON.parse(details.scheduled_days) : details.scheduled_days;
-        days = parsed.map(Number);
-      } else if (details?.scheduled_day != null) {
-        days = [Number(details.scheduled_day)];
-      }
-      days.forEach((d) => {
-        if (!map[d]) map[d] = [];
-        map[d].push(r);
-      });
-    });
-    return map;
-  }, [myRewards, weekStart, profile]);
-
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
   const getDayCompletion = (dayIdx: number, day: WorkoutDay) => {
