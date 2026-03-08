@@ -15,13 +15,6 @@ import { cn } from "@/lib/utils";
 
 const AVATAR_COLORS = ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF", "#FF6B35", "#A855F7"];
 
-const REWARD_EMOJIS: Record<string, string> = {
-  song: "🎵",
-  challenge: "⚡",
-  recovery: "🧘",
-  dinner: "🍽️",
-};
-
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { data: profile, isLoading } = useProfile();
