@@ -52,7 +52,7 @@ export function AppSidebar() {
                       activeClassName="bg-primary/10 text-primary"
                     >
                       <item.icon className="h-5 w-5" />
-                      {!collapsed && <span>{item.label}</span>}
+                      <span>{item.label}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
