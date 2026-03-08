@@ -188,7 +188,7 @@ const Profile = () => {
               className="w-full justify-start text-left font-bold text-sm h-10 mt-1"
             >
               <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
-              {challengeEnd ? format(challengeEnd, "MMM d, yyyy") : "Auto (start + 4 wks)"}
+              {challengeEnd ? format(challengeEnd, "MMM d, yyyy") : "—"}
             </Button>
           </div>
         </div>
