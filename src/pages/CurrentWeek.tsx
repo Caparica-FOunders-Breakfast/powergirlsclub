@@ -18,6 +18,7 @@ const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 
 const CurrentWeek = () => {
   const { data: reward } = useCurrentReward();
   const { data: myRewards } = useMyRewards();
+  const { data: profile } = useProfile();
   const toggleRewardDay = useToggleRewardDay();
   const { toast } = useToast();
 
