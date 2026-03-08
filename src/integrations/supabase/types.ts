@@ -17,6 +17,7 @@ export type Database = {
       challenge_rewards: {
         Row: {
           challenge_id: string
+          chosen_by: string | null
           completed_at: string | null
           created_at: string
           id: string
@@ -30,6 +31,7 @@ export type Database = {
         }
         Insert: {
           challenge_id: string
+          chosen_by?: string | null
           completed_at?: string | null
           created_at?: string
           id?: string
@@ -43,6 +45,7 @@ export type Database = {
         }
         Update: {
           challenge_id?: string
+          chosen_by?: string | null
           completed_at?: string | null
           created_at?: string
           id?: string
