@@ -51,7 +51,7 @@ const Auth = () => {
         className="text-center mb-8 relative z-10"
       >
         <h1 className="text-6xl font-display text-primary-foreground drop-shadow-lg tracking-wider">
-          Fit Girls Club
+          Power Girls Club
         </h1>
         <p className="text-primary-foreground/80 font-bold text-lg mt-2">
           💜 Stronger Together, Anywhere 💜
