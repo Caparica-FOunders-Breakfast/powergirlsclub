@@ -8,7 +8,7 @@ import { AppSidebar, BottomNav, AppHeader, SidebarProvider } from "@/components/
 import Auth from "@/pages/Auth";
 import Leaderboard from "@/pages/Leaderboard";
 import CurrentWeek from "@/pages/CurrentWeek";
-import Rewards from "@/pages/Rewards";
+
 import TeamManagement from "@/pages/TeamManagement";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
@@ -38,7 +38,7 @@ const ProtectedLayout = () => {
             <Routes>
               <Route path="/" element={<Leaderboard />} />
               <Route path="/week" element={<CurrentWeek />} />
-              <Route path="/rewards" element={<Rewards />} />
+              <Route path="/rewards" element={<Navigate to="/teams" replace />} />
               <Route path="/teams" element={<TeamManagement />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
