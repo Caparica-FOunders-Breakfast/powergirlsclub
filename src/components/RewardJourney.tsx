@@ -12,7 +12,7 @@ import {
   useChallengeRewards,
   useSetReward,
   useUpdateRewardPhoto,
-  useWeeklyWinner,
+  useWeeklyWinners,
   type ChallengeReward,
 } from "@/hooks/useChallengeRewards";
 
@@ -45,7 +45,7 @@ const RewardWeekItem = ({
   setExpandedWeek: (w: number | null) => void;
 }) => {
   const { user } = useAuth();
-  const { data: winnerId } = useWeeklyWinner(challengeId, challengeStartDate, config.week);
+  const { data: winnerIds } = useWeeklyWinners(challengeId, challengeStartDate, config.week);
   const setRewardMut = useSetReward();
   const updatePhoto = useUpdateRewardPhoto();
   const { toast } = useToast();
@@ -58,7 +58,8 @@ const RewardWeekItem = ({
   const completed = reward?.unlocked === true;
   const isExpanded = expandedWeek === config.week;
   const isCurrent = currentWeek === config.week && status === "active";
-  const isWinner = winnerId === user?.id;
+  const isWinner = winnerIds?.includes(user?.id ?? "") ?? false;
+  const isTiedReward = (winnerIds?.length ?? 0) > 1;
   const isChosenBy = reward?.chosen_by === user?.id;
 
   const handleSetReward = async () => {
@@ -126,7 +127,7 @@ const RewardWeekItem = ({
             )}
             {isCurrent && isWinner && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary">
-                🏆 You're winning!
+                {isTiedReward ? "🤝 Shared reward!" : "🏆 You're winning!"}
               </span>
             )}
           </div>
@@ -160,7 +161,10 @@ const RewardWeekItem = ({
                   {isWinner ? (
                     <div className="space-y-2">
                       <p className="text-[10px] font-bold text-secondary flex items-center gap-1">
-                        <Trophy className="w-3 h-3" /> You're the winner — pick the reward!
+                        <Trophy className="w-3 h-3" />
+                        {isTiedReward
+                          ? `Shared Reward Week — all ${winnerIds?.length} tied winners can pick!`
+                          : "You're the winner — pick the reward!"}
                       </p>
                       <Input
                         value={rewardInput}
@@ -176,9 +180,11 @@ const RewardWeekItem = ({
                         {setRewardMut.isPending ? "Saving..." : `Set Reward ${config.emoji}`}
                       </Button>
                     </div>
-                  ) : winnerId ? (
+                  ) : winnerIds?.length ? (
                     <p className="text-xs font-bold text-muted-foreground italic">
-                      Waiting for this week's winner to choose the reward...
+                      {isTiedReward
+                        ? "Waiting for the tied winners to choose the reward together..."
+                        : "Waiting for this week's winner to choose the reward..."}
                     </p>
                   ) : (
                     <p className="text-xs font-bold text-muted-foreground italic">
