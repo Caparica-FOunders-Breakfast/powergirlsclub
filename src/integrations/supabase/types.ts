@@ -186,6 +186,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_workout_plans: {
+        Row: {
+          created_at: string
+          day_index: number
+          emoji: string | null
+          exercises: Json
+          id: string
+          is_recovery: boolean
+          is_rest: boolean
+          label: string | null
+          rest_note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_index: number
+          emoji?: string | null
+          exercises?: Json
+          id?: string
+          is_recovery?: boolean
+          is_rest?: boolean
+          label?: string | null
+          rest_note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          emoji?: string | null
+          exercises?: Json
+          id?: string
+          is_recovery?: boolean
+          is_rest?: boolean
+          label?: string | null
+          rest_note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_scores: {
         Row: {
           created_at: string
