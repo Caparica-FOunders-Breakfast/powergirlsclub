@@ -210,6 +210,15 @@ const TeamManagement = () => {
             </div>
           )}
 
+          {/* Reward Journey */}
+          {progress && (
+            <RewardJourney
+              challengeId={challenge.id}
+              currentWeek={((progress.week - 1) % 4) + 1}
+              status={progress.status}
+            />
+          )}
+
           <Button
             variant="outline"
             onClick={handleLeaveChallenge}

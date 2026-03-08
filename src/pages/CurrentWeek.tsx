@@ -254,21 +254,6 @@ const CurrentWeek = () => {
             const completion = getDayCompletion(dayIdx, day);
             const isToday = isCurrentWeek && dayIdx === todayIndex;
 
-      {/* Reward Journey */}
-      {challenge && progress && (
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.05 }}
-          className="mb-4 p-4 rounded-2xl bg-card border-2 border-border"
-        >
-          <RewardJourney
-            challengeId={challenge.id}
-            currentWeek={progress.week}
-            status={progress.status}
-          />
-        </motion.div>
-      )}
 
             return (
               <motion.div
