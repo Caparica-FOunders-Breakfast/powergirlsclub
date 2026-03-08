@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      challenge_rewards: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          photo_url: string | null
+          reward_type: string
+          reward_value: string | null
+          unlocked: boolean
+          updated_at: string
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          reward_type: string
+          reward_value?: string | null
+          unlocked?: boolean
+          updated_at?: string
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          reward_type?: string
+          reward_value?: string | null
+          unlocked?: boolean
+          updated_at?: string
+          user_id?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_rewards_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           created_at: string
