@@ -171,7 +171,7 @@ const Profile = () => {
                 <Calendar
                   mode="single"
                   selected={challengeStart}
-                  onSelect={(date) => { handleDateChange("challenge_start", date); setStartOpen(false); }}
+                  onSelect={(date) => { handleStartDateChange(date); setStartOpen(false); }}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
@@ -179,33 +179,17 @@ const Profile = () => {
             </Popover>
           </div>
 
-          {/* End Date */}
+          {/* End Date (auto-calculated) */}
           <div>
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">End Date</label>
-            <Popover open={endOpen} onOpenChange={setEndOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-bold text-sm h-10 mt-1",
-                    !challengeEnd && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
-                  {challengeEnd ? format(challengeEnd, "MMM d, yyyy") : "Pick end"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={challengeEnd}
-                  onSelect={(date) => { handleDateChange("challenge_end", date); setEndOpen(false); }}
-                  disabled={(date) => challengeStart ? date < challengeStart : false}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
+            <Button
+              variant="outline"
+              disabled
+              className="w-full justify-start text-left font-bold text-sm h-10 mt-1"
+            >
+              <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
+              {challengeEnd ? format(challengeEnd, "MMM d, yyyy") : "Auto (start + 4 wks)"}
+            </Button>
           </div>
         </div>
 
