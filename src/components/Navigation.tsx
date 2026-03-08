@@ -1,4 +1,4 @@
-import { Trophy, Dumbbell, Gift, User, Menu } from "lucide-react";
+import { Trophy, Dumbbell, Gift, User, Users, Menu } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
