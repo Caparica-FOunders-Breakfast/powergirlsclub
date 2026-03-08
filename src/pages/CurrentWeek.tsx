@@ -74,14 +74,23 @@ const CurrentWeek = () => {
     return map;
   }, [prevLogs]);
 
-  // Build rewards-by-day map (dayIdx -> reward)
+  // Build rewards-by-day map (dayIdx -> reward[])
   const rewardsByDay = useMemo(() => {
-    const map: Record<number, any> = {};
+    const map: Record<number, any[]> = {};
     myRewards?.forEach((r: any) => {
       const details = r.reward_details as Record<string, any> | null;
-      if (details?.scheduled_day != null) {
-        map[Number(details.scheduled_day)] = r;
+      // Support both scheduled_days (array/JSON string) and legacy scheduled_day (single)
+      let days: number[] = [];
+      if (details?.scheduled_days) {
+        const parsed = typeof details.scheduled_days === "string" ? JSON.parse(details.scheduled_days) : details.scheduled_days;
+        days = parsed.map(Number);
+      } else if (details?.scheduled_day != null) {
+        days = [Number(details.scheduled_day)];
       }
+      days.forEach((d) => {
+        if (!map[d]) map[d] = [];
+        map[d].push(r);
+      });
     });
     return map;
   }, [myRewards]);

@@ -338,11 +338,12 @@ const Rewards = () => {
 };
 
 function RewardDisplay({ type, details, value }: { type: string; details: Record<string, any>; value: string }) {
-  const scheduledDay = details.scheduled_day != null ? DAYS_OF_WEEK[Number(details.scheduled_day)]?.label : null;
+  const scheduledDays: string[] = details.scheduled_days ? (typeof details.scheduled_days === "string" ? JSON.parse(details.scheduled_days) : details.scheduled_days) : (details.scheduled_day != null ? [String(details.scheduled_day)] : []);
+  const dayLabels = scheduledDays.map((d) => DAYS_OF_WEEK[Number(d)]?.label).filter(Boolean);
 
-  const dayBadge = scheduledDay ? (
+  const dayBadge = dayLabels.length > 0 ? (
     <p className="text-xs font-bold text-accent-foreground bg-accent/20 px-2 py-0.5 rounded-full inline-block mt-2">
-      📅 Scheduled: {scheduledDay}
+      📅 {dayLabels.join(", ")}
     </p>
   ) : null;
 
