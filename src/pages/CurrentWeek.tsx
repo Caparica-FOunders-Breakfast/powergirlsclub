@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift } from "lucide-react";
 import { useCurrentReward, useMyCurrentWeekReward, useMyRewards, useToggleRewardDay } from "@/hooks/useRewards";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
+import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
