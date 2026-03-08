@@ -65,6 +65,7 @@ const Profile = () => {
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="New name" className="border-2 border-primary/30" />
             <Button onClick={handleSave} className="gradient-primary text-primary-foreground font-bold">Save</Button>
           </div>
+        ) : (
           <h2 className="text-3xl font-display text-foreground">
             {profile?.display_name}
           </h2>
