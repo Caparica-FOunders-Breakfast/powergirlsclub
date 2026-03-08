@@ -180,6 +180,16 @@ const CurrentWeek = () => {
     toast({ title: "DAY CRUSHED! 💪🔥" });
   };
 
+  // Calculate challenge week number for the viewed week
+  const challengeWeekNum = (() => {
+    if (!profile?.challenge_start) return null;
+    const start = new Date(profile.challenge_start + "T00:00:00");
+    const viewedDate = new Date(weekStart + "T00:00:00");
+    const daysDiff = differenceInDays(viewedDate, start);
+    if (daysDiff < 0) return null;
+    return Math.floor(daysDiff / 7) + 1;
+  })();
+
   const weekLabel = isCurrentWeek
     ? "This Week"
     : weekOffset === -1
@@ -196,6 +206,11 @@ const CurrentWeek = () => {
           <Dumbbell className="inline w-8 h-8 text-neon-teal mr-2" />
           {weekLabel}
         </h1>
+        {challengeWeekNum != null && (
+          <span className="inline-block mt-1 text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+            Week {challengeWeekNum}
+          </span>
+        )}
 
         {/* Week navigation */}
         <div className="flex items-center justify-center gap-4 mt-2">
