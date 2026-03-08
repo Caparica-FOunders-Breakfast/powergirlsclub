@@ -115,6 +115,45 @@ export const useAllRewards = () => {
   });
 };
 
+export const useToggleRewardDay = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ rewardId, dayIndex, currentDetails }: {
+      rewardId: string;
+      dayIndex: number;
+      currentDetails: Record<string, any>;
+    }) => {
+      const completedDays: number[] = currentDetails?.completed_days
+        ? (typeof currentDetails.completed_days === "string"
+          ? JSON.parse(currentDetails.completed_days)
+          : currentDetails.completed_days)
+        : [];
+
+      const updated = completedDays.includes(dayIndex)
+        ? completedDays.filter((d: number) => d !== dayIndex)
+        : [...completedDays, dayIndex];
+
+      const { data, error } = await supabase
+        .from("rewards")
+        .update({
+          reward_details: { ...currentDetails, completed_days: updated },
+        } as any)
+        .eq("id", rewardId)
+        .eq("chosen_by", user!.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-rewards"] });
+      queryClient.invalidateQueries({ queryKey: ["my-reward"] });
+    },
+  });
+};
+
 export const useSetReward = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
