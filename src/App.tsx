@@ -9,6 +9,7 @@ import Auth from "@/pages/Auth";
 import Leaderboard from "@/pages/Leaderboard";
 import CurrentWeek from "@/pages/CurrentWeek";
 import Rewards from "@/pages/Rewards";
+import TeamManagement from "@/pages/TeamManagement";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 
