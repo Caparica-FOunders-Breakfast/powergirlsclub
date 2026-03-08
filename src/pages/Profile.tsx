@@ -65,12 +65,9 @@ const Profile = () => {
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="New name" className="border-2 border-primary/30" />
             <Button onClick={handleSave} className="gradient-primary text-primary-foreground font-bold">Save</Button>
           </div>
-        ) : (
-          <button onClick={() => { setName(profile?.display_name || ""); setEditing(true); }}>
-            <h2 className="text-3xl font-display text-foreground hover:text-primary transition-colors">
-              {profile?.display_name}
-            </h2>
-          </button>
+          <h2 className="text-3xl font-display text-foreground">
+            {profile?.display_name}
+          </h2>
         )}
 
         <p className="text-sm text-muted-foreground font-bold">{user?.email}</p>
