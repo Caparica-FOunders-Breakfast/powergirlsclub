@@ -207,7 +207,7 @@ const CurrentWeek = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <span className="text-sm font-bold text-muted-foreground">
-            {format(selectedWeekDate, "MMM d")} – {format(addWeeks(selectedWeekDate, 1), "MMM d")}
+            {format(viewedWeekStart, "MMM d")} – {format(viewedWeekEnd, "MMM d")}
           </span>
           <Button
             variant="ghost"
