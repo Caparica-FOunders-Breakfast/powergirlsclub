@@ -4,12 +4,14 @@ import { Gift, Music, Zap, Sparkles, UtensilsCrossed, Check, ExternalLink, Chevr
 import { useMyRewards, useSetReward } from "@/hooks/useRewards";
 import { useCurrentWeekStart } from "@/hooks/useWorkouts";
 import { useMyTeam } from "@/hooks/useTeams";
+import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { differenceInDays } from "date-fns";
 
 const DAYS_OF_WEEK = [
   { value: "0", label: "Monday" },
