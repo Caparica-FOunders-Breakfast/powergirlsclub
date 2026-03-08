@@ -39,6 +39,7 @@ const ProtectedLayout = () => {
               <Route path="/" element={<Leaderboard />} />
               <Route path="/week" element={<CurrentWeek />} />
               <Route path="/rewards" element={<Rewards />} />
+              <Route path="/teams" element={<TeamManagement />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
