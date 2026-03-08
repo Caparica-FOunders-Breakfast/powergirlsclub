@@ -22,7 +22,6 @@ const CurrentWeek = () => {
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
   const { toast } = useToast();
-  const { toast } = useToast();
 
   const now = new Date();
   const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
