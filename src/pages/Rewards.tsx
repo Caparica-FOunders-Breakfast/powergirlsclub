@@ -332,12 +332,10 @@ const Rewards = () => {
               }}
               className={cn(
                 "p-4 rounded-xl border-2 transition-all text-left cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
-                isCurrent
-                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                  : isPast
-                  ? "border-muted bg-muted/30 opacity-70"
-                  : hasReward
+                hasReward
                   ? "border-secondary/40 bg-secondary/5"
+                  : isCurrent
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                   : "border-border bg-card hover:border-primary/30"
               )}
             >
