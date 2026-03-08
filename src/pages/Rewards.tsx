@@ -136,8 +136,9 @@ const Rewards = () => {
     }
 
     try {
+      const cycleWeekStart = getCycleWeekStart(selectedWeek!);
       await setReward.mutateAsync({
-        weekStart,
+        weekStart: cycleWeekStart,
         weekNumber: selectedWeek!,
         rewardType: selectedRewardDef.type,
         rewardValue: mainValue,
