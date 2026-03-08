@@ -105,6 +105,10 @@ const Rewards = () => {
       toast({ title: "Please fill in the required field", variant: "destructive" });
       return;
     }
+    if (!formData.scheduled_day) {
+      toast({ title: "Please pick a day", variant: "destructive" });
+      return;
+    }
 
     try {
       await setReward.mutateAsync({
