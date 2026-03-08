@@ -74,14 +74,23 @@ const CurrentWeek = () => {
     return map;
   }, [prevLogs]);
 
-  // Build rewards-by-day map (dayIdx -> reward)
+  // Build rewards-by-day map (dayIdx -> reward[])
   const rewardsByDay = useMemo(() => {
-    const map: Record<number, any> = {};
+    const map: Record<number, any[]> = {};
     myRewards?.forEach((r: any) => {
       const details = r.reward_details as Record<string, any> | null;
-      if (details?.scheduled_day != null) {
-        map[Number(details.scheduled_day)] = r;
+      // Support both scheduled_days (array/JSON string) and legacy scheduled_day (single)
+      let days: number[] = [];
+      if (details?.scheduled_days) {
+        const parsed = typeof details.scheduled_days === "string" ? JSON.parse(details.scheduled_days) : details.scheduled_days;
+        days = parsed.map(Number);
+      } else if (details?.scheduled_day != null) {
+        days = [Number(details.scheduled_day)];
       }
+      days.forEach((d) => {
+        if (!map[d]) map[d] = [];
+        map[d].push(r);
+      });
     });
     return map;
   }, [myRewards]);
@@ -280,7 +289,7 @@ const CurrentWeek = () => {
             const expanded = expandedDay === dayIdx;
             const completion = getDayCompletion(dayIdx, day);
             const isToday = isCurrentWeek && dayIdx === todayIndex;
-            const dayReward = rewardsByDay[dayIdx];
+            const dayRewards = rewardsByDay[dayIdx] || [];
 
             return (
               <motion.div
@@ -321,7 +330,7 @@ const CurrentWeek = () => {
                     <p className="text-xs text-muted-foreground font-bold">
                       {day.label}
                       {!day.isRest && !day.isRecovery && day.exercises.length > 0 && ` • ${day.exercises.length} exercises`}
-                      {dayReward && ` • 🎁 ${dayReward.reward_value}`}
+                      {dayRewards.length > 0 && ` • 🎁 ${dayRewards.map((r: any) => r.reward_value).join(", ")}`}
                     </p>
                     {!day.isRest && !day.isRecovery && day.exercises.length > 0 && (
                       <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -355,8 +364,8 @@ const CurrentWeek = () => {
                     >
                       <div className="px-4 pb-4">
                         {/* Scheduled reward for this day */}
-                        {dayReward && (
-                          <div className="mb-3 p-3 rounded-xl bg-gradient-to-r from-accent/20 to-primary/10 border border-accent/30">
+                        {dayRewards.length > 0 && dayRewards.map((dayReward: any, ri: number) => (
+                          <div key={ri} className="mb-3 p-3 rounded-xl bg-gradient-to-r from-accent/20 to-primary/10 border border-accent/30">
                             <div className="flex items-center gap-2">
                               <Gift className="w-4 h-4 text-primary shrink-0" />
                               <div>
@@ -367,7 +376,7 @@ const CurrentWeek = () => {
                               </div>
                             </div>
                           </div>
-                        )}
+                        ))}
                         {(day.isRest || day.isRecovery) && day.restNote && (
                           <div className="p-4 rounded-xl bg-muted/50 text-center">
                             <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>

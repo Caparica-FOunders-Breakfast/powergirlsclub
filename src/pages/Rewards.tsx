@@ -8,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -105,8 +104,9 @@ const Rewards = () => {
       toast({ title: "Please fill in the required field", variant: "destructive" });
       return;
     }
-    if (!formData.scheduled_day) {
-      toast({ title: "Please pick a day", variant: "destructive" });
+    const selectedDays: string[] = formData.scheduled_days ? JSON.parse(formData.scheduled_days) : [];
+    if (selectedDays.length === 0) {
+      toast({ title: "Please pick at least one day", variant: "destructive" });
       return;
     }
 
@@ -219,24 +219,37 @@ const Rewards = () => {
                     )}
                   </div>
                 ))}
-                {/* Day of week selector */}
+                {/* Day of week multi-selector */}
                 <div>
                   <label className="text-xs font-bold text-muted-foreground uppercase">
-                    Scheduled Day *
+                    Scheduled Days *
                   </label>
-                  <Select
-                    value={formData.scheduled_day || ""}
-                    onValueChange={(val) => setFormData((prev) => ({ ...prev, scheduled_day: val }))}
-                  >
-                    <SelectTrigger className="mt-1 border-2 border-primary/20">
-                      <SelectValue placeholder="Pick a day for this reward" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS_OF_WEEK.map((d) => (
-                        <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {DAYS_OF_WEEK.map((d) => {
+                      const selectedDays: string[] = formData.scheduled_days ? JSON.parse(formData.scheduled_days) : [];
+                      const isSelected = selectedDays.includes(d.value);
+                      return (
+                        <button
+                          key={d.value}
+                          type="button"
+                          onClick={() => {
+                            const newDays = isSelected
+                              ? selectedDays.filter((v) => v !== d.value)
+                              : [...selectedDays, d.value];
+                            setFormData((prev) => ({ ...prev, scheduled_days: JSON.stringify(newDays) }));
+                          }}
+                          className={cn(
+                            "px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all",
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                          )}
+                        >
+                          {d.label.slice(0, 3)}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -324,11 +337,12 @@ const Rewards = () => {
 };
 
 function RewardDisplay({ type, details, value }: { type: string; details: Record<string, any>; value: string }) {
-  const scheduledDay = details.scheduled_day != null ? DAYS_OF_WEEK[Number(details.scheduled_day)]?.label : null;
+  const scheduledDays: string[] = details.scheduled_days ? (typeof details.scheduled_days === "string" ? JSON.parse(details.scheduled_days) : details.scheduled_days) : (details.scheduled_day != null ? [String(details.scheduled_day)] : []);
+  const dayLabels = scheduledDays.map((d) => DAYS_OF_WEEK[Number(d)]?.label).filter(Boolean);
 
-  const dayBadge = scheduledDay ? (
+  const dayBadge = dayLabels.length > 0 ? (
     <p className="text-xs font-bold text-accent-foreground bg-accent/20 px-2 py-0.5 rounded-full inline-block mt-2">
-      📅 Scheduled: {scheduledDay}
+      📅 {dayLabels.join(", ")}
     </p>
   ) : null;
 
