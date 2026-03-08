@@ -400,7 +400,7 @@ const CurrentWeek = () => {
                     >
                       <div className="px-4 pb-4">
                         {/* Edit button */}
-                        {!day.isRest && !day.isRecovery && editingDay !== dayIdx && (
+                        {editingDay !== dayIdx && (
                           <div className="flex justify-end mb-2">
                             <Button
                               variant="ghost"
