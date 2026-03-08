@@ -364,8 +364,8 @@ const CurrentWeek = () => {
                     >
                       <div className="px-4 pb-4">
                         {/* Scheduled reward for this day */}
-                        {dayReward && (
-                          <div className="mb-3 p-3 rounded-xl bg-gradient-to-r from-accent/20 to-primary/10 border border-accent/30">
+                        {dayRewards.length > 0 && dayRewards.map((dayReward: any, ri: number) => (
+                          <div key={ri} className="mb-3 p-3 rounded-xl bg-gradient-to-r from-accent/20 to-primary/10 border border-accent/30">
                             <div className="flex items-center gap-2">
                               <Gift className="w-4 h-4 text-primary shrink-0" />
                               <div>
@@ -376,7 +376,7 @@ const CurrentWeek = () => {
                               </div>
                             </div>
                           </div>
-                        )}
+                        ))}
                         {(day.isRest || day.isRecovery) && day.restNote && (
                           <div className="p-4 rounded-xl bg-muted/50 text-center">
                             <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>
