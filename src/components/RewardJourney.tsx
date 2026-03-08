@@ -120,7 +120,7 @@ const RewardWeekItem = ({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold uppercase text-muted-foreground">Week {config.week + 1}</span>
+            <span className="text-[10px] font-extrabold uppercase text-muted-foreground">Reward {config.week}</span>
             {isCurrent && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Current</span>
             )}
