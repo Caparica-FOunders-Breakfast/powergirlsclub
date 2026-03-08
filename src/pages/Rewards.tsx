@@ -85,12 +85,12 @@ const Rewards = () => {
   })();
 
   // Calculate the actual week_start date for each cycle week (1-4) based on challenge_start
-  const getCycleWeekStart = (weekNum: number): string => {
-    if (!profile?.challenge_start) return weekStart;
+  const getCycleWeekStart = (weekNum: number): string | null => {
+    if (!profile?.challenge_start) return null;
     const start = new Date(profile.challenge_start + "T00:00:00");
     const now = new Date();
     const daysDiff = differenceInDays(now, start);
-    if (daysDiff < 0) return weekStart;
+    if (daysDiff < 0) return null;
     const currentAbsoluteWeek = Math.floor(daysDiff / 7);
     const currentCycleStart = currentAbsoluteWeek - ((currentAbsoluteWeek) % 4);
     const targetAbsoluteWeek = currentCycleStart + (weekNum - 1);
