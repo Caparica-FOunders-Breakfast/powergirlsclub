@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, addDays, format } from "date-fns";
 
 const DAYS_OF_WEEK = [
   { value: "0", label: "Monday" },
