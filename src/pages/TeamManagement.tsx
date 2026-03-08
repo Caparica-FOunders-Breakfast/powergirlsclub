@@ -384,22 +384,6 @@ const TeamManagement = () => {
         </h1>
       </motion.div>
 
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="mb-4 p-4 rounded-2xl bg-card border-2 border-border flex items-center justify-between"
-      >
-        <div>
-          <p className="text-xs font-bold text-muted-foreground uppercase">Team Invite Code</p>
-          <p className="font-mono text-lg font-bold text-foreground tracking-widest uppercase">
-            {(team as any)?.team_code || "—"}
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={copyTeamCode} className="font-bold">
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          {copied ? "Copied" : "Copy"}
-        </Button>
-      </motion.div>
 
       {/* Challenge section */}
       <ChallengeSection />
