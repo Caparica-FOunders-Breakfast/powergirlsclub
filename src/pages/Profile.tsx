@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { LogOut, Dumbbell, Flame, Trophy, Gift, CalendarIcon } from "lucide-react";
+import { LogOut, Dumbbell, Flame, Trophy, CalendarIcon } from "lucide-react";
 import { format, differenceInDays, differenceInWeeks, addDays } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
