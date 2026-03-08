@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const tabs = [
-  { path: "/", icon: Trophy, label: "Leaderboard", emoji: "🏆" },
+  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/week", icon: Dumbbell, label: "This Week", emoji: "💪" },
   { path: "/rewards", icon: Gift, label: "Rewards", emoji: "🎁" },
   { path: "/teams", icon: Heart, label: "Team", emoji: "💜" },

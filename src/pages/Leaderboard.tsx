@@ -85,7 +85,7 @@ const Leaderboard = () => {
       >
         <h1 className="text-4xl font-display text-foreground">
           <Trophy className="inline w-8 h-8 text-accent mr-2" />
-          Leaderboard
+          Scorecard
         </h1>
         <p className="text-muted-foreground font-bold text-sm mt-1">Who's gaining momentum this week? 💪</p>
       </motion.div>
