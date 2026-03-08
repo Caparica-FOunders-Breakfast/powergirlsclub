@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
-import { startOfWeek, addWeeks, addDays, format, isSameWeek, isWithinInterval } from "date-fns";
+import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } from "date-fns";
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
