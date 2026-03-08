@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift, Pencil } from "lucide-react";
-import { useCurrentReward, useMyCurrentWeekReward, useMyRewards, useToggleRewardDay } from "@/hooks/useRewards";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, TrendingUp } from "lucide-react";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
@@ -18,13 +17,10 @@ import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 const CurrentWeek = () => {
-  const { data: reward } = useCurrentReward();
-  const { data: myRewards } = useMyRewards();
   const { data: profile } = useProfile();
   const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
-  const toggleRewardDay = useToggleRewardDay();
   const { toast } = useToast();
 
   const now = new Date();
@@ -82,38 +78,6 @@ const CurrentWeek = () => {
     }
     return map;
   }, [prevLogs]);
-
-  // Build rewards-by-day map — match rewards whose week_number matches the viewed week's cycle number
-  const rewardsByDay = useMemo(() => {
-    const map: Record<number, any[]> = {};
-
-    // Determine which cycle week (1-4) the viewed week corresponds to
-    if (!profile?.challenge_start) return map;
-    const start = new Date(profile.challenge_start + "T00:00:00");
-    const viewedDate = new Date(weekStart + "T00:00:00");
-    const daysDiff = differenceInDays(viewedDate, start);
-    if (daysDiff < 0) return map;
-    const viewedCycleWeek = ((Math.floor(daysDiff / 7)) % 4) + 1;
-
-    myRewards?.forEach((r: any) => {
-      // Show reward if its week_number matches this cycle week
-      if (r.week_number !== viewedCycleWeek) return;
-
-      const details = r.reward_details as Record<string, any> | null;
-      let days: number[] = [];
-      if (details?.scheduled_days) {
-        const parsed = typeof details.scheduled_days === "string" ? JSON.parse(details.scheduled_days) : details.scheduled_days;
-        days = parsed.map(Number);
-      } else if (details?.scheduled_day != null) {
-        days = [Number(details.scheduled_day)];
-      }
-      days.forEach((d) => {
-        if (!map[d]) map[d] = [];
-        map[d].push(r);
-      });
-    });
-    return map;
-  }, [myRewards, weekStart, profile]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
@@ -272,43 +236,6 @@ const CurrentWeek = () => {
         </p>
       </motion.div>
 
-      {/* Reward card */}
-      {reward && isCurrentWeek && (
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-neon-yellow/20 to-neon-teal/20 border-2 border-accent"
-        >
-          {reward.reward_type === "song" && (
-            <div className="flex items-center gap-3">
-              <Music className="w-6 h-6 text-neon-pink shrink-0" />
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground">🎵 Song of the Week</p>
-                <p className="font-extrabold text-foreground">{reward.reward_value}</p>
-              </div>
-            </div>
-          )}
-          {reward.reward_type === "challenge" && (
-            <div className="flex items-center gap-3">
-              <Zap className="w-6 h-6 text-neon-yellow shrink-0" />
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground">⚡ Mini Challenge</p>
-                <p className="font-extrabold text-foreground">{reward.reward_value}</p>
-              </div>
-            </div>
-          )}
-          {reward.reward_type === "recovery" && (
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🧘</span>
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground">Sunday Recovery</p>
-                <p className="font-extrabold text-foreground">{reward.reward_value}</p>
-              </div>
-            </div>
-          )}
-        </motion.div>
-      )}
-
       {/* Loading state */}
       {logsLoading && (
         <div className="space-y-3">
@@ -325,7 +252,7 @@ const CurrentWeek = () => {
             const expanded = expandedDay === dayIdx;
             const completion = getDayCompletion(dayIdx, day);
             const isToday = isCurrentWeek && dayIdx === todayIndex;
-            const dayRewards = rewardsByDay[dayIdx] || [];
+            
 
             return (
               <motion.div
@@ -366,7 +293,6 @@ const CurrentWeek = () => {
                     <p className="text-xs text-muted-foreground font-bold">
                       {day.label}
                       {!day.isRest && !day.isRecovery && day.exercises.length > 0 && ` • ${day.exercises.length} exercises`}
-                      {dayRewards.length > 0 && ` • 🎁 ${dayRewards.map((r: any) => r.reward_value).join(", ")}`}
                     </p>
                     {!day.isRest && !day.isRecovery && day.exercises.length > 0 && (
                       <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -443,45 +369,6 @@ const CurrentWeek = () => {
                           )}
                         </AnimatePresence>
 
-                        {/* Scheduled reward for this day */}
-                        {editingDay !== dayIdx && dayRewards.length > 0 && dayRewards.map((dayReward: any, ri: number) => {
-                          const details = dayReward.reward_details as Record<string, any> | null;
-                          const completedDays: number[] = details?.completed_days
-                            ? (typeof details.completed_days === "string" ? JSON.parse(details.completed_days) : details.completed_days)
-                            : [];
-                          const isRewardDone = completedDays.includes(dayIdx);
-
-                          return (
-                            <div key={ri} className={cn(
-                              "mb-3 p-3 rounded-xl border transition-all",
-                              isRewardDone
-                                ? "bg-secondary/10 border-secondary/40"
-                                : "bg-gradient-to-r from-accent/20 to-primary/10 border-accent/30"
-                            )}>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => toggleRewardDay.mutate({
-                                    rewardId: dayReward.id,
-                                    dayIndex: dayIdx,
-                                    currentDetails: details || {},
-                                  })}
-                                  className={cn(
-                                    "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
-                                    isRewardDone ? "bg-secondary border-secondary text-secondary-foreground" : "border-primary/40 hover:border-primary"
-                                  )}
-                                >
-                                  {isRewardDone && <Check className="w-3.5 h-3.5" />}
-                                </button>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] font-bold uppercase text-muted-foreground">
-                                    {dayReward.reward_type === "song" ? "🎵 Song" : dayReward.reward_type === "challenge" ? "⚡ Challenge" : dayReward.reward_type === "recovery" ? "🧘 Recovery" : "🍽️ Dinner"}
-                                  </p>
-                                  <p className={cn("text-sm font-extrabold text-foreground", isRewardDone && "line-through opacity-50")}>{dayReward.reward_value}</p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
                         {editingDay !== dayIdx && (day.isRest || day.isRecovery) && day.restNote && (
                           <div className="p-4 rounded-xl bg-muted/50 text-center">
                             <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>
