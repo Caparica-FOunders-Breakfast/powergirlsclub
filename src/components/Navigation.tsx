@@ -1,0 +1,108 @@
+import { Trophy, Dumbbell, Gift, User, Menu } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { NavLink } from "@/components/NavLink";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+
+const tabs = [
+  { path: "/", icon: Trophy, label: "Leaderboard", emoji: "🏆" },
+  { path: "/week", icon: Dumbbell, label: "This Week", emoji: "💪" },
+  { path: "/rewards", icon: Gift, label: "Weekly Powers", emoji: "🎁" },
+  { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
+];
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
+
+  return (
+    <Sidebar collapsible="offcanvas" className="border-r-2 border-primary/20">
+      <SidebarContent className="bg-card pt-4">
+        {/* Logo */}
+        <div className="px-4 pb-4 border-b border-border">
+          <h2 className="text-2xl font-display text-primary tracking-wider">FitSquad</h2>
+          <p className="text-xs font-bold text-muted-foreground">💥 Squad Goals</p>
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+            Navigate
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {tabs.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.path}
+                      end
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-foreground hover:bg-primary/10 transition-colors"
+                      activeClassName="bg-primary/10 text-primary"
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {!collapsed && <span>{item.label}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+export function BottomNav() {
+  const location = useLocation();
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden">
+      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+        {tabs.map(({ path, icon: Icon, label }) => {
+          const isActive = location.pathname === path;
+          return (
+            <NavLink
+              key={path}
+              to={path}
+              end
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200",
+                "text-muted-foreground hover:text-foreground"
+              )}
+              activeClassName="text-primary scale-110"
+            >
+              <Icon className={cn("w-6 h-6", isActive && "drop-shadow-[0_0_8px_hsl(var(--neon-pink)/0.6)]")} strokeWidth={isActive ? 2.5 : 2} />
+              <span className={cn("text-[10px] font-bold uppercase tracking-wider", isActive && "font-extrabold")}>{label.split(" ")[0]}</span>
+              {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5" />}
+            </NavLink>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+export function AppHeader() {
+  return (
+    <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20">
+      <SidebarTrigger className="text-foreground hover:text-primary" />
+      <h1 className="text-xl font-display text-primary tracking-wider">FitSquad</h1>
+    </header>
+  );
+}
+
+export { SidebarProvider };

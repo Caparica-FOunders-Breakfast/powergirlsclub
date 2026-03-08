@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import BottomNav from "@/components/BottomNav";
+import { AppSidebar, BottomNav, AppHeader, SidebarProvider } from "@/components/Navigation";
 import Auth from "@/pages/Auth";
 import Leaderboard from "@/pages/Leaderboard";
 import CurrentWeek from "@/pages/CurrentWeek";
@@ -28,16 +28,24 @@ const ProtectedLayout = () => {
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Routes>
-        <Route path="/" element={<Leaderboard />} />
-        <Route path="/week" element={<CurrentWeek />} />
-        <Route path="/rewards" element={<Rewards />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <BottomNav />
-    </div>
+    <SidebarProvider defaultOpen={false}>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <AppHeader />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Leaderboard />} />
+              <Route path="/week" element={<CurrentWeek />} />
+              <Route path="/rewards" element={<Rewards />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <BottomNav />
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
