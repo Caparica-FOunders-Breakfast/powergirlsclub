@@ -5,7 +5,7 @@ import { format, differenceInDays, differenceInWeeks, addDays } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
 import { useMyTeam } from "@/hooks/useTeams";
-import { useMyRewards } from "@/hooks/useRewards";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
