@@ -377,13 +377,6 @@ const TeamManagement = () => {
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-6">
-        <h1 className="text-4xl font-display text-foreground">
-          <Heart className="inline w-8 h-8 text-primary mr-2" />
-          {team.name}
-        </h1>
-      </motion.div>
-
 
       {/* Challenge section */}
       <ChallengeSection />
