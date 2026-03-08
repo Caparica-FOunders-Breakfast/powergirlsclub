@@ -388,33 +388,6 @@ const TeamManagement = () => {
       {/* Challenge section */}
       <ChallengeSection />
 
-      <h2 className="font-display text-2xl text-foreground mb-3">Team Members</h2>
-      <div className="space-y-2 mb-6">
-        {members?.map((member, i) => {
-          const memberScore = scores?.find((s) => s.user_id === member.user_id);
-          return (
-            <motion.div
-              key={member.id}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: i * 0.05 }}
-              className="flex items-center gap-3 p-3 rounded-xl bg-card border-2 border-border"
-            >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-display text-primary-foreground shrink-0"
-                style={{ backgroundColor: member.avatar_color || "#FF2D87" }}
-              >
-                {member.display_name?.[0]?.toUpperCase() || "?"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm text-foreground truncate">{member.display_name}</p>
-                {memberScore && <p className="text-xs text-primary font-bold">{memberScore.points} pts</p>}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-
       {isAdmin && (
         <>
           <h2 className="font-display text-2xl text-foreground mb-3">
