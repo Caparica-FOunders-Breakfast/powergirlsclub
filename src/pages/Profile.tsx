@@ -20,7 +20,7 @@ const Profile = () => {
   const { data: profile, isLoading } = useProfile();
   const { data: role } = useUserRole();
   const { data: team } = useMyTeam();
-  const { data: myRewards } = useMyRewards();
+  
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
