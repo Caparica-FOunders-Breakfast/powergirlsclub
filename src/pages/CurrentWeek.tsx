@@ -74,6 +74,18 @@ const CurrentWeek = () => {
     return map;
   }, [prevLogs]);
 
+  // Build rewards-by-day map (dayIdx -> reward)
+  const rewardsByDay = useMemo(() => {
+    const map: Record<number, any> = {};
+    myRewards?.forEach((r: any) => {
+      const details = r.reward_details as Record<string, any> | null;
+      if (details?.scheduled_day != null) {
+        map[Number(details.scheduled_day)] = r;
+      }
+    });
+    return map;
+  }, [myRewards]);
+
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
   const getDayCompletion = (dayIdx: number, day: WorkoutDay) => {
