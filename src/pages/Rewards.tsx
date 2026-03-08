@@ -58,7 +58,7 @@ const Rewards = () => {
       <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-6">
         <h1 className="text-4xl font-display text-foreground">
           <Gift className="inline w-8 h-8 text-neon-pink mr-2" />
-          Weekly Powers
+          Weekly Rewards
         </h1>
       </motion.div>
 

@@ -19,7 +19,7 @@ import {
 const tabs = [
   { path: "/", icon: Trophy, label: "Leaderboard", emoji: "🏆" },
   { path: "/week", icon: Dumbbell, label: "This Week", emoji: "💪" },
-  { path: "/rewards", icon: Gift, label: "Weekly Powers", emoji: "🎁" },
+  { path: "/rewards", icon: Gift, label: "Weekly Rewards", emoji: "🎁" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
