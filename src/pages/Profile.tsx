@@ -60,7 +60,7 @@ const Profile = () => {
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
-  const recentRewards = myRewards?.slice(0, 4) || [];
+  
 
   const challengeStart = (profile as any)?.challenge_start ? new Date((profile as any).challenge_start) : undefined;
   const challengeEnd = (profile as any)?.challenge_end ? new Date((profile as any).challenge_end) : undefined;
