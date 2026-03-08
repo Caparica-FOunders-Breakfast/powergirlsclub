@@ -12,7 +12,7 @@ import {
   useChallengeRewards,
   useSetReward,
   useUpdateRewardPhoto,
-  useWeeklyWinner,
+  useWeeklyWinners,
   type ChallengeReward,
 } from "@/hooks/useChallengeRewards";
 
