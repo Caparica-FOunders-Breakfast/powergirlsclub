@@ -33,7 +33,7 @@ export function AppSidebar() {
     <Sidebar collapsible="offcanvas" className="border-r-2 border-primary/20">
       <SidebarContent className="bg-card pt-4">
         <div className="px-4 pb-4 border-b border-border">
-          <h2 className="text-2xl font-display text-primary tracking-wider">Fit Girls Club</h2>
+          <h2 className="text-2xl font-display text-primary tracking-wider">Power Girls Club</h2>
           <p className="text-xs font-bold text-muted-foreground">💜 Stronger Together</p>
         </div>
 
