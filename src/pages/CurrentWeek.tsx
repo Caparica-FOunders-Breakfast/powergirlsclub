@@ -15,8 +15,6 @@ import confetti from "canvas-confetti";
 import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } from "date-fns";
 
-const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
-
 const CurrentWeek = () => {
   const { data: challenge } = useActiveChallenge();
   const progress = useChallengeProgress(challenge?.start_date ?? null);
@@ -26,12 +24,27 @@ const CurrentWeek = () => {
   const { toast } = useToast();
 
   const now = new Date();
-  const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
   const [weekOffset, setWeekOffset] = useState(0);
 
-  const selectedWeekDate = addWeeks(currentWeekDate, weekOffset);
-  const weekStart = getWeekStart(selectedWeekDate);
-  const prevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -1));
+  // Challenge-relative week calculation
+  const challengeStart = challenge?.start_date ? new Date(challenge.start_date + "T00:00:00") : null;
+
+  // Current challenge week (0-indexed): which week of the challenge are we in now?
+  const currentChallengeWeekIdx = challengeStart
+    ? Math.floor(differenceInDays(now, challengeStart) / 7)
+    : 0;
+
+  // The viewed week index (challenge-relative)
+  const viewedWeekIdx = currentChallengeWeekIdx + weekOffset;
+
+  // Compute the start/end dates of the viewed challenge week
+  const viewedWeekStart = challengeStart
+    ? addDays(challengeStart, viewedWeekIdx * 7)
+    : startOfWeek(addWeeks(now, weekOffset), { weekStartsOn: 1 });
+  const viewedWeekEnd = addDays(viewedWeekStart, 6);
+
+  const weekStart = format(viewedWeekStart, "yyyy-MM-dd");
+  const prevWeekStart = format(addDays(viewedWeekStart, -7), "yyyy-MM-dd");
   const isCurrentWeek = weekOffset === 0;
 
   const { data: logs, isLoading: logsLoading } = useExerciseLogs(weekStart);
