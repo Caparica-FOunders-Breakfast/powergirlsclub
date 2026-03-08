@@ -120,7 +120,7 @@ const RewardWeekItem = ({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold uppercase text-muted-foreground">Week {config.week}</span>
+            <span className="text-[10px] font-extrabold uppercase text-muted-foreground">Week {config.week + 1}</span>
             {isCurrent && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Current</span>
             )}
@@ -133,11 +133,6 @@ const RewardWeekItem = ({
           <p className={cn("font-extrabold text-sm", completed ? "text-secondary" : unlocked ? "text-foreground" : "text-muted-foreground")}>
             {completed && reward?.reward_value ? reward.reward_value : config.title}
           </p>
-          {completed && (
-            <p className="text-[10px] text-muted-foreground font-bold">
-              Unlocks after Week {config.week} → applies to Week {config.week + 1} 🏆
-            </p>
-          )}
         </div>
 
         {unlocked && (
