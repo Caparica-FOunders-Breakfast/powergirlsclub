@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import RewardJourney from "@/components/RewardJourney";
 import { Users, Plus, UserPlus, Copy, Check, Heart, CalendarIcon, ArrowRight, X } from "lucide-react";
 import { format } from "date-fns";
 import { useTeams, useCreateTeam, useJoinTeamByCode, useMyTeam, useTeamMembers, useAssignTeam } from "@/hooks/useTeams";
