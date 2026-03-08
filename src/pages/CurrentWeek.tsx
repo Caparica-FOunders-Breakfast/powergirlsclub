@@ -44,6 +44,7 @@ const CurrentWeek = () => {
   const todayIndex = today === 0 ? 6 : today - 1;
 
   const [expandedDay, setExpandedDay] = useState<number | null>(isCurrentWeek ? todayIndex : null);
+  const [editingDay, setEditingDay] = useState<number | null>(null);
   const [localWeights, setLocalWeights] = useState<Record<string, string>>({});
   const [localCompleted, setLocalCompleted] = useState<Record<string, boolean>>({});
   const [initialized, setInitialized] = useState(false);
