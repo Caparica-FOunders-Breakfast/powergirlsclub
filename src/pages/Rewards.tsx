@@ -215,6 +215,25 @@ const Rewards = () => {
                     )}
                   </div>
                 ))}
+                {/* Day of week selector */}
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase">
+                    Scheduled Day *
+                  </label>
+                  <Select
+                    value={formData.scheduled_day || ""}
+                    onValueChange={(val) => setFormData((prev) => ({ ...prev, scheduled_day: val }))}
+                  >
+                    <SelectTrigger className="mt-1 border-2 border-primary/20">
+                      <SelectValue placeholder="Pick a day for this reward" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS_OF_WEEK.map((d) => (
+                        <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex gap-2">
                   <Button
                     onClick={handleSetReward}
