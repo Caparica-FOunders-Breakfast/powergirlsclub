@@ -99,9 +99,7 @@ export function BottomNav() {
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20">
-      <SidebarTrigger className="text-foreground hover:text-primary">
-        <Menu className="w-6 h-6" />
-      </SidebarTrigger>
+      <SidebarTrigger className="text-foreground hover:text-primary" />
       <h1 className="text-xl font-display text-primary tracking-wider">FitSquad</h1>
     </header>
   );
