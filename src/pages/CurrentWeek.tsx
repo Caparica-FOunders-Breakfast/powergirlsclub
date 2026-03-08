@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, TrendingUp } from "lucide-react";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
-import { useProfile } from "@/hooks/useProfile";
+import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
 import ExerciseEditor from "@/components/ExerciseEditor";
 import { Button } from "@/components/ui/button";
