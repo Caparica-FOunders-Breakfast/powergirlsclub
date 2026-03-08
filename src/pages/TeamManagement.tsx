@@ -214,6 +214,7 @@ const TeamManagement = () => {
           {progress && (
             <RewardJourney
               challengeId={challenge.id}
+              challengeStartDate={challenge.start_date}
               currentWeek={((progress.week - 1) % 4) + 1}
               status={progress.status}
             />
