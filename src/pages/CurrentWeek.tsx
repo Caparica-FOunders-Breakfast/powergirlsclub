@@ -330,7 +330,7 @@ const CurrentWeek = () => {
                     <p className="text-xs text-muted-foreground font-bold">
                       {day.label}
                       {!day.isRest && !day.isRecovery && day.exercises.length > 0 && ` • ${day.exercises.length} exercises`}
-                      {dayReward && ` • 🎁 ${dayReward.reward_value}`}
+                      {dayRewards.length > 0 && ` • 🎁 ${dayRewards.map((r: any) => r.reward_value).join(", ")}`}
                     </p>
                     {!day.isRest && !day.isRecovery && day.exercises.length > 0 && (
                       <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
