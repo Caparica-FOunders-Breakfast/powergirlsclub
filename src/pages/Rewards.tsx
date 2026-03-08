@@ -351,12 +351,11 @@ const Rewards = () => {
               </div>
               <p className="text-xs font-bold text-muted-foreground">Week {reward.week}</p>
               <p className="font-bold text-sm text-foreground">{reward.label}</p>
-              <p className={cn(
-                "text-[10px] font-bold uppercase mt-1",
-                isCurrent ? "text-primary" : isPast ? "text-muted-foreground" : hasReward ? "text-secondary" : "text-muted-foreground"
-              )}>
-                {isCurrent ? "Current" : isPast ? (hasReward ? "Completed ✓" : "Past") : hasReward ? "Set ✓" : "Upcoming"}
-              </p>
+              {hasReward && (
+                <p className="text-[10px] font-bold uppercase mt-1 text-secondary">
+                  Set ✓
+                </p>
+              )}
             </motion.button>
           );
         })}
