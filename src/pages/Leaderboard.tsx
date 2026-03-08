@@ -203,6 +203,9 @@ const Leaderboard = () => {
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             📈 Power Graph = cumulative exercises completed this week
           </p>
+          <p className="text-[10px] font-bold text-muted-foreground mt-1">
+            10 pts per completed day • +2 bonus per consecutive day streak
+          </p>
         </motion.div>
       )}
     </div>
