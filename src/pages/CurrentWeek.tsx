@@ -155,8 +155,10 @@ const CurrentWeek = () => {
   };
 
   // Calculate challenge week number for the viewed week
-  const challengeWeekNum = progress?.status === "active" ? progress.week : null;
-  const challengeDayNum = progress?.status === "active" ? progress.day : null;
+  // Cycle weeks 1-4 continuously
+  const challengeWeekNum = progress?.status === "active"
+    ? ((progress.week - 1) % 4) + 1
+    : null;
 
   const weekLabel = isCurrentWeek
     ? "This Week"
@@ -176,7 +178,7 @@ const CurrentWeek = () => {
         </h1>
         {challengeWeekNum != null && (
           <span className="inline-block mt-1 text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-            Week {challengeWeekNum} • Day {challengeDayNum}
+            Week {challengeWeekNum}
           </span>
         )}
 
