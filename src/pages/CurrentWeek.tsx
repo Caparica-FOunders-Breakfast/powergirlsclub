@@ -21,6 +21,9 @@ const CurrentWeek = () => {
   const { data: reward } = useCurrentReward();
   const { data: myRewards } = useMyRewards();
   const { data: profile } = useProfile();
+  const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
+  const savePersonalDay = useSavePersonalDay();
+  const resetPersonalDay = useResetPersonalDay();
   const toggleRewardDay = useToggleRewardDay();
   const { toast } = useToast();
 
