@@ -254,7 +254,7 @@ const CurrentWeek = () => {
             const expanded = expandedDay === dayIdx;
             const completion = getDayCompletion(dayIdx, day);
             const isToday = isCurrentWeek && dayIdx === todayIndex;
-            const dayRewards = rewardsByDay[dayIdx] || [];
+            
 
             return (
               <motion.div
