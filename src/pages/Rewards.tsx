@@ -105,8 +105,9 @@ const Rewards = () => {
       toast({ title: "Please fill in the required field", variant: "destructive" });
       return;
     }
-    if (!formData.scheduled_day) {
-      toast({ title: "Please pick a day", variant: "destructive" });
+    const selectedDays: string[] = formData.scheduled_days ? JSON.parse(formData.scheduled_days) : [];
+    if (selectedDays.length === 0) {
+      toast({ title: "Please pick at least one day", variant: "destructive" });
       return;
     }
 
