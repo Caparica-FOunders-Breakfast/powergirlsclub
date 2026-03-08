@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Music, Zap, TrendingUp, Gift, Pencil } from "lucide-react";
-import { useCurrentReward, useMyCurrentWeekReward, useMyRewards, useToggleRewardDay } from "@/hooks/useRewards";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil } from "lucide-react";
+import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
