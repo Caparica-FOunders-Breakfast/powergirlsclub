@@ -9,6 +9,7 @@ import Auth from "@/pages/Auth";
 import Leaderboard from "@/pages/Leaderboard";
 import CurrentWeek from "@/pages/CurrentWeek";
 import Rewards from "@/pages/Rewards";
+import TeamManagement from "@/pages/TeamManagement";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 
@@ -38,6 +39,7 @@ const ProtectedLayout = () => {
               <Route path="/" element={<Leaderboard />} />
               <Route path="/week" element={<CurrentWeek />} />
               <Route path="/rewards" element={<Rewards />} />
+              <Route path="/teams" element={<TeamManagement />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

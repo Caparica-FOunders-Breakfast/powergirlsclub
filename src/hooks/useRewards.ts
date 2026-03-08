@@ -2,22 +2,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentWeekStart } from "./useWorkouts";
+import { useMyTeam } from "./useTeams";
 
 export const useCurrentReward = () => {
   const weekStart = useCurrentWeekStart();
+  const { data: team } = useMyTeam();
 
   return useQuery({
-    queryKey: ["reward", weekStart],
+    queryKey: ["reward", weekStart, team?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("rewards")
         .select("*")
-        .eq("week_start", weekStart)
-        .maybeSingle();
+        .eq("week_start", weekStart);
+
+      if (team?.id) {
+        query = query.eq("team_id", team.id);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       if (!data) return null;
 
-      // Get chooser profile
       const { data: profile } = await supabase
         .from("profiles")
         .select("display_name")
@@ -26,31 +32,41 @@ export const useCurrentReward = () => {
 
       return { ...data, chooser_name: profile?.display_name };
     },
+    enabled: !!team,
   });
 };
 
 export const useAllRewards = () => {
+  const { data: team } = useMyTeam();
+
   return useQuery({
-    queryKey: ["rewards-all"],
+    queryKey: ["rewards-all", team?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("rewards")
         .select("*")
         .order("created_at", { ascending: false });
+
+      if (team?.id) {
+        query = query.eq("team_id", team.id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
-      // Get all profiles for display names
       const { data: profiles } = await supabase.from("profiles").select("user_id, display_name");
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]));
 
       return data.map((r) => ({ ...r, chooser_name: profileMap.get(r.chosen_by) || "Unknown" }));
     },
+    enabled: !!team,
   });
 };
 
 export const useSetReward = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { data: team } = useMyTeam();
 
   return useMutation({
     mutationFn: async ({ weekStart, weekNumber, rewardType, rewardValue }: {
@@ -67,7 +83,8 @@ export const useSetReward = () => {
           reward_type: rewardType,
           reward_value: rewardValue,
           chosen_by: user!.id,
-        })
+          team_id: team?.id,
+        } as any)
         .select()
         .single();
       if (error) throw error;

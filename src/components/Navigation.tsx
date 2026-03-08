@@ -1,4 +1,4 @@
-import { Trophy, Dumbbell, Gift, User, Menu } from "lucide-react";
+import { Trophy, Dumbbell, Gift, User, Users, Menu } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
@@ -20,6 +20,7 @@ const tabs = [
   { path: "/", icon: Trophy, label: "Leaderboard", emoji: "🏆" },
   { path: "/week", icon: Dumbbell, label: "This Week", emoji: "💪" },
   { path: "/rewards", icon: Gift, label: "Weekly Rewards", emoji: "🎁" },
+  { path: "/teams", icon: Users, label: "Teams", emoji: "👥" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 

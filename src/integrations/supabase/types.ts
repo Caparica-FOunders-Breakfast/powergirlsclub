@@ -62,6 +62,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          team_id: string | null
           updated_at: string
           user_id: string
         }
@@ -70,6 +71,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          team_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -78,10 +80,19 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          team_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rewards: {
         Row: {
@@ -90,6 +101,7 @@ export type Database = {
           id: string
           reward_type: string
           reward_value: string
+          team_id: string | null
           week_number: number
           week_start: string
         }
@@ -99,6 +111,7 @@ export type Database = {
           id?: string
           reward_type: string
           reward_value: string
+          team_id?: string | null
           week_number: number
           week_start: string
         }
@@ -108,8 +121,38 @@ export type Database = {
           id?: string
           reward_type?: string
           reward_value?: string
+          team_id?: string | null
           week_number?: number
           week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rewards_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -138,6 +181,7 @@ export type Database = {
           is_winner: boolean
           points: number
           streak: number
+          team_id: string | null
           user_id: string
           week_start: string
         }
@@ -147,6 +191,7 @@ export type Database = {
           is_winner?: boolean
           points?: number
           streak?: number
+          team_id?: string | null
           user_id: string
           week_start: string
         }
@@ -156,10 +201,19 @@ export type Database = {
           is_winner?: boolean
           points?: number
           streak?: number
+          team_id?: string | null
           user_id?: string
           week_start?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_scores_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workout_entries: {
         Row: {
