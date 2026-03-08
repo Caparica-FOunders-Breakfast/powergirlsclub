@@ -17,7 +17,8 @@ import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 const CurrentWeek = () => {
-  const { data: profile } = useProfile();
+  const { data: challenge } = useActiveChallenge();
+  const progress = useChallengeProgress(challenge?.start_date ?? null);
   const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
