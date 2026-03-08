@@ -5,6 +5,7 @@ import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
 import ExerciseEditor from "@/components/ExerciseEditor";
+import RewardJourney from "@/components/RewardJourney";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
