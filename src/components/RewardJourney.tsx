@@ -133,6 +133,9 @@ const RewardWeekItem = ({
           <p className={cn("font-extrabold text-sm", completed ? "text-secondary" : unlocked ? "text-foreground" : "text-muted-foreground")}>
             {completed && reward?.reward_value ? reward.reward_value : config.title}
           </p>
+          <p className="text-[10px] text-muted-foreground font-bold">
+            Applies to Week {config.week + 1}
+          </p>
         </div>
 
         {unlocked && (
