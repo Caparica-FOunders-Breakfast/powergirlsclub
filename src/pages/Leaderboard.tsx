@@ -169,6 +169,16 @@ const Leaderboard = () => {
                         </span>
                       )}
                     </div>
+                    {score.points > 0 && (() => {
+                      const streakBonus = score.streak > 1 ? (score.streak - 1) * 2 : 0;
+                      const dayPoints = score.points - streakBonus;
+                      const days = dayPoints / 10;
+                      return (
+                        <p className="text-[10px] text-muted-foreground font-bold mt-0.5">
+                          {days} day{days !== 1 ? "s" : ""} × 10pts{streakBonus > 0 ? ` + ${streakBonus} streak bonus` : ""}
+                        </p>
+                      );
+                    })()}
                   </div>
 
                   {/* Power Sparkline */}
