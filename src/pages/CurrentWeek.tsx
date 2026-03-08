@@ -18,13 +18,11 @@ import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 const CurrentWeek = () => {
-  const { data: reward } = useCurrentReward();
-  const { data: myRewards } = useMyRewards();
   const { data: profile } = useProfile();
   const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
-  const toggleRewardDay = useToggleRewardDay();
+  const { toast } = useToast();
   const { toast } = useToast();
 
   const now = new Date();
