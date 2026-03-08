@@ -145,7 +145,7 @@ const Rewards = () => {
               <div key={r.id} className="p-3 rounded-xl bg-card border border-border">
                 <p className="text-xs text-muted-foreground font-bold">{r.week_start} • Week {r.week_number}</p>
                 <p className="font-bold text-foreground">{r.reward_value}</p>
-                <p className="text-xs text-muted-foreground">by {r.profiles?.display_name}</p>
+                <p className="text-xs text-muted-foreground">by {r.chooser_name}</p>
               </div>
             ))}
           </div>
