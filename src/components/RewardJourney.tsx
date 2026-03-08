@@ -161,7 +161,10 @@ const RewardWeekItem = ({
                   {isWinner ? (
                     <div className="space-y-2">
                       <p className="text-[10px] font-bold text-secondary flex items-center gap-1">
-                        <Trophy className="w-3 h-3" /> You're the winner — pick the reward!
+                        <Trophy className="w-3 h-3" />
+                        {isTiedReward
+                          ? `Shared Reward Week — all ${winnerIds?.length} tied winners can pick!`
+                          : "You're the winner — pick the reward!"}
                       </p>
                       <Input
                         value={rewardInput}
@@ -177,9 +180,11 @@ const RewardWeekItem = ({
                         {setRewardMut.isPending ? "Saving..." : `Set Reward ${config.emoji}`}
                       </Button>
                     </div>
-                  ) : winnerId ? (
+                  ) : winnerIds?.length ? (
                     <p className="text-xs font-bold text-muted-foreground italic">
-                      Waiting for this week's winner to choose the reward...
+                      {isTiedReward
+                        ? "Waiting for the tied winners to choose the reward together..."
+                        : "Waiting for this week's winner to choose the reward..."}
                     </p>
                   ) : (
                     <p className="text-xs font-bold text-muted-foreground italic">
