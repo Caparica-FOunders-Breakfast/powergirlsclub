@@ -11,11 +11,20 @@ export const useCurrentReward = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rewards")
-        .select("*, profiles!rewards_chosen_by_fkey(display_name)")
+        .select("*")
         .eq("week_start", weekStart)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+
+      // Get chooser profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", data.chosen_by)
+        .single();
+
+      return { ...data, chooser_name: profile?.display_name };
     },
   });
 };
@@ -26,10 +35,15 @@ export const useAllRewards = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("rewards")
-        .select("*, profiles!rewards_chosen_by_fkey(display_name)")
+        .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Get all profiles for display names
+      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name");
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]));
+
+      return data.map((r) => ({ ...r, chooser_name: profileMap.get(r.chosen_by) || "Unknown" }));
     },
   });
 };

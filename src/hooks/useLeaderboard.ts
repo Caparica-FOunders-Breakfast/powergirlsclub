@@ -8,13 +8,28 @@ export const useLeaderboard = () => {
   return useQuery({
     queryKey: ["scores", weekStart],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get scores for this week
+      const { data: scores, error: scoresError } = await supabase
         .from("weekly_scores")
-        .select("*, profiles!inner(display_name, avatar_color)")
+        .select("*")
         .eq("week_start", weekStart)
         .order("points", { ascending: false });
-      if (error) throw error;
-      return data;
+      if (scoresError) throw scoresError;
+
+      if (!scores || scores.length === 0) return [];
+
+      // Get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*");
+      if (profilesError) throw profilesError;
+
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]));
+
+      return scores.map((score) => ({
+        ...score,
+        profile: profileMap.get(score.user_id) || null,
+      }));
     },
   });
 };
