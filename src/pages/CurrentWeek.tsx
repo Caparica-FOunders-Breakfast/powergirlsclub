@@ -238,43 +238,6 @@ const CurrentWeek = () => {
         </p>
       </motion.div>
 
-      {/* Reward card */}
-      {reward && isCurrentWeek && (
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-neon-yellow/20 to-neon-teal/20 border-2 border-accent"
-        >
-          {reward.reward_type === "song" && (
-            <div className="flex items-center gap-3">
-              <Music className="w-6 h-6 text-neon-pink shrink-0" />
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground">🎵 Song of the Week</p>
-                <p className="font-extrabold text-foreground">{reward.reward_value}</p>
-              </div>
-            </div>
-          )}
-          {reward.reward_type === "challenge" && (
-            <div className="flex items-center gap-3">
-              <Zap className="w-6 h-6 text-neon-yellow shrink-0" />
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground">⚡ Mini Challenge</p>
-                <p className="font-extrabold text-foreground">{reward.reward_value}</p>
-              </div>
-            </div>
-          )}
-          {reward.reward_type === "recovery" && (
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🧘</span>
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground">Sunday Recovery</p>
-                <p className="font-extrabold text-foreground">{reward.reward_value}</p>
-              </div>
-            </div>
-          )}
-        </motion.div>
-      )}
-
       {/* Loading state */}
       {logsLoading && (
         <div className="space-y-3">
