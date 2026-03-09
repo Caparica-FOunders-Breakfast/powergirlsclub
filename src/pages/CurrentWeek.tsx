@@ -439,8 +439,10 @@ function ExerciseCard({
   onToggle: () => void;
 }) {
   const isTime = exercise.isTimeBased;
-  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + (isTime ? 5 : 2) : null;
-  const unit = isTime ? "sec" : "kg";
+  const isBodyweight = exercise.isBodyweight && !isTime;
+  const unit = isTime ? "sec" : isBodyweight ? "reps" : "kg";
+  const increment = isTime ? 5 : isBodyweight ? 2 : 2;
+  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
 
   return (
     <motion.div
@@ -473,13 +475,13 @@ function ExerciseCard({
           </div>
 
           {/* Last week value + recommendation */}
-          {lastWeekWeight != null && (!exercise.isBodyweight || exercise.isTimeBased) && (
+          {lastWeekWeight != null && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
               <span className="text-[11px] font-semibold text-muted-foreground">
                 Last week: {lastWeekWeight} {unit}
               </span>
               <span className="text-[11px] font-bold text-neon-teal">
-                → Try {recommendedWeight} {unit} {isTime ? "⏱️" : "💪"}
+                → Try {recommendedWeight} {unit} {isTime ? "⏱️" : isBodyweight ? "🔁" : "💪"}
               </span>
             </div>
           )}
@@ -490,22 +492,20 @@ function ExerciseCard({
           </div>
         </div>
 
-        {(!exercise.isBodyweight || exercise.isTimeBased) && (
-          <div className="shrink-0">
-            <Input
-              type="number"
-              placeholder={recommendedWeight != null ? `${recommendedWeight}` : unit}
-              value={weight}
-              onChange={(e) => onWeightChange(e.target.value)}
-              onBlur={onWeightBlur}
-              className={cn(
-                "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
-                isDone && "opacity-50"
-              )}
-              disabled={isDone}
-            />
-          </div>
-        )}
+        <div className="shrink-0">
+          <Input
+            type="number"
+            placeholder={recommendedWeight != null ? `${recommendedWeight}` : unit}
+            value={weight}
+            onChange={(e) => onWeightChange(e.target.value)}
+            onBlur={onWeightBlur}
+            className={cn(
+              "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
+              isDone && "opacity-50"
+            )}
+            disabled={isDone}
+          />
+        </div>
       </div>
     </motion.div>
   );
