@@ -475,8 +475,7 @@ function ExerciseCard({
           </div>
 
           {/* Last week value + recommendation */}
-          {lastWeekWeight != null && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+          {lastWeekWeight != null && (nter gap-x-3 gap-y-0.5 mt-1">
               <span className="text-[11px] font-semibold text-muted-foreground">
                 Last week: {lastWeekWeight} {unit}
               </span>
@@ -484,7 +483,7 @@ function ExerciseCard({
                 → Try {recommendedWeight} {unit} {isTime ? "⏱️" : "💪"}
               </span>
             </div>
-          )}
+   isBodyweight ? "🔁" :        )}
 
           <div className="flex items-center gap-1 mt-1">
             <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
