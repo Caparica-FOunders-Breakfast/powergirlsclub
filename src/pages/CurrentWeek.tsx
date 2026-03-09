@@ -490,21 +490,20 @@ function ExerciseCard({
           </div>
         </div>
 
-        {(!exercise.isBodyweight || exhrink-0">
-            <Input
-              type="number"
-              placeholder={recommendedWeight != null ? `${recommendedWeight}` : unit}
-              value={weight}
-              onChange={(e) => onWeightChange(e.target.value)}
-              onBlur={onWeightBlur}
-              className={cn(
-                "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
-                isDone && "opacity-50"
-              )}
-              disabled={isDone}
-            />
-          </div>
-        )}
+        <div className="shrink-0">
+          <Input
+            type="number"
+            placeholder={recommendedWeight != null ? `${recommendedWeight}` : unit}
+            value={weight}
+            onChange={(e) => onWeightChange(e.target.value)}
+            onBlur={onWeightBlur}
+            className={cn(
+              "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
+              isDone && "opacity-50"
+            )}
+            disabled={isDone}
+          />
+        </div>
       </div>
     </motion.div>
   );
