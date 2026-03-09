@@ -439,8 +439,10 @@ function ExerciseCard({
   onToggle: () => void;
 }) {
   const isTime = exercise.isTimeBased;
-  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + (isTime ? 5 : 2) : null;
-  const unit = isTime ? "sec" : "kg";
+  const isBodyweight = exercise.isBodyweight && !isTime;
+  const unit = isTime ? "sec" : isBodyweight ? "reps" : "kg";
+  const increment = isTime ? 5 : isBodyweight ? 2 : 2;
+  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
 
   return (
     <motion.div
