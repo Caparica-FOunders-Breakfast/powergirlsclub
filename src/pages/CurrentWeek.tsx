@@ -475,7 +475,7 @@ function ExerciseCard({
           </div>
 
           {/* Last week value + recommendation */}
-          {lastWeekWeight != null && (!exercise.isBodyweight || exercise.isTimeBased) && (
+          {lastWeekWeight != null && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
               <span className="text-[11px] font-semibold text-muted-foreground">
                 Last week: {lastWeekWeight} {unit}
