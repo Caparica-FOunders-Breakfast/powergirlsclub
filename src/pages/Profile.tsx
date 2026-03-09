@@ -73,18 +73,13 @@ const Profile = () => {
 
         <p className="text-sm text-muted-foreground font-bold">{user?.email}</p>
 
-        <div className="flex items-center justify-center gap-2 mt-2">
-          {team && (
-            <span className="inline-block px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-extrabold">
-              {team.name}
-            </span>
-          )}
-          {role === "admin" && (
+        {role === "admin" && (
+          <div className="flex items-center justify-center mt-2">
             <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold uppercase">
               Admin 👑
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="flex justify-center gap-2 mt-4">
           {AVATAR_COLORS.map((c) => (
