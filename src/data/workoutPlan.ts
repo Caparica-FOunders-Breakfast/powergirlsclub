@@ -6,6 +6,7 @@ export interface Exercise {
   progression: string;
   isBodyweight?: boolean;
   isTimeBased?: boolean;
+  isRoundsBased?: boolean;
 }
 
 export interface WorkoutDay {
