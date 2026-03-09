@@ -438,10 +438,11 @@ function ExerciseCard({
   onWeightBlur: () => void;
   onToggle: () => void;
 }) {
+  const isRounds = exercise.isRoundsBased;
   const isTime = exercise.isTimeBased;
   const isBodyweight = exercise.isBodyweight && !isTime;
-  const unit = isTime ? "sec" : isBodyweight ? "reps" : "kg";
-  const increment = isTime ? 5 : isBodyweight ? 2 : 2;
+  const unit = isRounds ? "rounds" : isTime ? "sec" : isBodyweight ? "reps" : "kg";
+  const increment = isRounds ? 1 : isTime ? 5 : isBodyweight ? 2 : 2;
   const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
 
   return (
