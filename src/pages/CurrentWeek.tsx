@@ -490,7 +490,7 @@ function ExerciseCard({
           </div>
         </div>
 
-        {!exercise.isBodyweight && (
+        {(!exercise.isBodyweight || exercise.isTimeBased) && (
           <div className="shrink-0">
             <Input
               type="number"
