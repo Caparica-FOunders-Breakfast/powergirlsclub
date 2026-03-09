@@ -438,7 +438,9 @@ function ExerciseCard({
   onWeightBlur: () => void;
   onToggle: () => void;
 }) {
-  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + 2 : null;
+  const isTime = exercise.isTimeBased;
+  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + (isTime ? 5 : 2) : null;
+  const unit = isTime ? "sec" : "kg";
 
   return (
     <motion.div
@@ -470,14 +472,14 @@ function ExerciseCard({
             <span className="text-xs font-semibold text-muted-foreground">{exercise.suggestedWeight}</span>
           </div>
 
-          {/* Last week weight + recommendation */}
-          {lastWeekWeight != null && !exercise.isBodyweight && !exercise.isTimeBased && (
+          {/* Last week value + recommendation */}
+          {lastWeekWeight != null && !exercise.isBodyweight && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
               <span className="text-[11px] font-semibold text-muted-foreground">
-                Last week: {lastWeekWeight} kg
+                Last week: {lastWeekWeight} {unit}
               </span>
               <span className="text-[11px] font-bold text-neon-teal">
-                → Try {recommendedWeight} kg 💪
+                → Try {recommendedWeight} {unit} {isTime ? "⏱️" : "💪"}
               </span>
             </div>
           )}
@@ -488,11 +490,11 @@ function ExerciseCard({
           </div>
         </div>
 
-        {!exercise.isBodyweight && !exercise.isTimeBased && (
+        {!exercise.isBodyweight && (
           <div className="shrink-0">
             <Input
               type="number"
-              placeholder={recommendedWeight != null ? `${recommendedWeight}` : "kg"}
+              placeholder={recommendedWeight != null ? `${recommendedWeight}` : unit}
               value={weight}
               onChange={(e) => onWeightChange(e.target.value)}
               onBlur={onWeightBlur}
