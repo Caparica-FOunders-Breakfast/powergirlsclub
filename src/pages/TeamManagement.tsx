@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import RewardJourney from "@/components/RewardJourney";
-import { Users, Plus, UserPlus, Copy, Check, Heart, CalendarIcon, ArrowRight, X } from "lucide-react";
+import { Users, Plus, UserPlus, Copy, Check, Heart, CalendarIcon, ArrowRight, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useTeams, useCreateTeam, useJoinTeamByCode, useMyTeam, useTeamMembers, useAssignTeam } from "@/hooks/useTeams";
 import { useAllProfiles, useUserRole, useProfile } from "@/hooks/useProfile";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { useActiveChallenge, useChallengeParticipants, useCreateChallenge, useJoinChallenge, useLeaveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
+import { useActiveChallenge, useChallengeParticipants, useCreateChallenge, useJoinChallenge, useLeaveChallenge, useDeleteChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,6 +31,7 @@ const TeamManagement = () => {
   const createChallenge = useCreateChallenge();
   const joinChallenge = useJoinChallenge();
   const leaveChallenge = useLeaveChallenge();
+  const deleteChallenge = useDeleteChallenge();
   const { toast } = useToast();
 
   const progress = useChallengeProgress(challenge?.start_date ?? null);
@@ -112,6 +113,16 @@ const TeamManagement = () => {
       toast({ title: "Left the challenge" });
     } catch {
       toast({ title: "Error", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteChallenge = async () => {
+    if (!challenge?.id) return;
+    try {
+      await deleteChallenge.mutateAsync(challenge.id);
+      toast({ title: "Challenge deleted" });
+    } catch {
+      toast({ title: "Error deleting challenge", variant: "destructive" });
     }
   };
 
@@ -220,13 +231,25 @@ const TeamManagement = () => {
             />
           )}
 
-          <Button
-            variant="outline"
-            onClick={handleLeaveChallenge}
-            className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 font-bold text-sm"
-          >
-            <X className="w-4 h-4 mr-1" /> Leave Challenge
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleLeaveChallenge}
+              className="flex-1 text-muted-foreground border-border font-bold text-sm"
+            >
+              <X className="w-4 h-4 mr-1" /> Leave
+            </Button>
+            {challenge.created_by === profile?.user_id && (
+              <Button
+                variant="outline"
+                onClick={handleDeleteChallenge}
+                disabled={deleteChallenge.isPending}
+                className="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10 font-bold text-sm"
+              >
+                <Trash2 className="w-4 h-4 mr-1" /> {deleteChallenge.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="space-y-3 mt-3">

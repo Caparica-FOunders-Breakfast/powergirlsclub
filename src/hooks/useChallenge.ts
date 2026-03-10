@@ -138,6 +138,38 @@ export const useLeaveChallenge = () => {
   });
 };
 
+export const useDeleteChallenge = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (challengeId: string) => {
+      // First remove all participants from the challenge
+      const { error: profilesErr } = await supabase
+        .from("profiles")
+        .update({
+          challenge_id: null,
+          challenge_start: null,
+          challenge_end: null,
+        } as any)
+        .eq("challenge_id", challengeId);
+      if (profilesErr) throw profilesErr;
+
+      // Then delete the challenge itself
+      const { error } = await supabase
+        .from("challenges" as any)
+        .delete()
+        .eq("id", challengeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["challenge"] });
+      queryClient.invalidateQueries({ queryKey: ["challenge-participants"] });
+    },
+  });
+};
+
 /** Compute challenge week (1-4) and day (1-7) from a challenge start date */
 export const useChallengeProgress = (startDate: string | null) => {
   if (!startDate) return null;
