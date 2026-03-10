@@ -231,13 +231,25 @@ const TeamManagement = () => {
             />
           )}
 
-          <Button
-            variant="outline"
-            onClick={handleLeaveChallenge}
-            className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 font-bold text-sm"
-          >
-            <X className="w-4 h-4 mr-1" /> Leave Challenge
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleLeaveChallenge}
+              className="flex-1 text-muted-foreground border-border font-bold text-sm"
+            >
+              <X className="w-4 h-4 mr-1" /> Leave
+            </Button>
+            {challenge.created_by === profile?.user_id && (
+              <Button
+                variant="outline"
+                onClick={handleDeleteChallenge}
+                disabled={deleteChallenge.isPending}
+                className="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10 font-bold text-sm"
+              >
+                <Trash2 className="w-4 h-4 mr-1" /> {deleteChallenge.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="space-y-3 mt-3">
