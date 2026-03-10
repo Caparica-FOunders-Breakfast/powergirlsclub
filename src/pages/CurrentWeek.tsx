@@ -524,6 +524,7 @@ function ExerciseCard({
               "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
               isDone && "opacity-50"
             )}
+            disabled={isDone}
           />
         </div>
       </div>
