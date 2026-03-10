@@ -490,9 +490,9 @@ function ExerciseCard({
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
             <span className="text-xs font-bold text-primary">
-              {exercise.sets} × {exercise.reps}
+              {isRounds ? `${exercise.sets} rounds` : `${exercise.sets} × ${exercise.reps}`}
             </span>
-            <span className="text-xs font-semibold text-muted-foreground">{exercise.suggestedWeight}</span>
+            {!isRounds && <span className="text-xs font-semibold text-muted-foreground">{exercise.suggestedWeight}</span>}
           </div>
 
           {/* Last week value + recommendation */}
