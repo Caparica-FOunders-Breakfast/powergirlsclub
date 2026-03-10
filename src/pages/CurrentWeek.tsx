@@ -154,6 +154,17 @@ const CurrentWeek = () => {
     toast({ title: "DAY CRUSHED! 💪🔥" });
   };
 
+  const handleUndoDay = (dayIdx: number, day: WorkoutDay) => {
+    const updates: Record<string, boolean> = {};
+    day.exercises.forEach((ex, i) => {
+      const key = getExKey(dayIdx, i);
+      updates[key] = false;
+      saveExercise(dayIdx, i, ex.name, localWeights[key] || "", false);
+    });
+    setLocalCompleted((prev) => ({ ...prev, ...updates }));
+    toast({ title: "Day unmarked — you can edit now ✏️" });
+  };
+
   // Calculate challenge week number for the viewed week
   // Calculate which challenge week the viewed week falls into (cycling 1-4)
   const challengeWeekNum = useMemo(() => {
