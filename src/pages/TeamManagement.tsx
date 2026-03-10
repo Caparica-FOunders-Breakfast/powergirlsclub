@@ -31,6 +31,7 @@ const TeamManagement = () => {
   const createChallenge = useCreateChallenge();
   const joinChallenge = useJoinChallenge();
   const leaveChallenge = useLeaveChallenge();
+  const deleteChallenge = useDeleteChallenge();
   const { toast } = useToast();
 
   const progress = useChallengeProgress(challenge?.start_date ?? null);
