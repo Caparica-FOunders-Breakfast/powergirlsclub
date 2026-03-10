@@ -417,6 +417,15 @@ const CurrentWeek = () => {
                                 Complete All 🔥
                               </Button>
                             )}
+                            {completion === 100 && (
+                              <Button
+                                variant="outline"
+                                onClick={() => handleUndoDay(dayIdx, day)}
+                                className="w-full mt-2 font-bold text-muted-foreground border-2 border-border"
+                              >
+                                <Undo2 className="w-4 h-4 mr-1" /> Undo Day
+                              </Button>
+                            )}
                           </div>
                         )}
                       </div>
