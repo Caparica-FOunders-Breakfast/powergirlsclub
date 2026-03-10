@@ -116,6 +116,16 @@ const TeamManagement = () => {
     }
   };
 
+  const handleDeleteChallenge = async () => {
+    if (!challenge?.id) return;
+    try {
+      await deleteChallenge.mutateAsync(challenge.id);
+      toast({ title: "Challenge deleted" });
+    } catch {
+      toast({ title: "Error deleting challenge", variant: "destructive" });
+    }
+  };
+
   const copyChallengeCode = () => {
     if (challenge?.invite_code) {
       navigator.clipboard.writeText(challenge.invite_code);
