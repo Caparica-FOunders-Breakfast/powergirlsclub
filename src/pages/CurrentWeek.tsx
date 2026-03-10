@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, TrendingUp } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, TrendingUp, Undo2 } from "lucide-react";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
@@ -152,6 +152,17 @@ const CurrentWeek = () => {
       origin: { y: 0.6 },
     });
     toast({ title: "DAY CRUSHED! 💪🔥" });
+  };
+
+  const handleUndoDay = (dayIdx: number, day: WorkoutDay) => {
+    const updates: Record<string, boolean> = {};
+    day.exercises.forEach((ex, i) => {
+      const key = getExKey(dayIdx, i);
+      updates[key] = false;
+      saveExercise(dayIdx, i, ex.name, localWeights[key] || "", false);
+    });
+    setLocalCompleted((prev) => ({ ...prev, ...updates }));
+    toast({ title: "Day unmarked — you can edit now ✏️" });
   };
 
   // Calculate challenge week number for the viewed week
@@ -406,6 +417,15 @@ const CurrentWeek = () => {
                                 Complete All 🔥
                               </Button>
                             )}
+                            {completion === 100 && (
+                              <Button
+                                variant="outline"
+                                onClick={() => handleUndoDay(dayIdx, day)}
+                                className="w-full mt-2 font-bold text-muted-foreground border-2 border-border"
+                              >
+                                <Undo2 className="w-4 h-4 mr-1" /> Undo Day
+                              </Button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -504,7 +524,6 @@ function ExerciseCard({
               "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
               isDone && "opacity-50"
             )}
-            disabled={isDone}
           />
         </div>
       </div>
