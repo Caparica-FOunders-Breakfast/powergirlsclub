@@ -90,7 +90,7 @@ export const weeklyPlan: WorkoutDay[] = [
       { name: "Cable Row", sets: 3, reps: "10", suggestedWeight: "25–35 kg", progression: "+2 to 2.5 kg" },
       { name: "Russian Twists", sets: 3, reps: "20", suggestedWeight: "6–10 kg", progression: "+2 kg" },
       { name: "Bird Dog", sets: 3, reps: "12", suggestedWeight: "Bodyweight", progression: "Slow controlled", isBodyweight: true },
-      { name: "Farmer Carry", sets: 3, reps: "40 sec", suggestedWeight: "10–16 kg/hand", progression: "Increase weight", isTimeBased: true },
+      { name: "Farmer Carry", sets: 3, reps: "40 sec", suggestedWeight: "10–16 kg/hand", progression: "Increase weight" },
     ],
   },
   {
