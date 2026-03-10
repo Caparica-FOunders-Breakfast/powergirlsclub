@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { useTeams, useCreateTeam, useJoinTeamByCode, useMyTeam, useTeamMembers, useAssignTeam } from "@/hooks/useTeams";
 import { useAllProfiles, useUserRole, useProfile } from "@/hooks/useProfile";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { useActiveChallenge, useChallengeParticipants, useCreateChallenge, useJoinChallenge, useLeaveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
+import { useActiveChallenge, useChallengeParticipants, useCreateChallenge, useJoinChallenge, useLeaveChallenge, useDeleteChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
