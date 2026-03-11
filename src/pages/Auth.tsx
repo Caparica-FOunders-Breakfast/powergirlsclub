@@ -16,6 +16,26 @@ const Auth = () => {
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({
+        title: "Check your email! 📧",
+        description: "We sent you a link to reset your password.",
+      });
+      setIsForgotPassword(false);
+    } catch (err: any) {
+      toast({ title: "Oops!", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
