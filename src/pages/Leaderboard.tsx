@@ -150,27 +150,57 @@ const Leaderboard = () => {
         </div>
       )}
 
-      {/* Legend */}
-      {scores && scores.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-6 p-3 rounded-xl bg-muted/50 text-center"
-        >
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            📈 Power Graph = cumulative exercises completed this week
-          </p>
-          <p className="text-[10px] font-bold text-muted-foreground mt-1">
-            10 pts per completed day • +2 bonus per consecutive day streak
-          </p>
+      {/* How Scoring Works */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-8 rounded-2xl border-2 border-border bg-card p-5"
+      >
+        <h2 className="text-sm font-display text-foreground mb-3 flex items-center gap-2">
+          ⚡ How You Score
+        </h2>
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <span className="text-lg mt-0.5">🏋️</span>
+            <div>
+              <p className="text-xs font-extrabold text-foreground">Complete Your Day</p>
+              <p className="text-[11px] text-muted-foreground font-semibold">
+                Finish all exercises for the day → earn <span className="text-primary font-extrabold">10 pts</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-lg mt-0.5">🔥</span>
+            <div>
+              <p className="text-xs font-extrabold text-foreground">Build Your Streak</p>
+              <p className="text-[11px] text-muted-foreground font-semibold">
+                Train consecutive days → <span className="text-accent font-extrabold">+2 bonus</span> per day in a row
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-lg mt-0.5">📈</span>
+            <div>
+              <p className="text-xs font-extrabold text-foreground">Power Graph</p>
+              <p className="text-[11px] text-muted-foreground font-semibold">
+                Your sparkline shows cumulative exercises completed — momentum matters!
+              </p>
+            </div>
+          </div>
           {isTied && (
-            <p className="text-[10px] font-bold text-accent mt-1">
-              🤝 Tied scores = Shared Reward Week — all tied winners pick the reward together!
-            </p>
+            <div className="flex items-start gap-3">
+              <span className="text-lg mt-0.5">🤝</span>
+              <div>
+                <p className="text-xs font-extrabold text-foreground">Shared Reward Week</p>
+                <p className="text-[11px] text-muted-foreground font-semibold">
+                  Tied at the top? All winners pick the reward together!
+                </p>
+              </div>
+            </div>
           )}
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
     </div>
   );
 };
