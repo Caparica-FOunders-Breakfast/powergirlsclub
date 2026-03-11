@@ -88,7 +88,42 @@ const Auth = () => {
         className="w-full max-w-sm bg-card/95 backdrop-blur-sm rounded-2xl p-6 comic-border space-y-4 relative z-10"
       >
         <h2 className="text-2xl font-display text-center text-foreground">
-          {isLogin ? "Welcome Back! 💜" : "Join Us! 💪"}
+          {isForgotPassword ? "Reset Password 📧" : isLogin ? "Welcome Back! 💜" : "Join Us! 💪"}
+        </h2>
+
+        {isForgotPassword ? (
+          <>
+            <p className="text-sm text-center text-muted-foreground">
+              Enter your email and we'll send you a reset link.
+            </p>
+            <div>
+              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                required
+                className="mt-1 border-2 border-primary/30 focus:border-primary"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 text-lg font-bold gradient-primary hover:opacity-90 transition-opacity comic-border border-primary-foreground/20 text-primary-foreground"
+            >
+              {loading ? "Sending..." : "SEND RESET LINK 📧"}
+            </Button>
+            <button
+              type="button"
+              onClick={() => setIsForgotPassword(false)}
+              className="w-full text-center text-sm font-bold text-primary hover:underline"
+            >
+              Back to login
+            </button>
+          </>
+        ) : (
+          <>
         </h2>
 
         {!isLogin && (
