@@ -84,7 +84,7 @@ const Auth = () => {
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        onSubmit={handleSubmit}
+        onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit}
         className="w-full max-w-sm bg-card/95 backdrop-blur-sm rounded-2xl p-6 comic-border space-y-4 relative z-10"
       >
         <h2 className="text-2xl font-display text-center text-foreground">
@@ -124,61 +124,71 @@ const Auth = () => {
           </>
         ) : (
           <>
-        </h2>
+            {!isLogin && (
+              <div>
+                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Your Name</label>
+                <Input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="e.g. Sofia"
+                  required={!isLogin}
+                  className="mt-1 border-2 border-primary/30 focus:border-primary"
+                />
+              </div>
+            )}
 
-        {!isLogin && (
-          <div>
-            <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Your Name</label>
-            <Input
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="e.g. Sofia"
-              required={!isLogin}
-              className="mt-1 border-2 border-primary/30 focus:border-primary"
-            />
-          </div>
+            <div>
+              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                required
+                className="mt-1 border-2 border-primary/30 focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Password</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={6}
+                className="mt-1 border-2 border-primary/30 focus:border-primary"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 text-lg font-bold gradient-primary hover:opacity-90 transition-opacity comic-border border-primary-foreground/20 text-primary-foreground"
+            >
+              {loading ? "Loading..." : isLogin ? "LET'S GO! 💜" : "JOIN THE CLUB! 🎉"}
+            </Button>
+
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(true)}
+                className="w-full text-center text-sm text-muted-foreground hover:text-primary hover:underline"
+              >
+                Forgot your password?
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="w-full text-center text-sm font-bold text-primary hover:underline"
+            >
+              {isLogin ? "New here? Join the club!" : "Already a member? Log in!"}
+            </button>
+          </>
         )}
-
-        <div>
-          <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Email</label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@email.com"
-            required
-            className="mt-1 border-2 border-primary/30 focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Password</label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-            minLength={6}
-            className="mt-1 border-2 border-primary/30 focus:border-primary"
-          />
-        </div>
-
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full h-12 text-lg font-bold gradient-primary hover:opacity-90 transition-opacity comic-border border-primary-foreground/20 text-primary-foreground"
-        >
-          {loading ? "Loading..." : isLogin ? "LET'S GO! 💜" : "JOIN THE CLUB! 🎉"}
-        </Button>
-
-        <button
-          type="button"
-          onClick={() => setIsLogin(!isLogin)}
-          className="w-full text-center text-sm font-bold text-primary hover:underline"
-        >
-          {isLogin ? "New here? Join the club!" : "Already a member? Log in!"}
-        </button>
       </motion.form>
     </div>
   );
