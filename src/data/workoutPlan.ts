@@ -26,10 +26,10 @@ export const weeklyPlan: WorkoutDay[] = [
     emoji: "🦵",
     isRest: false,
     exercises: [
-      { name: "Goblet Squat", sets: 4, reps: "8", suggestedWeight: "14–20 kg", progression: "+2 to 2.5 kg/week" },
-      { name: "Romanian Deadlift", sets: 4, reps: "8", suggestedWeight: "20–30 kg", progression: "+2 to 2.5 kg" },
+      { name: "Goblet Squat", sets: 3, reps: "10", suggestedWeight: "14–20 kg", progression: "+2 to 2.5 kg/week" },
+      { name: "Romanian Deadlift", sets: 3, reps: "10", suggestedWeight: "20–30 kg", progression: "+2 to 2.5 kg" },
       { name: "Smith Machine Lunges", sets: 3, reps: "10 each leg", suggestedWeight: "20–30 kg", progression: "+2 to 2.5 kg" },
-      { name: "Hip Thrust", sets: 4, reps: "10", suggestedWeight: "40–55 kg", progression: "+2 to 2.5 kg" },
+      { name: "Hip Thrust", sets: 3, reps: "10", suggestedWeight: "40–55 kg", progression: "+2 to 2.5 kg" },
       { name: "Plank", sets: 3, reps: "40 sec", suggestedWeight: "Bodyweight", progression: "Increase time", isBodyweight: true, isTimeBased: true },
     ],
   },
