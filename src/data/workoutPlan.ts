@@ -61,10 +61,10 @@ export const weeklyPlan: WorkoutDay[] = [
     emoji: "⚡",
     isRest: false,
     exercises: [
-      { name: "Kettlebell Swings", sets: 4, reps: "15", suggestedWeight: "12–16 kg", progression: "+2 kg" },
-      { name: "Box Jumps", sets: 4, reps: "8", suggestedWeight: "Bodyweight", progression: "Increase height", isBodyweight: true },
-      { name: "Battle Ropes", sets: 4, reps: "20 sec", suggestedWeight: "—", progression: "Increase intensity", isTimeBased: true },
-      { name: "Bike Sprint (20s all-in + 3min rest)", sets: 4, reps: "4 rounds", suggestedWeight: "4 rounds", progression: "+1 round/week", isRoundsBased: true },
+      { name: "Kettlebell Swings", sets: 3, reps: "10", suggestedWeight: "12–16 kg", progression: "+2 kg" },
+      { name: "Box Jumps", sets: 3, reps: "10", suggestedWeight: "Bodyweight", progression: "Increase height", isBodyweight: true },
+      { name: "Battle Ropes", sets: 3, reps: "20 sec", suggestedWeight: "—", progression: "Increase intensity", isTimeBased: true },
+      { name: "Bike Sprint (20s all-in + 3min rest)", sets: 3, reps: "4 rounds", suggestedWeight: "4 rounds", progression: "+1 round/week", isRoundsBased: true },
     ],
   },
   {
