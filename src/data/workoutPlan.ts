@@ -73,11 +73,11 @@ export const weeklyPlan: WorkoutDay[] = [
     emoji: "🦵",
     isRest: false,
     exercises: [
-      { name: "Barbell Squat", sets: 4, reps: "6", suggestedWeight: "30–40 kg", progression: "+2 to 2.5 kg" },
-      { name: "Hip Thrust", sets: 4, reps: "10", suggestedWeight: "45–60 kg", progression: "+2 to 5 kg" },
+      { name: "Barbell Squat", sets: 3, reps: "10", suggestedWeight: "30–40 kg", progression: "+2 to 2.5 kg" },
+      { name: "Hip Thrust", sets: 3, reps: "10", suggestedWeight: "45–60 kg", progression: "+2 to 5 kg" },
       { name: "Step Ups", sets: 3, reps: "10 each leg", suggestedWeight: "10 kg dumbbells", progression: "+2 kg" },
-      { name: "Cable Kickbacks", sets: 3, reps: "12", suggestedWeight: "Moderate", progression: "Increase load" },
-      { name: "Hanging Knee Raises", sets: 3, reps: "12", suggestedWeight: "Bodyweight", progression: "Add reps", isBodyweight: true },
+      { name: "Cable Kickbacks", sets: 3, reps: "10", suggestedWeight: "Moderate", progression: "Increase load" },
+      { name: "Hanging Knee Raises", sets: 3, reps: "10", suggestedWeight: "Bodyweight", progression: "Add reps", isBodyweight: true },
     ],
   },
   {
