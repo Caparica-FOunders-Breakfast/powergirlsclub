@@ -93,11 +93,8 @@ const CurrentWeek = () => {
     return Math.round((done / total) * 100);
   };
 
-  const totalWorkoutDays = weeklyPlan.filter((d) => !d.isRest && !d.isRecovery && d.exercises.length > 0).length;
-  const completedDays = weeklyPlan.filter((d, i) => {
-    if (d.isRest || d.isRecovery || d.exercises.length === 0) return false;
-    return getDayCompletion(i, d) === 100;
-  }).length;
+  const totalWorkoutDays = weeklyPlan.length;
+  const completedDays = weeklyPlan.filter((d, i) => getDayCompletion(i, d) === 100).length;
   const weeklyScore = Math.round((completedDays / totalWorkoutDays) * 100);
 
   const saveExercise = useCallback(
