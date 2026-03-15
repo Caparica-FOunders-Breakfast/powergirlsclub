@@ -314,6 +314,9 @@ const CurrentWeek = () => {
                         />
                       </div>
                     )}
+                    {(day.isRest || day.isRecovery) && day.exercises.length === 0 && completion === 100 && (
+                      <p className="text-[10px] font-bold text-secondary mt-1">Checked off ✓</p>
+                    )}
                   </div>
                   {completion === 100 ? (
                     <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
