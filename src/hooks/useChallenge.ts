@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
-import { addDays, format, differenceInDays } from "date-fns";
+import { addDays, format, differenceInDays, startOfWeek } from "date-fns";
 
 export const useActiveChallenge = () => {
   const { data: profile } = useProfile();
@@ -43,8 +43,10 @@ export const useCreateChallenge = () => {
 
   return useMutation({
     mutationFn: async ({ name, startDate }: { name: string; startDate: Date }) => {
-      const start = format(startDate, "yyyy-MM-dd");
-      const end = format(addDays(startDate, 27), "yyyy-MM-dd");
+      // Always align to the Monday of the selected week
+      const alignedStart = startOfWeek(startDate, { weekStartsOn: 1 });
+      const start = format(alignedStart, "yyyy-MM-dd");
+      const end = format(addDays(alignedStart, 27), "yyyy-MM-dd");
 
       // Create the challenge
       const { data: challenge, error: createErr } = await supabase
@@ -175,7 +177,8 @@ export const useChallengeProgress = (startDate: string | null) => {
   if (!startDate) return null;
 
   const now = new Date();
-  const start = new Date(startDate + "T00:00:00");
+  // Always align to the Monday of the challenge start week
+  const start = startOfWeek(new Date(startDate + "T00:00:00"), { weekStartsOn: 1 });
   const daysDiff = differenceInDays(now, start);
 
   if (daysDiff < 0) {
