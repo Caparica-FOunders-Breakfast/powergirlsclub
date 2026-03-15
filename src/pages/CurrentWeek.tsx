@@ -381,10 +381,52 @@ const CurrentWeek = () => {
                           )}
                         </AnimatePresence>
 
-                        {editingDay !== dayIdx && (day.isRest || day.isRecovery) && day.restNote && (
-                          <div className="p-4 rounded-xl bg-muted/50 text-center">
-                            <p className="text-3xl mb-2">{day.isRecovery ? "🌿" : "😴"}</p>
-                            <p className="font-bold text-foreground text-sm">{day.restNote}</p>
+                        {editingDay !== dayIdx && (day.isRest || day.isRecovery) && day.exercises.length === 0 && (
+                          <div className="p-4 rounded-xl bg-muted/50 text-center space-y-3">
+                            <p className="text-3xl mb-1">{day.isRecovery ? "🌿" : "😴"}</p>
+                            {day.restNote && (
+                              <p className="font-bold text-foreground text-sm">{day.restNote}</p>
+                            )}
+                            {(() => {
+                              const restKey = getExKey(dayIdx, 0);
+                              const restDone = localCompleted[restKey] || false;
+                              return (
+                                <button
+                                  onClick={() => {
+                                    const newVal = !restDone;
+                                    setLocalCompleted((prev) => ({ ...prev, [restKey]: newVal }));
+                                    const restLabel = day.isRecovery ? "Recovery Day" : "Rest Day";
+                                    saveExercise(dayIdx, 0, restLabel, "", newVal);
+                                    if (newVal) {
+                                      confetti({
+                                        particleCount: 40,
+                                        spread: 60,
+                                        colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"],
+                                        origin: { y: 0.7 },
+                                        gravity: 1.2,
+                                      });
+                                      toast({ title: day.isRecovery ? "Recovery done! 🌿" : "Rest day logged! 😴" });
+                                    }
+                                  }}
+                                  className={cn(
+                                    "inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all",
+                                    restDone
+                                      ? "bg-secondary/10 border-secondary text-secondary-foreground"
+                                      : "border-primary/30 text-muted-foreground hover:border-primary"
+                                  )}
+                                >
+                                  <div
+                                    className={cn(
+                                      "w-5 h-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
+                                      restDone ? "bg-secondary border-secondary text-secondary-foreground" : "border-primary/40"
+                                    )}
+                                  >
+                                    {restDone && <Check className="w-3 h-3" />}
+                                  </div>
+                                  {restDone ? "Done ✓" : "Mark as done"}
+                                </button>
+                              );
+                            })()}
                           </div>
                         )}
 
