@@ -43,8 +43,10 @@ export const useCreateChallenge = () => {
 
   return useMutation({
     mutationFn: async ({ name, startDate }: { name: string; startDate: Date }) => {
-      const start = format(startDate, "yyyy-MM-dd");
-      const end = format(addDays(startDate, 27), "yyyy-MM-dd");
+      // Always align to the Monday of the selected week
+      const alignedStart = startOfWeek(startDate, { weekStartsOn: 1 });
+      const start = format(alignedStart, "yyyy-MM-dd");
+      const end = format(addDays(alignedStart, 27), "yyyy-MM-dd");
 
       // Create the challenge
       const { data: challenge, error: createErr } = await supabase
