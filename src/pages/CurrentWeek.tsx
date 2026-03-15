@@ -275,7 +275,7 @@ const CurrentWeek = () => {
                 className={cn(
                   "rounded-2xl border-2 overflow-hidden transition-all",
                   isToday && "ring-2 ring-primary/40",
-                  completion === 100 && !day.isRest && !day.isRecovery && day.exercises.length > 0
+                  completion === 100
                     ? "bg-secondary/10 border-secondary"
                     : "bg-card border-border hover:border-primary/30"
                 )}
