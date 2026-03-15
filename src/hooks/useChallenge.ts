@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
-import { addDays, format, differenceInDays } from "date-fns";
+import { addDays, format, differenceInDays, startOfWeek } from "date-fns";
 
 export const useActiveChallenge = () => {
   const { data: profile } = useProfile();
