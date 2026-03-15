@@ -177,7 +177,8 @@ export const useChallengeProgress = (startDate: string | null) => {
   if (!startDate) return null;
 
   const now = new Date();
-  const start = new Date(startDate + "T00:00:00");
+  // Always align to the Monday of the challenge start week
+  const start = startOfWeek(new Date(startDate + "T00:00:00"), { weekStartsOn: 1 });
   const daysDiff = differenceInDays(now, start);
 
   if (daysDiff < 0) {
