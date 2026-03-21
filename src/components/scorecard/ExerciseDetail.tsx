@@ -14,6 +14,8 @@ interface ExerciseDetailProps {
     bestWeight: number;
     ratio: number;
     level: { label: string; icon: string; index: number };
+    unit?: string;
+    useRatio?: boolean;
   };
   bodyWeight: number | null;
   onBack: () => void;
