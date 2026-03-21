@@ -10,7 +10,7 @@ import { ExerciseScorecard } from "@/components/scorecard/ExerciseScorecard";
 type Tab = "leaderboard" | "scorecard";
 
 const Leaderboard = () => {
-  const [tab, setTab] = useState<Tab>("leaderboard");
+  const [tab, setTab] = useState<Tab>("scorecard");
   const { data: scores, isLoading } = useLeaderboard();
 
   const topPoints = scores?.[0]?.points ?? 0;
