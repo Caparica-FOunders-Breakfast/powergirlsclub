@@ -142,6 +142,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_color: string
+          body_weight: number | null
           challenge_end: string | null
           challenge_id: string | null
           challenge_start: string | null
@@ -154,6 +155,7 @@ export type Database = {
         }
         Insert: {
           avatar_color?: string
+          body_weight?: number | null
           challenge_end?: string | null
           challenge_id?: string | null
           challenge_start?: string | null
@@ -166,6 +168,7 @@ export type Database = {
         }
         Update: {
           avatar_color?: string
+          body_weight?: number | null
           challenge_end?: string | null
           challenge_id?: string | null
           challenge_start?: string | null
