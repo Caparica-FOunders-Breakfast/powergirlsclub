@@ -1,4 +1,4 @@
-import { Trophy, Dumbbell, User, Heart, Menu, Globe } from "lucide-react";
+import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
@@ -20,8 +20,7 @@ const tabs = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
-  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
-  { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
+  { path: "/more", icon: MoreHorizontal, label: "More", emoji: "⋯" },
 ];
 
 export function AppSidebar() {
