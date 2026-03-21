@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, BookOpen, Trash2, X, ChevronDown } from "lucide-react";
+import { Search, BookOpen, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useVocabulary, useDeleteVocab, type VocabEntry } from "@/hooks/useVocabulary";
 import { useUserLanguages, WEEKLY_PLAN } from "@/hooks/useLanguageLearning";
@@ -54,133 +54,103 @@ export function VocabLibrary({ languageCode, languageName, flag }: VocabLibraryP
     return WEEKLY_PLAN[idx]?.emoji ?? "📝";
   };
 
-  if (allVocab.length === 0) return null;
+  if (allVocab.length === 0) {
+    return (
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="text-center py-12 bg-card rounded-2xl border-2 border-border"
+      >
+        <p className="text-4xl mb-3">📖</p>
+        <h3 className="text-lg font-display text-foreground">No words yet</h3>
+        <p className="text-muted-foreground font-semibold mt-1 text-sm px-6">
+          Add words from your daily tasks — they'll appear here
+        </p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
       initial={{ y: 12, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="rounded-2xl border-2 border-border bg-card overflow-hidden"
+      className="space-y-3"
     >
-      {/* Header */}
-      <button
-        onClick={() => setExpanded((e) => !e)}
-        className="w-full flex items-center gap-3 px-4 py-3"
-      >
-        <BookOpen className="w-5 h-5 text-primary" />
-        <div className="flex-1 text-left">
-          <p className="text-sm font-extrabold text-foreground">
-            My Words
-          </p>
+      {/* Search */}
+      <div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search words…"
+            className="h-10 text-sm rounded-xl pl-9 pr-9"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center justify-between mt-2">
           <p className="text-[10px] font-bold text-muted-foreground">
-            {allVocab.length} {allVocab.length === 1 ? "word" : "words"} saved
+            {search ? `${filtered.length} result${filtered.length !== 1 ? "s" : ""}` : `${allVocab.length} word${allVocab.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <ChevronDown
-          className={cn(
-            "w-4 h-4 text-muted-foreground transition-transform",
-            expanded && "rotate-180"
-          )}
-        />
-      </button>
+      </div>
 
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            {/* Search */}
-            <div className="px-4 pb-3">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search words…"
-                  className="h-8 text-xs rounded-xl pl-8 pr-8"
-                />
-                {search && (
-                  <button
-                    onClick={() => setSearch("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                )}
+      {/* Word list grouped by day */}
+      <div className="space-y-4">
+        {filtered.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-4">No words found</p>
+        ) : (
+          [...grouped.entries()]
+            .sort(([a], [b]) => (a ?? 99) - (b ?? 99))
+            .map(([dayIdx, words]) => (
+              <div key={dayIdx ?? "null"} className="rounded-2xl border-2 border-border bg-card p-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-sm">{dayEmoji(dayIdx)}</span>
+                  <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                    {dayLabel(dayIdx)}
+                  </p>
+                  <span className="text-[10px] font-bold text-muted-foreground/60">{words.length}</span>
+                </div>
+                <div className="space-y-1.5">
+                  {words.map((v) => {
+                    const altLang = otherLanguages.find(
+                      (l) => l.language_code === v.alt_language_code
+                    );
+                    return (
+                      <div
+                        key={v.id}
+                        className="flex items-start gap-2 group/vocab text-xs py-1"
+                      >
+                        <div className="flex-1 min-w-0 space-y-0.5">
+                          <p className="font-bold text-foreground">{v.original_text}</p>
+                          {v.english_translation && (
+                            <p className="text-muted-foreground">🇬🇧 {v.english_translation}</p>
+                          )}
+                          {v.alt_translation && altLang && (
+                            <p className="text-muted-foreground">{altLang.flag_emoji} {v.alt_translation}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => deleteVocab.mutate({ id: v.id, languageCode })}
+                          className="opacity-0 group-hover/vocab:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0 mt-0.5"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              {search && (
-                <p className="text-[10px] font-bold text-muted-foreground mt-1.5">
-                  {filtered.length} {filtered.length === 1 ? "result" : "results"}
-                </p>
-              )}
-            </div>
-
-            {/* Word list grouped by day */}
-            <div className="px-4 pb-4 space-y-3 max-h-[400px] overflow-y-auto">
-              {filtered.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">No words found</p>
-              ) : (
-                [...grouped.entries()]
-                  .sort(([a], [b]) => (a ?? 99) - (b ?? 99))
-                  .map(([dayIdx, words]) => (
-                    <div key={dayIdx ?? "null"}>
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="text-sm">{dayEmoji(dayIdx)}</span>
-                        <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                          {dayLabel(dayIdx)}
-                        </p>
-                        <span className="text-[10px] font-bold text-muted-foreground/60">{words.length}</span>
-                      </div>
-                      <div className="space-y-1 ml-5">
-                        {words.map((v) => {
-                          const altLang = otherLanguages.find(
-                            (l) => l.language_code === v.alt_language_code
-                          );
-                          return (
-                            <div
-                              key={v.id}
-                              className="flex items-start gap-2 group/vocab text-xs py-1"
-                            >
-                              <div className="flex-1 min-w-0 space-y-0.5">
-                                <p className="font-bold text-foreground">
-                                  {v.original_text}
-                                </p>
-                                {v.english_translation && (
-                                  <p className="text-muted-foreground">
-                                    🇬🇧 {v.english_translation}
-                                  </p>
-                                )}
-                                {v.alt_translation && altLang && (
-                                  <p className="text-muted-foreground">
-                                    {altLang.flag_emoji} {v.alt_translation}
-                                  </p>
-                                )}
-                              </div>
-                              <button
-                                onClick={() =>
-                                  deleteVocab.mutate({
-                                    id: v.id,
-                                    languageCode,
-                                  })
-                                }
-                                className="opacity-0 group-hover/vocab:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0 mt-0.5"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))
-              )}
-            </div>
-          </motion.div>
+            ))
         )}
-      </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
