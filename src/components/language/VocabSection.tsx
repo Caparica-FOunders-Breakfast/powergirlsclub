@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, BookOpen, Trash2 } from "lucide-react";
+import { BookOpen, Trash2, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useVocabulary, useAddVocab, useDeleteVocab, type VocabEntry } from "@/hooks/useVocabulary";
-import { useUserLanguages } from "@/hooks/useLanguageLearning";
+import { useUserLanguages, AVAILABLE_LANGUAGES } from "@/hooks/useLanguageLearning";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface VocabSectionProps {
@@ -19,42 +21,79 @@ export function VocabSection({ languageCode, languageName, dayIndex, weekStart }
   const { data: userLanguages = [] } = useUserLanguages();
   const addVocab = useAddVocab();
   const deleteVocab = useDeleteVocab();
+  const { toast } = useToast();
 
   const [adding, setAdding] = useState(false);
   const [original, setOriginal] = useState("");
-  const [english, setEnglish] = useState("");
-  const [alt, setAlt] = useState("");
-  const [altLangCode, setAltLangCode] = useState("");
+  const [translating, setTranslating] = useState(false);
 
-  // Other languages user is learning (for alt translation)
   const otherLanguages = userLanguages.filter((l) => l.language_code !== languageCode);
-
-  // Words added for this specific day (across all weeks)
   const dayVocab = allVocab.filter((v) => v.day_index === dayIndex);
 
-  const handleAdd = () => {
+  // Resolve full language name from code
+  const langName = (code: string) =>
+    AVAILABLE_LANGUAGES.find((l) => l.code === code)?.name ?? code;
+
+  const handleSave = async () => {
     const text = original.trim();
     if (!text) return;
+
+    setTranslating(true);
+
+    // Build target languages: always English + any other user languages
+    const targetLangs = ["en", ...otherLanguages.map((l) => l.language_code)];
+    const uniqueTargets = [...new Set(targetLangs)];
+
+    let translations: Record<string, string> = {};
+
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-word", {
+        body: {
+          text,
+          sourceLanguage: langName(languageCode),
+          targetLanguages: uniqueTargets.map((c) => (c === "en" ? "English" : langName(c))),
+        },
+      });
+      if (error) throw error;
+      translations = data?.translations ?? {};
+    } catch (e) {
+      console.error("Translation failed:", e);
+      toast({ description: "Auto-translate failed — saving word without translations.", variant: "destructive", duration: 3000 });
+    }
+
+    // Find the English translation
+    const englishTranslation = translations["English"] || translations["en"] || "";
+
+    // Find alt translation (first other language)
+    let altTranslation = "";
+    let altCode = "";
+    for (const lang of otherLanguages) {
+      const name = langName(lang.language_code);
+      const val = translations[name] || translations[lang.language_code];
+      if (val) {
+        altTranslation = val;
+        altCode = lang.language_code;
+        break;
+      }
+    }
+
     addVocab.mutate({
       languageCode,
       dayIndex,
       weekStart,
       originalText: text,
-      englishTranslation: english.trim() || undefined,
-      altTranslation: alt.trim() || undefined,
-      altLanguageCode: altLangCode || undefined,
+      englishTranslation: englishTranslation || undefined,
+      altTranslation: altTranslation || undefined,
+      altLanguageCode: altCode || undefined,
     });
+
     setOriginal("");
-    setEnglish("");
-    setAlt("");
+    setTranslating(false);
     setAdding(false);
   };
 
-  const altLang = otherLanguages.find((l) => l.language_code === altLangCode);
-
   return (
     <div className="pt-1 space-y-2">
-      {/* Existing words for this day */}
       {dayVocab.length > 0 && (
         <div className="space-y-1">
           {dayVocab.map((v) => (
@@ -63,7 +102,6 @@ export function VocabSection({ languageCode, languageName, dayIndex, weekStart }
         </div>
       )}
 
-      {/* Add new word */}
       <AnimatePresence>
         {adding ? (
           <motion.div
@@ -77,48 +115,25 @@ export function VocabSection({ languageCode, languageName, dayIndex, weekStart }
                 autoFocus
                 value={original}
                 onChange={(e) => setOriginal(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && original.trim()) handleSave();
+                  if (e.key === "Escape") { setAdding(false); setOriginal(""); }
+                }}
                 placeholder={`Word or phrase in ${languageName}…`}
                 className="h-8 text-xs rounded-lg"
                 maxLength={200}
+                disabled={translating}
               />
-              <Input
-                value={english}
-                onChange={(e) => setEnglish(e.target.value)}
-                placeholder="English translation…"
-                className="h-8 text-xs rounded-lg"
-                maxLength={200}
-              />
-              {otherLanguages.length > 0 && (
-                <div className="flex gap-2">
-                  <select
-                    value={altLangCode}
-                    onChange={(e) => setAltLangCode(e.target.value)}
-                    className="h-8 text-xs rounded-lg border border-input bg-background px-2 flex-shrink-0"
-                  >
-                    <option value="">+ Language</option>
-                    {otherLanguages.map((l) => (
-                      <option key={l.language_code} value={l.language_code}>
-                        {l.flag_emoji} {l.language_name}
-                      </option>
-                    ))}
-                  </select>
-                  {altLangCode && (
-                    <Input
-                      value={alt}
-                      onChange={(e) => setAlt(e.target.value)}
-                      placeholder={`${altLang?.language_name ?? "Alt"} translation…`}
-                      className="h-8 text-xs rounded-lg flex-1"
-                      maxLength={200}
-                    />
-                  )}
-                </div>
-              )}
+              <p className="text-[10px] text-muted-foreground">
+                Translations to English{otherLanguages.length > 0 ? ` & ${otherLanguages.map((l) => l.language_name).join(", ")}` : ""} will be added automatically
+              </p>
               <div className="flex gap-2 justify-end">
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setAdding(false); setOriginal(""); setEnglish(""); setAlt(""); }}>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setAdding(false); setOriginal(""); }} disabled={translating}>
                   Cancel
                 </Button>
-                <Button size="sm" className="h-7 text-xs" onClick={handleAdd} disabled={!original.trim()}>
-                  Save
+                <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={!original.trim() || translating}>
+                  {translating ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                  {translating ? "Translating…" : "Save"}
                 </Button>
               </div>
             </div>
