@@ -156,6 +156,31 @@ export function ExerciseScorecard() {
         </div>
       </motion.div>
 
+      {/* Strength Level Legend */}
+      <motion.div
+        initial={{ y: -5, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-2xl border-2 border-border bg-card px-4 py-3"
+      >
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Strength Levels</p>
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {[
+            { icon: "🌱", label: "Beginner", range: "< 0.35x" },
+            { icon: "💪", label: "Getting Stronger", range: "0.35–0.60x" },
+            { icon: "⚡", label: "Strong", range: "0.60–0.85x" },
+            { icon: "🔥", label: "Very Strong", range: "0.85–1.20x" },
+            { icon: "👑", label: "Elite", range: "> 1.20x" },
+          ].map((l) => (
+            <span key={l.label} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span>{l.icon}</span>
+              <span className="font-semibold text-foreground">{l.label}</span>
+              <span className="opacity-60">{l.range}</span>
+            </span>
+          ))}
+        </div>
+      </motion.div>
+
       {/* Grouped Exercise Cards */}
       {sortedCategories.map((category, catIdx) => (
         <div key={category} className="space-y-3">
