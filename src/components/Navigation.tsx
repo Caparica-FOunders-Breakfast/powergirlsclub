@@ -72,7 +72,9 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {tabs.map(({ path, icon: Icon, label }) => {
-          const isActive = location.pathname === path;
+          const isActive = path === "/more"
+            ? ["/more", "/teams", "/profile"].includes(location.pathname)
+            : location.pathname === path;
           return (
             <NavLink
               key={path}
