@@ -208,6 +208,45 @@ export type Database = {
         }
         Relationships: []
       }
+      language_vocabulary: {
+        Row: {
+          alt_language_code: string | null
+          alt_translation: string | null
+          created_at: string
+          day_index: number | null
+          english_translation: string | null
+          id: string
+          language_code: string
+          original_text: string
+          user_id: string
+          week_start: string | null
+        }
+        Insert: {
+          alt_language_code?: string | null
+          alt_translation?: string | null
+          created_at?: string
+          day_index?: number | null
+          english_translation?: string | null
+          id?: string
+          language_code: string
+          original_text: string
+          user_id: string
+          week_start?: string | null
+        }
+        Update: {
+          alt_language_code?: string | null
+          alt_translation?: string | null
+          created_at?: string
+          day_index?: number | null
+          english_translation?: string | null
+          id?: string
+          language_code?: string
+          original_text?: string
+          user_id?: string
+          week_start?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string
