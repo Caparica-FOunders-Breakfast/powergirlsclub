@@ -17,6 +17,7 @@ interface ExerciseDetailProps {
     level: { label: string; icon: string; index: number };
     unit?: string;
     useRatio?: boolean;
+    hasThresholds?: boolean;
   };
   bodyWeight: number | null;
   onBack: () => void;
