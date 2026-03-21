@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
