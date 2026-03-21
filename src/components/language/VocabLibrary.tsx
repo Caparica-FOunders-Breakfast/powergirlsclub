@@ -102,69 +102,55 @@ export function VocabLibrary({ languageCode, languageName, flag }: VocabLibraryP
         </div>
       </div>
 
-            {/* Word list grouped by day */}
-            <div className="px-4 pb-4 space-y-3 max-h-[400px] overflow-y-auto">
-              {filtered.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">No words found</p>
-              ) : (
-                [...grouped.entries()]
-                  .sort(([a], [b]) => (a ?? 99) - (b ?? 99))
-                  .map(([dayIdx, words]) => (
-                    <div key={dayIdx ?? "null"}>
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="text-sm">{dayEmoji(dayIdx)}</span>
-                        <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                          {dayLabel(dayIdx)}
-                        </p>
-                        <span className="text-[10px] font-bold text-muted-foreground/60">{words.length}</span>
+      {/* Word list grouped by day */}
+      <div className="space-y-4">
+        {filtered.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-4">No words found</p>
+        ) : (
+          [...grouped.entries()]
+            .sort(([a], [b]) => (a ?? 99) - (b ?? 99))
+            .map(([dayIdx, words]) => (
+              <div key={dayIdx ?? "null"} className="rounded-2xl border-2 border-border bg-card p-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-sm">{dayEmoji(dayIdx)}</span>
+                  <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                    {dayLabel(dayIdx)}
+                  </p>
+                  <span className="text-[10px] font-bold text-muted-foreground/60">{words.length}</span>
+                </div>
+                <div className="space-y-1.5">
+                  {words.map((v) => {
+                    const altLang = otherLanguages.find(
+                      (l) => l.language_code === v.alt_language_code
+                    );
+                    return (
+                      <div
+                        key={v.id}
+                        className="flex items-start gap-2 group/vocab text-xs py-1"
+                      >
+                        <div className="flex-1 min-w-0 space-y-0.5">
+                          <p className="font-bold text-foreground">{v.original_text}</p>
+                          {v.english_translation && (
+                            <p className="text-muted-foreground">🇬🇧 {v.english_translation}</p>
+                          )}
+                          {v.alt_translation && altLang && (
+                            <p className="text-muted-foreground">{altLang.flag_emoji} {v.alt_translation}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => deleteVocab.mutate({ id: v.id, languageCode })}
+                          className="opacity-0 group-hover/vocab:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0 mt-0.5"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
-                      <div className="space-y-1 ml-5">
-                        {words.map((v) => {
-                          const altLang = otherLanguages.find(
-                            (l) => l.language_code === v.alt_language_code
-                          );
-                          return (
-                            <div
-                              key={v.id}
-                              className="flex items-start gap-2 group/vocab text-xs py-1"
-                            >
-                              <div className="flex-1 min-w-0 space-y-0.5">
-                                <p className="font-bold text-foreground">
-                                  {v.original_text}
-                                </p>
-                                {v.english_translation && (
-                                  <p className="text-muted-foreground">
-                                    🇬🇧 {v.english_translation}
-                                  </p>
-                                )}
-                                {v.alt_translation && altLang && (
-                                  <p className="text-muted-foreground">
-                                    {altLang.flag_emoji} {v.alt_translation}
-                                  </p>
-                                )}
-                              </div>
-                              <button
-                                onClick={() =>
-                                  deleteVocab.mutate({
-                                    id: v.id,
-                                    languageCode,
-                                  })
-                                }
-                                className="opacity-0 group-hover/vocab:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0 mt-0.5"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))
-              )}
-            </div>
-          </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
         )}
-      </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
