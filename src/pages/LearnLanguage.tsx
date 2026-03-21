@@ -9,6 +9,7 @@ import {
 import { LanguageSelector } from "@/components/language/LanguageSelector";
 import { WeeklyPlanPreview } from "@/components/language/WeeklyPlanPreview";
 import { WeeklyPlan } from "@/components/language/WeeklyPlan";
+import { VocabLibrary } from "@/components/language/VocabLibrary";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
