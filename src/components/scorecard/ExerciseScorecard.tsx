@@ -326,7 +326,7 @@ export function ExerciseScorecard() {
                 </div>
 
                 {/* Progress bar */}
-                {ex.useRatio ? (
+                {(ex.useRatio || ex.hasThresholds) ? (
                   <div className="space-y-1">
                     <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                       <motion.div
@@ -336,7 +336,12 @@ export function ExerciseScorecard() {
                         className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
                       />
                     </div>
-                    <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
+                      {!ex.useRatio && (
+                        <p className="text-[10px] font-bold text-muted-foreground">{ex.currentWeight} {ex.unit}</p>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-[10px] font-bold text-muted-foreground italic">
