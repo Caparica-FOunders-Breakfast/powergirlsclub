@@ -135,8 +135,12 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
         <div className="divide-y divide-border">
           {entries.slice(0, 20).map((entry, i) => {
             const isPR = entry.weight === bestWeight;
+            const entryLevel = useRatio && bodyWeight
+              ? getLevel(entry.weight / bodyWeight)
+              : hasThresholds
+                ? getNonKgLevel(name, entry.weight)
+                : { icon: "📈", label: "—", index: -1 };
             const entryRatio = bodyWeight ? entry.weight / bodyWeight : 0;
-            const entryLevel = getLevel(entryRatio);
             const expanded = expandedIdx === i;
 
             return (
