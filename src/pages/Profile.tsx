@@ -178,7 +178,7 @@ const Profile = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="cycle" className="border-border/50">
+          <AccordionItem value="cycle" className="border-none">
             <AccordionTrigger className="text-base font-bold hover:no-underline">🌙 6. Train with Your Cycle</AccordionTrigger>
             <AccordionContent className="text-sm text-muted-foreground space-y-2">
               <p className="font-semibold text-foreground">Adjust intensity based on your phase.</p>
