@@ -301,7 +301,20 @@ export function ExerciseScorecard() {
                         <span className="shrink-0 text-base" title="Personal Record">⭐</span>
                       )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveExercise(ex.name);
+                        }}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 active:scale-95"
+                        title="Remove from Scorecard"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
                   </div>
 
                   {/* Stats row */}
