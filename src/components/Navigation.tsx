@@ -1,4 +1,4 @@
-import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal } from "lucide-react";
+import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal, Heart, User } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
@@ -16,7 +16,15 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const tabs = [
+const allTabs = [
+  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
+  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
+  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
+  { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
+];
+
+const mobileTabs = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
