@@ -137,6 +137,15 @@ export default function LearnLanguage() {
         />
       )}
 
+      {/* Vocabulary library */}
+      {activeLang && (
+        <VocabLibrary
+          languageCode={activeLang.language_code}
+          languageName={activeLang.language_name}
+          flag={activeLang.flag_emoji}
+        />
+      )}
+
       {/* Add another language */}
       <LanguageSelector onLanguageAdded={() => {}} />
     </div>
