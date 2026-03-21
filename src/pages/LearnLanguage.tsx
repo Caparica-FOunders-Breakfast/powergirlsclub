@@ -93,7 +93,7 @@ export default function LearnLanguage() {
   return (
     <div className="p-4 pb-24 max-w-lg mx-auto space-y-4">
       {/* Language toggle */}
-      {languages.length > 1 && (
+      {languages.length > 0 && (
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -114,6 +114,7 @@ export default function LearnLanguage() {
               <span className="text-xs font-extrabold">{lang.language_name}</span>
             </button>
           ))}
+          <LanguageSelector onLanguageAdded={() => {}} />
         </motion.div>
       )}
 
