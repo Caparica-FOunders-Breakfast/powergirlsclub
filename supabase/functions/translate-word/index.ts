@@ -39,39 +39,13 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You are a translator. Return ONLY a JSON object mapping language codes to translations. No markdown, no explanation.",
+                "You are a translation API. You ONLY respond with a raw JSON object, nothing else. No markdown, no code fences, no explanation. Example response: {\"English\":\"thank you\",\"Spanish\":\"gracias\"}",
             },
             {
               role: "user",
-              content: `Translate the ${sourceLanguage} word/phrase "${text}" into these languages: ${langList}. Return JSON like {"en": "...", "es": "..."}`,
+              content: `Translate "${text}" from ${sourceLanguage} into: ${langList}`,
             },
           ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "return_translations",
-                description: "Return translations for a word or phrase",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    translations: {
-                      type: "object",
-                      description:
-                        "Map of language codes to translated strings",
-                      additionalProperties: { type: "string" },
-                    },
-                  },
-                  required: ["translations"],
-                  additionalProperties: false,
-                },
-              },
-            },
-          ],
-          tool_choice: {
-            type: "function",
-            function: { name: "return_translations" },
-          },
         }),
       }
     );
@@ -95,12 +69,16 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    let translations: Record<string, string> = {};
+    const content = data.choices?.[0]?.message?.content ?? "";
+    console.log("AI raw response:", content);
 
-    if (toolCall?.function?.arguments) {
-      const parsed = JSON.parse(toolCall.function.arguments);
-      translations = parsed.translations ?? parsed;
+    // Parse JSON from the response, stripping any markdown fences
+    let translations: Record<string, string> = {};
+    try {
+      const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      translations = JSON.parse(cleaned);
+    } catch (e) {
+      console.error("Failed to parse AI response:", content, e);
     }
 
     return new Response(JSON.stringify({ translations }), {
