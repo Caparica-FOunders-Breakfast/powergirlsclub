@@ -9,6 +9,7 @@ import {
 import { LanguageSelector } from "@/components/language/LanguageSelector";
 import { WeeklyPlanPreview } from "@/components/language/WeeklyPlanPreview";
 import { WeeklyPlan } from "@/components/language/WeeklyPlan";
+import { VocabLibrary } from "@/components/language/VocabLibrary";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,15 @@ export default function LearnLanguage() {
       {activeLang && (
         <WeeklyPlan
           language={{ code: activeLang.language_code, name: activeLang.language_name, flag: activeLang.flag_emoji }}
+        />
+      )}
+
+      {/* Vocabulary library */}
+      {activeLang && (
+        <VocabLibrary
+          languageCode={activeLang.language_code}
+          languageName={activeLang.language_name}
+          flag={activeLang.flag_emoji}
         />
       )}
 
