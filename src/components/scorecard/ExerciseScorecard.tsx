@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -287,18 +288,6 @@ export function ExerciseScorecard() {
                 transition={{ delay: catIdx * 0.08 + i * 0.04 }}
                 className="relative group"
               >
-                {/* Remove button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveExercise(ex.name);
-                  }}
-                  className="absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-muted border-2 border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity active:scale-95"
-                  title="Remove from Scorecard"
-                >
-                  <X className="w-3 h-3 text-muted-foreground" />
-                </button>
-
                 <button
                   onClick={() => setSelectedExercise(ex.name)}
                   className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
@@ -312,7 +301,20 @@ export function ExerciseScorecard() {
                         <span className="shrink-0 text-base" title="Personal Record">⭐</span>
                       )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveExercise(ex.name);
+                        }}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 active:scale-95"
+                        title="Remove from Scorecard"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
                   </div>
 
                   {/* Stats row */}
