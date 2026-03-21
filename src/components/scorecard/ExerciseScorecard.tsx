@@ -156,82 +156,99 @@ export function ExerciseScorecard() {
         </div>
       </motion.div>
 
-      {/* Exercise Cards */}
-      {exercises.map((ex, i) => {
-        const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
-        const progress = bw ? getLevelProgress(ex.ratio) : 0;
-
-        return (
-          <motion.button
-            key={ex.name}
-            initial={{ x: -20, opacity: 0 }}
+      {/* Grouped Exercise Cards */}
+      {sortedCategories.map((category, catIdx) => (
+        <div key={category} className="space-y-3">
+          <motion.h3
+            initial={{ x: -10, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: i * 0.05 }}
-            onClick={() => setSelectedExercise(ex.name)}
-            className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
+            transition={{ delay: catIdx * 0.08 }}
+            className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground px-1 pt-2"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-lg">{ex.level.icon}</span>
-                <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
-                {isPR && (
-                  <span className="shrink-0 text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
-                    PR
-                  </span>
+            {category}
+          </motion.h3>
+
+          {groupedByCategory.get(category)!.map((ex, i) => {
+            const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
+            const progress = bw ? getLevelProgress(ex.ratio) : 0;
+
+            return (
+              <motion.button
+                key={ex.name}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: catIdx * 0.08 + i * 0.04 }}
+                onClick={() => setSelectedExercise(ex.name)}
+                className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg">{ex.level.icon}</span>
+                    <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
+                    {isPR && (
+                      <span className="shrink-0 text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                        PR
+                      </span>
+                    )}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </div>
+
+                {/* Stats row */}
+                <div className="flex items-baseline gap-4 mb-3">
+                  <div>
+                    <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
+                    <span className="text-xs font-bold text-muted-foreground ml-1">kg</span>
+                  </div>
+                  {ex.bestWeight > ex.currentWeight && (
+                    <div className="text-xs font-bold text-muted-foreground">
+                      Best: <span className="text-primary">{ex.bestWeight} kg</span>
+                    </div>
+                  )}
+                  {bw && (
+                    <div className="text-xs font-bold text-muted-foreground ml-auto">
+                      {ex.ratio.toFixed(2)}x BW
+                    </div>
+                  )}
+                </div>
+
+                {/* Progress bar */}
+                {bw ? (
+                  <div className="space-y-1">
+                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(progress, 100)}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
+                      />
+                    </div>
+                    <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
+                  </div>
+                ) : (
+                  <p className="text-[10px] font-bold text-muted-foreground">Set body weight to see level</p>
                 )}
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </div>
 
-            {/* Stats row */}
-            <div className="flex items-baseline gap-4 mb-3">
-              <div>
-                <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
-                <span className="text-xs font-bold text-muted-foreground ml-1">kg</span>
-              </div>
-              {ex.bestWeight > ex.currentWeight && (
-                <div className="text-xs font-bold text-muted-foreground">
-                  Best: <span className="text-primary">{ex.bestWeight} kg</span>
+                {/* Mini trend dots */}
+                <div className="flex items-end gap-[3px] mt-3 h-5">
+                  {ex.entries.slice(0, 12).reverse().map((entry, j) => {
+                    const max = ex.bestWeight || 1;
+                    const h = Math.max(4, (entry.weight / max) * 20);
+                    return (
+                      <div
+                        key={j}
+                        className="w-[5px] rounded-full bg-primary/40"
+                        style={{ height: `${h}px` }}
+                      />
+                    );
+                  })}
                 </div>
-              )}
-              {bw && (
-                <div className="text-xs font-bold text-muted-foreground ml-auto">
-                  {ex.ratio.toFixed(2)}x BW
-                </div>
-              )}
-            </div>
-
-            {/* Progress bar */}
-            {bw ? (
-              <div className="space-y-1">
-                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(progress, 100)}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
-                  />
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
-              </div>
-            ) : (
-              <p className="text-[10px] font-bold text-muted-foreground">Set body weight to see level</p>
-            )}
-
-            {/* Mini trend dots */}
-            <div className="flex items-end gap-[3px] mt-3 h-5">
-              {ex.entries.slice(0, 12).reverse().map((entry, j) => {
-                const max = ex.bestWeight || 1;
-                const h = Math.max(4, (entry.weight / max) * 20);
-                return (
-                  <div
-                    key={j}
-                    className="w-[5px] rounded-full bg-primary/40"
-                    style={{ height: `${h}px` }}
-                  />
-                );
-              })}
+              </motion.button>
+            );
+          })}
+        </div>
+      ))}
             </div>
           </motion.button>
         );
