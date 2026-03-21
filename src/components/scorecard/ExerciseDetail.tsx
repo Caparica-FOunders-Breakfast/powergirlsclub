@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
+import { getNonKgLevel, getNonKgProgress, NON_KG_THRESHOLDS } from "./exerciseLevels";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
