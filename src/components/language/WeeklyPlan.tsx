@@ -16,6 +16,7 @@ import {
 } from "@/hooks/useLanguageLearning";
 import { cn } from "@/lib/utils";
 import { startOfWeek, addWeeks, addDays, format } from "date-fns";
+import { VocabSection } from "@/components/language/VocabSection";
 
 interface WeeklyPlanProps {
   language: { code: string; name: string; flag: string };
@@ -268,6 +269,14 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                       </button>
                     )}
                   </div>
+
+                  {/* Vocabulary */}
+                  <VocabSection
+                    languageCode={language.code}
+                    languageName={language.name}
+                    dayIndex={dayIdx}
+                    weekStart={weekStart}
+                  />
                 </div>
               </CollapsibleContent>
             </motion.div>
