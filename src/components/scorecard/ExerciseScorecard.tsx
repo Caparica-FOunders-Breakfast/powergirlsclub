@@ -248,11 +248,6 @@ export function ExerciseScorecard() {
             );
           })}
         </div>
-      ))}
-            </div>
-          </motion.button>
-        );
-      })}
     </div>
   );
 }
