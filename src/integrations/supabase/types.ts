@@ -139,6 +139,42 @@ export type Database = {
         }
         Relationships: []
       }
+      language_daily_tasks: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          day_index: number
+          id: string
+          language_code: string
+          task_index: number
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_index: number
+          id?: string
+          language_code: string
+          task_index: number
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_index?: number
+          id?: string
+          language_code?: string
+          task_index?: number
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string
@@ -282,6 +318,33 @@ export type Database = {
           id?: string
           name?: string
           team_code?: string | null
+        }
+        Relationships: []
+      }
+      user_languages: {
+        Row: {
+          created_at: string
+          flag_emoji: string
+          id: string
+          language_code: string
+          language_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flag_emoji: string
+          id?: string
+          language_code: string
+          language_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          flag_emoji?: string
+          id?: string
+          language_code?: string
+          language_name?: string
+          user_id?: string
         }
         Relationships: []
       }
