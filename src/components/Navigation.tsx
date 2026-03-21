@@ -1,4 +1,4 @@
-import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal } from "lucide-react";
+import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal, Heart, User } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
@@ -16,7 +16,15 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const tabs = [
+const allTabs = [
+  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
+  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
+  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
+  { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
+];
+
+const mobileTabs = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
@@ -42,7 +50,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {tabs.map((item) => (
+              {allTabs.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -71,7 +79,7 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
-        {tabs.map(({ path, icon: Icon, label }) => {
+        {mobileTabs.map(({ path, icon: Icon, label }) => {
           const isActive = path === "/more"
             ? ["/more", "/teams", "/profile"].includes(location.pathname)
             : location.pathname === path;
