@@ -175,6 +175,39 @@ export type Database = {
         }
         Relationships: []
       }
+      language_day_links: {
+        Row: {
+          created_at: string
+          day_index: number
+          id: string
+          label: string | null
+          language_code: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_index: number
+          id?: string
+          label?: string | null
+          language_code: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          id?: string
+          label?: string | null
+          language_code?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string

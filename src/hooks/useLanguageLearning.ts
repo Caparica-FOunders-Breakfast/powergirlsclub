@@ -181,7 +181,6 @@ export const useToggleTask = (weekStart: string) => {
 };
 
 export const getCompletedDays = (tasks: any[]): number => {
-  // Use actual task counts from WEEKLY_PLAN
   const dayCompletion = new Map<number, { total: number; done: number }>();
   WEEKLY_PLAN.forEach((day, idx) => {
     dayCompletion.set(idx, { total: day.tasks.length, done: 0 });
@@ -193,10 +192,80 @@ export const getCompletedDays = (tasks: any[]): number => {
     }
   });
   let completed = 0;
-  // Only count Mon-Fri (indices 0-4) for the main progress
   for (let d = 0; d < 5; d++) {
     const v = dayCompletion.get(d);
     if (v && v.done >= v.total) completed++;
   }
   return completed;
+};
+
+// Day links hooks
+export interface DayLink {
+  id: string;
+  user_id: string;
+  language_code: string;
+  day_index: number;
+  url: string;
+  label: string | null;
+}
+
+export const useDayLinks = (languageCode: string | null) => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["day-links", user?.id, languageCode],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("language_day_links" as any)
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("language_code", languageCode!);
+      if (error) throw error;
+      return data as any as DayLink[];
+    },
+    enabled: !!user && !!languageCode,
+  });
+};
+
+export const useUpsertDayLink = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ languageCode, dayIndex, url, label }: {
+      languageCode: string; dayIndex: number; url: string; label?: string;
+    }) => {
+      const { error } = await supabase
+        .from("language_day_links" as any)
+        .upsert({
+          user_id: user!.id,
+          language_code: languageCode,
+          day_index: dayIndex,
+          url,
+          label: label || null,
+          updated_at: new Date().toISOString(),
+        } as any, { onConflict: "user_id,language_code,day_index" });
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["day-links", user?.id, vars.languageCode] });
+    },
+  });
+};
+
+export const useRemoveDayLink = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ languageCode, dayIndex }: { languageCode: string; dayIndex: number }) => {
+      const { error } = await supabase
+        .from("language_day_links" as any)
+        .delete()
+        .eq("user_id", user!.id)
+        .eq("language_code", languageCode)
+        .eq("day_index", dayIndex);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["day-links", user?.id, vars.languageCode] });
+    },
+  });
 };
