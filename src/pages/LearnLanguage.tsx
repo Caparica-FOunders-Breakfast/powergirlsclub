@@ -93,7 +93,7 @@ export default function LearnLanguage() {
   return (
     <div className="p-4 pb-24 max-w-lg mx-auto space-y-4">
       {/* Language toggle */}
-      {languages.length > 1 && (
+      {languages.length > 0 && (
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -114,22 +114,11 @@ export default function LearnLanguage() {
               <span className="text-xs font-extrabold">{lang.language_name}</span>
             </button>
           ))}
+          <LanguageSelector onLanguageAdded={() => {}} />
         </motion.div>
       )}
 
-      {/* Single language header with remove */}
-      {languages.length === 1 && activeLang && (
-        <motion.div
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{activeLang.flag_emoji}</span>
-            <span className="text-sm font-extrabold text-foreground">{activeLang.language_name}</span>
-          </div>
-        </motion.div>
-      )}
+      {/* removed single-language header — now handled by the unified chip row */}
 
       {/* Tab switcher */}
       {activeLang && (
@@ -174,8 +163,7 @@ export default function LearnLanguage() {
         />
       )}
 
-      {/* Add another language */}
-      {tab === "plan" && <LanguageSelector onLanguageAdded={() => {}} />}
+      {/* Add language button moved to chip row */}
     </div>
   );
 }
