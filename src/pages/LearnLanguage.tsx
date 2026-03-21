@@ -118,19 +118,7 @@ export default function LearnLanguage() {
         </motion.div>
       )}
 
-      {/* Single language header with remove */}
-      {languages.length === 1 && activeLang && (
-        <motion.div
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{activeLang.flag_emoji}</span>
-            <span className="text-sm font-extrabold text-foreground">{activeLang.language_name}</span>
-          </div>
-        </motion.div>
-      )}
+      {/* removed single-language header — now handled by the unified chip row */}
 
       {/* Tab switcher */}
       {activeLang && (
