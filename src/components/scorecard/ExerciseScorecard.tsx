@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ExerciseDetail } from "./ExerciseDetail";
+import { StrengthSummary } from "./StrengthSummary";
 
 export function ExerciseScorecard() {
   const { data: grouped, isLoading } = useExerciseScorecard();
