@@ -288,18 +288,6 @@ export function ExerciseScorecard() {
                 transition={{ delay: catIdx * 0.08 + i * 0.04 }}
                 className="relative group"
               >
-                {/* Remove button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveExercise(ex.name);
-                  }}
-                  className="absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-muted border-2 border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity active:scale-95"
-                  title="Remove from Scorecard"
-                >
-                  <X className="w-3 h-3 text-muted-foreground" />
-                </button>
-
                 <button
                   onClick={() => setSelectedExercise(ex.name)}
                   className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
