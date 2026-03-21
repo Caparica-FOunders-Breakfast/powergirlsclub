@@ -300,7 +300,7 @@ export function ExerciseScorecard() {
                     <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
                     {isPR && (
                       <span className="shrink-0 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-primary text-primary-foreground tracking-wide">
-                        🏆 PR
+                        🏆 Record
                       </span>
                     )}
                   </div>
