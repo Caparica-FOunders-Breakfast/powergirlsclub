@@ -181,6 +181,9 @@ export function ExerciseScorecard() {
         </div>
       </motion.div>
 
+      {/* Strength Summary */}
+      <StrengthSummary exercises={exercises} bodyWeight={bw} />
+
       {/* Strength Level Legend */}
       <Collapsible defaultOpen={false}>
         <motion.div
