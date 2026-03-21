@@ -269,6 +269,14 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                       </button>
                     )}
                   </div>
+
+                  {/* Vocabulary */}
+                  <VocabSection
+                    languageCode={language.code}
+                    languageName={language.name}
+                    dayIndex={dayIdx}
+                    weekStart={weekStart}
+                  />
                 </div>
               </CollapsibleContent>
             </motion.div>
