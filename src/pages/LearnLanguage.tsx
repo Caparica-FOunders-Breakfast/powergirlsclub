@@ -131,15 +131,42 @@ export default function LearnLanguage() {
         </motion.div>
       )}
 
-      {/* Weekly plan */}
+      {/* Tab switcher */}
       {activeLang && (
+        <div className="flex rounded-xl border-2 border-border overflow-hidden">
+          <button
+            onClick={() => setTab("plan")}
+            className={cn(
+              "flex-1 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors",
+              tab === "plan"
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground hover:text-foreground"
+            )}
+          >
+            📅 Weekly Plan
+          </button>
+          <button
+            onClick={() => setTab("words")}
+            className={cn(
+              "flex-1 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors",
+              tab === "words"
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground hover:text-foreground"
+            )}
+          >
+            📖 My Words
+          </button>
+        </div>
+      )}
+
+      {/* Tab content */}
+      {activeLang && tab === "plan" && (
         <WeeklyPlan
           language={{ code: activeLang.language_code, name: activeLang.language_name, flag: activeLang.flag_emoji }}
         />
       )}
 
-      {/* Vocabulary library */}
-      {activeLang && (
+      {activeLang && tab === "words" && (
         <VocabLibrary
           languageCode={activeLang.language_code}
           languageName={activeLang.language_name}
@@ -148,7 +175,7 @@ export default function LearnLanguage() {
       )}
 
       {/* Add another language */}
-      <LanguageSelector onLanguageAdded={() => {}} />
+      {tab === "plan" && <LanguageSelector onLanguageAdded={() => {}} />}
     </div>
   );
 }
