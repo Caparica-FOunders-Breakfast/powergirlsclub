@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { LogOut, Dumbbell, Flame, Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
