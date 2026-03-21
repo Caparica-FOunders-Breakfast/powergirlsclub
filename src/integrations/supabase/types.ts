@@ -240,6 +240,27 @@ export type Database = {
           },
         ]
       }
+      scorecard_hidden_exercises: {
+        Row: {
+          created_at: string
+          exercise_name: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_name: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_name?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           created_at: string
