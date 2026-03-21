@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ExerciseDetail } from "./ExerciseDetail";
 import { StrengthSummary } from "./StrengthSummary";
+import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress } from "./exerciseLevels";
 
 export function ExerciseScorecard() {
   const { data: grouped, isLoading } = useExerciseScorecard();
