@@ -12,6 +12,7 @@ import CurrentWeek from "@/pages/CurrentWeek";
 import LearnLanguage from "@/pages/LearnLanguage";
 import TeamManagement from "@/pages/TeamManagement";
 import Profile from "@/pages/Profile";
+import More from "@/pages/More";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const ProtectedLayout = () => {
               <Route path="/learn" element={<LearnLanguage />} />
               <Route path="/teams" element={<TeamManagement />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/more" element={<More />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

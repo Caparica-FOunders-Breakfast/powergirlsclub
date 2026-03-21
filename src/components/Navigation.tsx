@@ -1,4 +1,4 @@
-import { Trophy, Dumbbell, User, Heart, Menu, Globe } from "lucide-react";
+import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
@@ -20,8 +20,7 @@ const tabs = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
-  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
-  { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
+  { path: "/more", icon: MoreHorizontal, label: "More", emoji: "⋯" },
 ];
 
 export function AppSidebar() {
@@ -73,7 +72,9 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {tabs.map(({ path, icon: Icon, label }) => {
-          const isActive = location.pathname === path;
+          const isActive = path === "/more"
+            ? ["/more", "/teams", "/profile"].includes(location.pathname)
+            : location.pathname === path;
           return (
             <NavLink
               key={path}
