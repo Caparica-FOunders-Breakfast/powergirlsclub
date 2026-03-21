@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Award, ChevronRight } from "lucide-react";
+import { TrendingUp, Award, ChevronRight, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useExerciseScorecard, getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { Input } from "@/components/ui/input";
