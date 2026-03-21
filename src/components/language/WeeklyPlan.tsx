@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Check, Link2, X } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   WEEKLY_PLAN,
   useLanguageTasks,
   useToggleTask,
   getCompletedDays,
+  useDayLinks,
+  useUpsertDayLink,
+  useRemoveDayLink,
 } from "@/hooks/useLanguageLearning";
 import { cn } from "@/lib/utils";
-import { startOfWeek, addWeeks, addDays, format, isSameWeek } from "date-fns";
+import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 
 interface WeeklyPlanProps {
   language: { code: string; name: string; flag: string };
@@ -23,41 +27,39 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
   const now = new Date();
   const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
   const [weekOffset, setWeekOffset] = useState(0);
+  const [editingLink, setEditingLink] = useState<number | null>(null);
+  const [linkInput, setLinkInput] = useState("");
 
   const selectedWeekDate = addWeeks(currentWeekDate, weekOffset);
   const weekStart = getWeekStart(selectedWeekDate);
   const isCurrentWeek = weekOffset === 0;
 
   const { data: tasks = [], isLoading } = useLanguageTasks(language.code, weekStart);
+  const { data: dayLinks = [] } = useDayLinks(language.code);
   const toggleTask = useToggleTask(weekStart);
+  const upsertLink = useUpsertDayLink();
+  const removeLink = useRemoveDayLink();
 
   const completedDays = getCompletedDays(tasks);
 
-  const weekLabel = isCurrentWeek
-    ? "This Week"
-    : weekOffset === -1
-    ? "Last Week"
-    : weekOffset === 1
-    ? "Next Week"
-    : format(selectedWeekDate, "MMM d, yyyy");
-
   const weekRange = `${format(selectedWeekDate, "MMM d")} – ${format(addDays(selectedWeekDate, 6), "MMM d")}`;
 
-  const isTaskCompleted = (dayIndex: number, taskIndex: number) => {
-    return tasks.some((t) => t.day_index === dayIndex && t.task_index === taskIndex && t.completed);
-  };
+  const isTaskCompleted = (dayIndex: number, taskIndex: number) =>
+    tasks.some((t) => t.day_index === dayIndex && t.task_index === taskIndex && t.completed);
 
   const isDayCompleted = (dayIndex: number) => {
+    const dayTasks = WEEKLY_PLAN[dayIndex]?.tasks.length ?? 3;
     let count = 0;
-    for (let t = 0; t < 3; t++) {
+    for (let t = 0; t < dayTasks; t++) {
       if (isTaskCompleted(dayIndex, t)) count++;
     }
-    return count === 3;
+    return count === dayTasks;
   };
 
   const dayTaskCount = (dayIndex: number) => {
+    const dayTasks = WEEKLY_PLAN[dayIndex]?.tasks.length ?? 3;
     let count = 0;
-    for (let t = 0; t < 3; t++) {
+    for (let t = 0; t < dayTasks; t++) {
       if (isTaskCompleted(dayIndex, t)) count++;
     }
     return count;
@@ -65,12 +67,27 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
 
   const handleToggle = (dayIndex: number, taskIndex: number) => {
     const current = isTaskCompleted(dayIndex, taskIndex);
-    toggleTask.mutate({
-      languageCode: language.code,
-      dayIndex,
-      taskIndex,
-      completed: !current,
-    });
+    toggleTask.mutate({ languageCode: language.code, dayIndex, taskIndex, completed: !current });
+  };
+
+  const getDayLink = (dayIndex: number) => dayLinks.find((l) => l.day_index === dayIndex);
+
+  const handleSaveLink = (dayIndex: number) => {
+    const url = linkInput.trim();
+    if (url) {
+      const finalUrl = url.startsWith("http") ? url : `https://${url}`;
+      upsertLink.mutate({ languageCode: language.code, dayIndex, url: finalUrl });
+    } else {
+      removeLink.mutate({ languageCode: language.code, dayIndex });
+    }
+    setEditingLink(null);
+    setLinkInput("");
+  };
+
+  const startEditLink = (dayIndex: number) => {
+    const existing = getDayLink(dayIndex);
+    setLinkInput(existing?.url ?? "");
+    setEditingLink(dayIndex);
   };
 
   if (isLoading) {
@@ -92,48 +109,31 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
         className="text-center space-y-1"
       >
         <div className="flex items-center justify-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setWeekOffset((o) => o - 1)}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setWeekOffset((o) => o - 1)} className="h-8 w-8">
             <ChevronLeft className="w-5 h-5" />
           </Button>
-          <span className="text-sm font-bold text-muted-foreground min-w-[140px]">
-            {weekRange}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setWeekOffset((o) => o + 1)}
-            className="h-8 w-8"
-          >
+          <span className="text-sm font-bold text-muted-foreground min-w-[140px]">{weekRange}</span>
+          <Button variant="ghost" size="icon" onClick={() => setWeekOffset((o) => o + 1)} className="h-8 w-8">
             <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
         {!isCurrentWeek && (
-          <button
-            onClick={() => setWeekOffset(0)}
-            className="text-[10px] font-bold text-primary uppercase tracking-wider hover:underline"
-          >
+          <button onClick={() => setWeekOffset(0)} className="text-[10px] font-bold text-primary uppercase tracking-wider hover:underline">
             Back to this week
           </button>
         )}
       </motion.div>
 
       {/* Progress header */}
-      <motion.div
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="rounded-2xl border-2 border-border bg-card p-4"
-      >
+      <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="rounded-2xl border-2 border-border bg-card p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{language.flag}</span>
             <div>
               <h3 className="font-display text-lg text-foreground">{language.name}</h3>
-              <p className="text-xs font-bold text-muted-foreground">{weekLabel}</p>
+              <p className="text-xs font-bold text-muted-foreground">
+                {isCurrentWeek ? "This Week" : weekOffset === -1 ? "Last Week" : weekOffset === 1 ? "Next Week" : format(selectedWeekDate, "MMM d, yyyy")}
+              </p>
             </div>
           </div>
           <div className="text-right">
@@ -141,8 +141,6 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Days</p>
           </div>
         </div>
-
-        {/* Progress bar */}
         <div className="mt-3 h-2 w-full bg-muted rounded-full overflow-hidden">
           <motion.div
             key={weekStart}
@@ -159,6 +157,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
         const done = isDayCompleted(dayIdx);
         const count = dayTaskCount(dayIdx);
         const isWeekend = dayIdx === 5;
+        const link = getDayLink(dayIdx);
 
         return (
           <Collapsible key={day.day} defaultOpen={isCurrentWeek && !done && dayIdx === getDayOfWeekIndex()}>
@@ -218,6 +217,57 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                       </motion.label>
                     );
                   })}
+
+                  {/* Day link */}
+                  <div className="pt-1">
+                    {editingLink === dayIdx ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          autoFocus
+                          value={linkInput}
+                          onChange={(e) => setLinkInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveLink(dayIdx);
+                            if (e.key === "Escape") { setEditingLink(null); setLinkInput(""); }
+                          }}
+                          placeholder="Paste a link…"
+                          className="h-8 text-xs rounded-xl"
+                        />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleSaveLink(dayIdx)}>
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => { setEditingLink(null); setLinkInput(""); }}>
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ) : link ? (
+                      <div className="flex items-center gap-2 group/link">
+                        <Link2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-bold text-primary/80 hover:text-primary truncate transition-colors"
+                        >
+                          {link.url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
+                        </a>
+                        <button
+                          onClick={(e) => { e.preventDefault(); startEditLink(dayIdx); }}
+                          className="text-[10px] font-bold text-muted-foreground hover:text-foreground opacity-0 group-hover/link:opacity-100 transition-opacity"
+                        >
+                          edit
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startEditLink(dayIdx)}
+                        className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Link2 className="w-3 h-3" />
+                        Add link
+                      </button>
+                    )}
+                  </div>
                 </div>
               </CollapsibleContent>
             </motion.div>
