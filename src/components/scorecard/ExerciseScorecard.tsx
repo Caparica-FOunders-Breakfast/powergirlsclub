@@ -1,23 +1,81 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Award, ChevronRight, ChevronDown } from "lucide-react";
+import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useExerciseScorecard, getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ExerciseDetail } from "./ExerciseDetail";
 import { StrengthSummary } from "./StrengthSummary";
+import { AddExerciseModal } from "./AddExerciseModal";
 import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress } from "./exerciseLevels";
+import { useToast } from "@/hooks/use-toast";
+
+// Unit mapping: exercises not measured in kg
+const EXERCISE_UNITS: Record<string, string> = {
+  "Plank": "sec",
+  "Side Plank": "sec",
+  "Battle Ropes": "sec",
+  "Farmer Carry": "sec",
+  "Push Ups": "reps",
+  "Dead Bug": "reps",
+  "Bird Dog": "reps",
+  "Hanging Knee Raises": "reps",
+  "Box Jumps": "reps",
+  "Bike Sprint (20s all-in + 3min rest)": "rounds",
+  "Sprint / Jump Rope": "rounds",
+  "Recovery Day": "—",
+  "Rest Day": "—",
+  "jkk": "reps",
+};
+
+const getUnit = (name: string) => EXERCISE_UNITS[name] || "kg";
+
+// Category mapping
+const EXERCISE_CATEGORIES: Record<string, string> = {
+  "Goblet Squat": "🦵 Legs",
+  "Barbell Squat": "🦵 Legs",
+  "Smith Machine Lunges": "🦵 Legs",
+  "Step Ups": "🦵 Legs",
+  "Box Jumps": "🦵 Legs",
+  "Hip Thrust": "🍑 Glutes",
+  "Cable Kickbacks": "🍑 Glutes",
+  "Romanian Deadlift": "🍑 Glutes",
+  "Lat Pulldown": "💪 Upper Body",
+  "Dumbbell Shoulder Press": "💪 Upper Body",
+  "Seated Row": "💪 Upper Body",
+  "Cable Row": "💪 Upper Body",
+  "Push Ups": "💪 Upper Body",
+  "Back Extension": "💪 Upper Body",
+  "Plank": "🧘 Core",
+  "Dead Bug": "🧘 Core",
+  "Russian Twists": "🧘 Core",
+  "Side Plank": "🧘 Core",
+  "Bird Dog": "🧘 Core",
+  "Hanging Knee Raises": "🧘 Core",
+  "Kettlebell Swings": "⚡ Cardio & Power",
+  "Battle Ropes": "⚡ Cardio & Power",
+  "Sprint / Jump Rope": "⚡ Cardio & Power",
+  "Bike Sprint (20s all-in + 3min rest)": "⚡ Cardio & Power",
+  "Farmer Carry": "⚡ Cardio & Power",
+};
+
+const CATEGORY_ORDER = ["🦵 Legs", "🍑 Glutes", "💪 Upper Body", "🧘 Core", "⚡ Cardio & Power", "🏋️ Other"];
 
 export function ExerciseScorecard() {
   const { data: grouped, isLoading } = useExerciseScorecard();
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
+  const { hiddenExercises, hideExercise, unhideExercise } = useScorecardVisibility();
+  const { toast } = useToast();
   const [bodyWeight, setBodyWeight] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
 
@@ -27,6 +85,32 @@ export function ExerciseScorecard() {
     await updateProfile.mutateAsync({ body_weight: val } as any);
     setBodyWeight("");
   };
+
+  const handleRemoveExercise = useCallback((exerciseName: string) => {
+    hideExercise.mutate(exerciseName);
+
+    const { dismiss } = toast({
+      description: "Exercise removed from Scorecard",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs font-bold"
+          onClick={() => {
+            unhideExercise.mutate(exerciseName);
+            dismiss();
+          }}
+        >
+          Undo
+        </Button>
+      ),
+      duration: 4000,
+    });
+  }, [hideExercise, unhideExercise, toast]);
+
+  const handleAddExercise = useCallback((exerciseName: string) => {
+    unhideExercise.mutate(exerciseName);
+  }, [unhideExercise]);
 
   if (isLoading) {
     return (
@@ -54,78 +138,27 @@ export function ExerciseScorecard() {
     );
   }
 
-  // Unit mapping: exercises not measured in kg
-  const EXERCISE_UNITS: Record<string, string> = {
-    "Plank": "sec",
-    "Side Plank": "sec",
-    "Battle Ropes": "sec",
-    "Farmer Carry": "sec",
-    "Push Ups": "reps",
-    "Dead Bug": "reps",
-    "Bird Dog": "reps",
-    "Hanging Knee Raises": "reps",
-    "Box Jumps": "reps",
-    "Bike Sprint (20s all-in + 3min rest)": "rounds",
-    "Sprint / Jump Rope": "rounds",
-    "Recovery Day": "—",
-    "Rest Day": "—",
-    "jkk": "reps",
-  };
+  const allExerciseNames = Array.from(grouped.keys());
 
-  const getUnit = (name: string) => EXERCISE_UNITS[name] || "kg";
-  const isWeightBased = (name: string) => getUnit(name) === "kg";
-
-
-
-
-  // Category mapping
-  const EXERCISE_CATEGORIES: Record<string, string> = {
-    "Goblet Squat": "🦵 Legs",
-    "Barbell Squat": "🦵 Legs",
-    "Smith Machine Lunges": "🦵 Legs",
-    "Step Ups": "🦵 Legs",
-    "Box Jumps": "🦵 Legs",
-    "Hip Thrust": "🍑 Glutes",
-    "Cable Kickbacks": "🍑 Glutes",
-    "Romanian Deadlift": "🍑 Glutes",
-    "Lat Pulldown": "💪 Upper Body",
-    "Dumbbell Shoulder Press": "💪 Upper Body",
-    "Seated Row": "💪 Upper Body",
-    "Cable Row": "💪 Upper Body",
-    "Push Ups": "💪 Upper Body",
-    "Back Extension": "💪 Upper Body",
-    "Plank": "🧘 Core",
-    "Dead Bug": "🧘 Core",
-    "Russian Twists": "🧘 Core",
-    "Side Plank": "🧘 Core",
-    "Bird Dog": "🧘 Core",
-    "Hanging Knee Raises": "🧘 Core",
-    "Kettlebell Swings": "⚡ Cardio & Power",
-    "Battle Ropes": "⚡ Cardio & Power",
-    "Sprint / Jump Rope": "⚡ Cardio & Power",
-    "Bike Sprint (20s all-in + 3min rest)": "⚡ Cardio & Power",
-    "Farmer Carry": "⚡ Cardio & Power",
-  };
-
-  const CATEGORY_ORDER = ["🦵 Legs", "🍑 Glutes", "💪 Upper Body", "🧘 Core", "⚡ Cardio & Power", "🏋️ Other"];
-
-  // Build exercise cards sorted by most recent activity
-  const exercises = Array.from(grouped.entries()).map(([name, entries]) => {
-    const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const currentWeight = sorted[0].weight;
-    const bestWeight = Math.max(...entries.map((e) => e.weight));
-    const unit = getUnit(name);
-    const useRatio = unit === "kg" && !!bw;
-    const ratio = useRatio ? currentWeight / bw! : 0;
-    const hasThresholds = !useRatio && NON_KG_THRESHOLDS[name] != null;
-    const level = useRatio
-      ? getLevel(ratio)
-      : hasThresholds
-        ? getNonKgLevel(name, currentWeight)
-        : { label: "—" as const, icon: "📈", index: -1 };
-    const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-    return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds };
-  });
+  // Build exercise cards, filtering out hidden ones
+  const exercises = Array.from(grouped.entries())
+    .filter(([name]) => !hiddenExercises.includes(name))
+    .map(([name, entries]) => {
+      const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const currentWeight = sorted[0].weight;
+      const bestWeight = Math.max(...entries.map((e) => e.weight));
+      const unit = getUnit(name);
+      const useRatio = unit === "kg" && !!bw;
+      const ratio = useRatio ? currentWeight / bw! : 0;
+      const hasThresholds = !useRatio && NON_KG_THRESHOLDS[name] != null;
+      const level = useRatio
+        ? getLevel(ratio)
+        : hasThresholds
+          ? getNonKgLevel(name, currentWeight)
+          : { label: "—" as const, icon: "📈", index: -1 };
+      const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
+      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds };
+    });
 
   // Group by category
   const groupedByCategory = new Map<string, typeof exercises>();
@@ -133,7 +166,6 @@ export function ExerciseScorecard() {
     if (!groupedByCategory.has(ex.category)) groupedByCategory.set(ex.category, []);
     groupedByCategory.get(ex.category)!.push(ex);
   }
-  // Sort within each category by best weight descending
   for (const [, exs] of groupedByCategory) {
     exs.sort((a, b) => b.bestWeight - a.bestWeight);
   }
@@ -152,6 +184,8 @@ export function ExerciseScorecard() {
       );
     }
   }
+
+  const hasHiddenExercises = hiddenExercises.length > 0;
 
   return (
     <div className="space-y-4">
@@ -246,87 +280,133 @@ export function ExerciseScorecard() {
                 : 0;
 
             return (
-              <motion.button
+              <motion.div
                 key={ex.name}
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: catIdx * 0.08 + i * 0.04 }}
-                onClick={() => setSelectedExercise(ex.name)}
-                className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
+                className="relative group"
               >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-lg">{ex.level.icon}</span>
-                    <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
-                    {isPR && (
-                      <span className="shrink-0 text-base" title="Personal Record">⭐</span>
-                    )}
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </div>
+                {/* Remove button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveExercise(ex.name);
+                  }}
+                  className="absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-muted border-2 border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity active:scale-95"
+                  title="Remove from Scorecard"
+                >
+                  <X className="w-3 h-3 text-muted-foreground" />
+                </button>
 
-                {/* Stats row */}
-                <div className="flex items-baseline gap-4 mb-3">
-                  <div>
-                    <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
-                    <span className="text-xs font-bold text-muted-foreground ml-1">{ex.unit}</span>
-                  </div>
-                  {ex.bestWeight > ex.currentWeight && (
-                    <div className="text-xs font-bold text-muted-foreground">
-                      Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
-                    </div>
-                  )}
-                  {ex.useRatio && (
-                    <div className="text-xs font-bold text-muted-foreground ml-auto">
-                      {ex.ratio.toFixed(2)}x BW
-                    </div>
-                  )}
-                </div>
-
-                {/* Progress bar */}
-                {(ex.useRatio || ex.hasThresholds) ? (
-                  <div className="space-y-1">
-                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(progress, 100)}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
-                      {!ex.useRatio && (
-                        <p className="text-[10px] font-bold text-muted-foreground">{ex.currentWeight} {ex.unit}</p>
+                <button
+                  onClick={() => setSelectedExercise(ex.name)}
+                  className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg">{ex.level.icon}</span>
+                      <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
+                      {isPR && (
+                        <span className="shrink-0 text-base" title="Personal Record">⭐</span>
                       )}
                     </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   </div>
-                ) : (
-                  <p className="text-[10px] font-bold text-muted-foreground italic">
-                    Tracked in {ex.unit}
-                  </p>
-                )}
 
-                {/* Mini trend dots */}
-                <div className="flex items-end gap-[3px] mt-3 h-5">
-                  {ex.entries.slice(0, 12).reverse().map((entry, j) => {
-                    const max = ex.bestWeight || 1;
-                    const h = Math.max(4, (entry.weight / max) * 20);
-                    return (
-                      <div
-                        key={j}
-                        className="w-[5px] rounded-full bg-primary/40"
-                        style={{ height: `${h}px` }}
-                      />
-                    );
-                  })}
-                </div>
-              </motion.button>
+                  {/* Stats row */}
+                  <div className="flex items-baseline gap-4 mb-3">
+                    <div>
+                      <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
+                      <span className="text-xs font-bold text-muted-foreground ml-1">{ex.unit}</span>
+                    </div>
+                    {ex.bestWeight > ex.currentWeight && (
+                      <div className="text-xs font-bold text-muted-foreground">
+                        Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
+                      </div>
+                    )}
+                    {ex.useRatio && (
+                      <div className="text-xs font-bold text-muted-foreground ml-auto">
+                        {ex.ratio.toFixed(2)}x BW
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Progress bar */}
+                  {(ex.useRatio || ex.hasThresholds) ? (
+                    <div className="space-y-1">
+                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(progress, 100)}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
+                        {!ex.useRatio && (
+                          <p className="text-[10px] font-bold text-muted-foreground">{ex.currentWeight} {ex.unit}</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] font-bold text-muted-foreground italic">
+                      Tracked in {ex.unit}
+                    </p>
+                  )}
+
+                  {/* Mini trend dots */}
+                  <div className="flex items-end gap-[3px] mt-3 h-5">
+                    {ex.entries.slice(0, 12).reverse().map((entry, j) => {
+                      const max = ex.bestWeight || 1;
+                      const h = Math.max(4, (entry.weight / max) * 20);
+                      return (
+                        <div
+                          key={j}
+                          className="w-[5px] rounded-full bg-primary/40"
+                          style={{ height: `${h}px` }}
+                        />
+                      );
+                    })}
+                  </div>
+                </button>
+              </motion.div>
             );
           })}
         </div>
       ))}
+
+      {/* Add Exercise Button */}
+      <motion.div
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <button
+          onClick={() => setAddModalOpen(true)}
+          disabled={!hasHiddenExercises}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed transition-all active:scale-[0.98]",
+            hasHiddenExercises
+              ? "border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5"
+              : "border-border text-muted-foreground/50 cursor-not-allowed"
+          )}
+        >
+          <Plus className="w-4 h-4" />
+          <span className="text-sm font-bold">Add Exercise</span>
+        </button>
+      </motion.div>
+
+      {/* Add Exercise Modal */}
+      <AddExerciseModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        allExercises={allExerciseNames}
+        hiddenExercises={hiddenExercises}
+        onAdd={handleAddExercise}
+      />
     </div>
   );
 }
