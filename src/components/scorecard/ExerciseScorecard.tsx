@@ -248,6 +248,7 @@ export function ExerciseScorecard() {
             );
           })}
         </div>
+      ))}
     </div>
   );
 }
