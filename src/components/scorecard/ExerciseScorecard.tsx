@@ -247,14 +247,14 @@ export function ExerciseScorecard() {
                 <div className="flex items-baseline gap-4 mb-3">
                   <div>
                     <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
-                    <span className="text-xs font-bold text-muted-foreground ml-1">kg</span>
+                    <span className="text-xs font-bold text-muted-foreground ml-1">{ex.unit}</span>
                   </div>
                   {ex.bestWeight > ex.currentWeight && (
                     <div className="text-xs font-bold text-muted-foreground">
-                      Best: <span className="text-primary">{ex.bestWeight} kg</span>
+                      Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
                     </div>
                   )}
-                  {bw && (
+                  {ex.useRatio && (
                     <div className="text-xs font-bold text-muted-foreground ml-auto">
                       {ex.ratio.toFixed(2)}x BW
                     </div>
@@ -262,7 +262,7 @@ export function ExerciseScorecard() {
                 </div>
 
                 {/* Progress bar */}
-                {bw ? (
+                {ex.useRatio ? (
                   <div className="space-y-1">
                     <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                       <motion.div
@@ -275,7 +275,9 @@ export function ExerciseScorecard() {
                     <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
                   </div>
                 ) : (
-                  <p className="text-[10px] font-bold text-muted-foreground">Set body weight to see level</p>
+                  <p className="text-[10px] font-bold text-muted-foreground italic">
+                    Tracked in {ex.unit}
+                  </p>
                 )}
 
                 {/* Mini trend dots */}
