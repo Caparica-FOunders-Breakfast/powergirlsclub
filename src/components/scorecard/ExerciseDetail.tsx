@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
+import { getNonKgLevel, getNonKgProgress, NON_KG_THRESHOLDS } from "./exerciseLevels";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -16,6 +17,7 @@ interface ExerciseDetailProps {
     level: { label: string; icon: string; index: number };
     unit?: string;
     useRatio?: boolean;
+    hasThresholds?: boolean;
   };
   bodyWeight: number | null;
   onBack: () => void;
@@ -23,8 +25,9 @@ interface ExerciseDetailProps {
 
 export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
-  const { entries, name, currentWeight, bestWeight, level, ratio, unit = "kg", useRatio = true } = exercise;
-  const progress = bodyWeight && useRatio ? getLevelProgress(ratio) : 0;
+  const { entries, name, currentWeight, bestWeight, level, ratio, unit = "kg", useRatio = true, hasThresholds = false } = exercise;
+  const progress = useRatio && bodyWeight ? getLevelProgress(ratio) : hasThresholds ? getNonKgProgress(name, currentWeight) : 0;
+  const showProgressBar = (useRatio && !!bodyWeight) || hasThresholds;
 
   // Trend chart data (oldest first for chart)
   const chartEntries = [...entries].reverse().slice(-20);
@@ -85,7 +88,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
         </div>
 
         {/* Level progress */}
-        {useRatio && bodyWeight && (
+        {showProgressBar && (
           <div className="mb-4">
             <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
               <motion.div
@@ -132,8 +135,12 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
         <div className="divide-y divide-border">
           {entries.slice(0, 20).map((entry, i) => {
             const isPR = entry.weight === bestWeight;
+            const entryLevel = useRatio && bodyWeight
+              ? getLevel(entry.weight / bodyWeight)
+              : hasThresholds
+                ? getNonKgLevel(name, entry.weight)
+                : { icon: "📈", label: "—", index: -1 };
             const entryRatio = bodyWeight ? entry.weight / bodyWeight : 0;
-            const entryLevel = getLevel(entryRatio);
             const expanded = expandedIdx === i;
 
             return (
@@ -166,7 +173,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
                     >
                       <div className="pt-2 text-xs font-bold text-muted-foreground space-y-0.5">
                         {useRatio && bodyWeight && <p>Ratio: {entryRatio.toFixed(2)}x BW</p>}
-                        {useRatio && <p>Level: {entryLevel.label}</p>}
+                        <p>Level: {entryLevel.label}</p>
                       </div>
                     </motion.div>
                   )}
