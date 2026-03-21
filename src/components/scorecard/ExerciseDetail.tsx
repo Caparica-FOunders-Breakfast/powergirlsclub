@@ -88,7 +88,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
         </div>
 
         {/* Level progress */}
-        {useRatio && bodyWeight && (
+        {showProgressBar && (
           <div className="mb-4">
             <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
               <motion.div
