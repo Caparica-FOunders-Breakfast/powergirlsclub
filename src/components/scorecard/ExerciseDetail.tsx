@@ -67,23 +67,25 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className={cn("grid gap-3 mb-4", useRatio ? "grid-cols-3" : "grid-cols-2")}>
           <div className="text-center p-2 rounded-xl bg-muted/50">
             <p className="text-lg font-display text-foreground">{currentWeight}</p>
-            <p className="text-[10px] font-bold text-muted-foreground">Current (kg)</p>
+            <p className="text-[10px] font-bold text-muted-foreground">Current ({unit})</p>
           </div>
           <div className="text-center p-2 rounded-xl bg-muted/50">
             <p className="text-lg font-display text-primary">{bestWeight}</p>
-            <p className="text-[10px] font-bold text-muted-foreground">Best (kg)</p>
+            <p className="text-[10px] font-bold text-muted-foreground">Best ({unit})</p>
           </div>
-          <div className="text-center p-2 rounded-xl bg-muted/50">
-            <p className="text-lg font-display text-foreground">{bodyWeight ? ratio.toFixed(2) : "—"}</p>
-            <p className="text-[10px] font-bold text-muted-foreground">× BW</p>
-          </div>
+          {useRatio && (
+            <div className="text-center p-2 rounded-xl bg-muted/50">
+              <p className="text-lg font-display text-foreground">{bodyWeight ? ratio.toFixed(2) : "—"}</p>
+              <p className="text-[10px] font-bold text-muted-foreground">× BW</p>
+            </div>
+          )}
         </div>
 
         {/* Level progress */}
-        {bodyWeight && (
+        {useRatio && bodyWeight && (
           <div className="mb-4">
             <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
               <motion.div
