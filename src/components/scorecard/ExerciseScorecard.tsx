@@ -1,0 +1,199 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingUp, Award, ChevronRight } from "lucide-react";
+import { useExerciseScorecard, getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ExerciseDetail } from "./ExerciseDetail";
+
+export function ExerciseScorecard() {
+  const { data: grouped, isLoading } = useExerciseScorecard();
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
+  const [bodyWeight, setBodyWeight] = useState("");
+  const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+
+  const bw = profile?.body_weight ? Number(profile.body_weight) : null;
+
+  const handleSaveWeight = async () => {
+    const val = parseFloat(bodyWeight);
+    if (!val || val <= 0) return;
+    await updateProfile.mutateAsync({ body_weight: val } as any);
+    setBodyWeight("");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-24 bg-muted rounded-2xl animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!grouped || grouped.size === 0) {
+    return (
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="text-center py-12 bg-card rounded-2xl border-2 border-border"
+      >
+        <p className="text-5xl mb-3">📊</p>
+        <h2 className="text-2xl font-display text-foreground">No Data Yet</h2>
+        <p className="text-muted-foreground font-semibold mt-2">
+          Complete exercises with weights to see your progression
+        </p>
+      </motion.div>
+    );
+  }
+
+  // Build exercise cards sorted by most recent activity
+  const exercises = Array.from(grouped.entries()).map(([name, entries]) => {
+    const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const currentWeight = sorted[0].weight;
+    const bestWeight = Math.max(...entries.map((e) => e.weight));
+    const ratio = bw ? currentWeight / bw : 0;
+    const level = getLevel(ratio);
+    return { name, entries: sorted, currentWeight, bestWeight, ratio, level };
+  });
+
+  exercises.sort((a, b) => new Date(b.entries[0].date).getTime() - new Date(a.entries[0].date).getTime());
+
+  // Detail view
+  if (selectedExercise) {
+    const ex = exercises.find((e) => e.name === selectedExercise);
+    if (ex) {
+      return (
+        <ExerciseDetail
+          exercise={ex}
+          bodyWeight={bw}
+          onBack={() => setSelectedExercise(null)}
+        />
+      );
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Body Weight Input */}
+      <motion.div
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="rounded-2xl border-2 border-border bg-card p-4"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Body Weight</p>
+            {bw ? (
+              <p className="text-2xl font-display text-foreground">{bw} <span className="text-sm font-bold text-muted-foreground">kg</span></p>
+            ) : (
+              <p className="text-sm font-bold text-muted-foreground">Not set</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              placeholder={bw ? String(bw) : "kg"}
+              value={bodyWeight}
+              onChange={(e) => setBodyWeight(e.target.value)}
+              className="w-20 h-9 text-center border-2 border-border"
+            />
+            <Button
+              size="sm"
+              onClick={handleSaveWeight}
+              disabled={!bodyWeight}
+              className="h-9 font-bold"
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Exercise Cards */}
+      {exercises.map((ex, i) => {
+        const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
+        const progress = bw ? getLevelProgress(ex.ratio) : 0;
+
+        return (
+          <motion.button
+            key={ex.name}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: i * 0.05 }}
+            onClick={() => setSelectedExercise(ex.name)}
+            className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-lg">{ex.level.icon}</span>
+                <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
+                {isPR && (
+                  <span className="shrink-0 text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                    PR
+                  </span>
+                )}
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </div>
+
+            {/* Stats row */}
+            <div className="flex items-baseline gap-4 mb-3">
+              <div>
+                <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
+                <span className="text-xs font-bold text-muted-foreground ml-1">kg</span>
+              </div>
+              {ex.bestWeight > ex.currentWeight && (
+                <div className="text-xs font-bold text-muted-foreground">
+                  Best: <span className="text-primary">{ex.bestWeight} kg</span>
+                </div>
+              )}
+              {bw && (
+                <div className="text-xs font-bold text-muted-foreground ml-auto">
+                  {ex.ratio.toFixed(2)}x BW
+                </div>
+              )}
+            </div>
+
+            {/* Progress bar */}
+            {bw ? (
+              <div className="space-y-1">
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(progress, 100)}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
+                  />
+                </div>
+                <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
+              </div>
+            ) : (
+              <p className="text-[10px] font-bold text-muted-foreground">Set body weight to see level</p>
+            )}
+
+            {/* Mini trend dots */}
+            <div className="flex items-end gap-[3px] mt-3 h-5">
+              {ex.entries.slice(0, 12).reverse().map((entry, j) => {
+                const max = ex.bestWeight || 1;
+                const h = Math.max(4, (entry.weight / max) * 20);
+                return (
+                  <div
+                    key={j}
+                    className="w-[5px] rounded-full bg-primary/40"
+                    style={{ height: `${h}px` }}
+                  />
+                );
+              })}
+            </div>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}

@@ -36,7 +36,7 @@ export const useUpdateProfile = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: { display_name?: string; avatar_color?: string; challenge_start?: string | null; challenge_end?: string | null }) => {
+    mutationFn: async (updates: { display_name?: string; avatar_color?: string; challenge_start?: string | null; challenge_end?: string | null; body_weight?: number | null }) => {
       const { data, error } = await supabase
         .from("profiles")
         .update(updates as any)
