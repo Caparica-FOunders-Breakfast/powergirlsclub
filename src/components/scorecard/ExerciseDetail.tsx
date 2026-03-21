@@ -148,7 +148,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
                     <span className="text-xs font-bold text-muted-foreground w-16">
                       {format(new Date(entry.date), "MMM d")}
                     </span>
-                    <span className="font-extrabold text-sm text-foreground">{entry.weight} kg</span>
+                    <span className="font-extrabold text-sm text-foreground">{entry.weight} {unit}</span>
                     {isPR && (
                       <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
                         PR
@@ -165,8 +165,8 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
                       className="overflow-hidden"
                     >
                       <div className="pt-2 text-xs font-bold text-muted-foreground space-y-0.5">
-                        {bodyWeight && <p>Ratio: {entryRatio.toFixed(2)}x BW</p>}
-                        <p>Level: {entryLevel.label}</p>
+                        {useRatio && bodyWeight && <p>Ratio: {entryRatio.toFixed(2)}x BW</p>}
+                        {useRatio && <p>Level: {entryLevel.label}</p>}
                       </div>
                     </motion.div>
                   )}
