@@ -186,10 +186,11 @@ export const useToggleTask = (weekStart: string) => {
 };
 
 export const getCompletedDays = (tasks: any[]): number => {
+  // Use actual task counts from WEEKLY_PLAN
   const dayCompletion = new Map<number, { total: number; done: number }>();
-  for (let d = 0; d < 5; d++) {
-    dayCompletion.set(d, { total: 3, done: 0 });
-  }
+  WEEKLY_PLAN.forEach((day, idx) => {
+    dayCompletion.set(idx, { total: day.tasks.length, done: 0 });
+  });
   tasks?.forEach((t) => {
     if (t.completed) {
       const entry = dayCompletion.get(t.day_index);
@@ -197,6 +198,10 @@ export const getCompletedDays = (tasks: any[]): number => {
     }
   });
   let completed = 0;
-  dayCompletion.forEach((v) => { if (v.done >= v.total) completed++; });
+  // Only count Mon-Fri (indices 0-4) for the main progress
+  for (let d = 0; d < 5; d++) {
+    const v = dayCompletion.get(d);
+    if (v && v.done >= v.total) completed++;
+  }
   return completed;
 };
