@@ -127,7 +127,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
               </CollapsibleTrigger>
 
               <CollapsibleContent>
-                <div className="px-4 pb-4 space-y-2.5">
+                <div className="px-4 pb-4 space-y-3">
                   {day.tasks.map((task, taskIdx) => {
                     const checked = isTaskCompleted(dayIdx, taskIdx);
                     return (
@@ -136,15 +136,15 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: taskIdx * 0.04 }}
-                        className="flex items-start gap-3 cursor-pointer group/task"
+                        className="flex items-center gap-3.5 cursor-pointer group/task py-1"
                       >
                         <Checkbox
                           checked={checked}
                           onCheckedChange={() => handleToggle(dayIdx, taskIdx)}
-                          className="mt-0.5 border-2"
+                          className="h-6 w-6 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <span className={cn(
-                          "text-xs font-bold transition-colors",
+                          "text-sm font-bold transition-colors",
                           checked ? "text-muted-foreground line-through" : "text-foreground"
                         )}>
                           {task}
