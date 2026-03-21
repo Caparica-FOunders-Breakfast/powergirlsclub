@@ -30,15 +30,12 @@ export function LanguageSelector({ onLanguageAdded }: LanguageSelectorProps) {
 
   return (
     <>
-      <motion.button
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+      <button
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-[0.98]"
+        className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-dashed border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-[0.97] shrink-0"
       >
-        <Plus className="w-4 h-4" />
-        <span className="text-sm font-bold">Add Language</span>
-      </motion.button>
+        <Plus className="w-5 h-5" />
+      </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 gap-0">

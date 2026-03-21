@@ -163,8 +163,7 @@ export default function LearnLanguage() {
         />
       )}
 
-      {/* Add another language */}
-      {tab === "plan" && <LanguageSelector onLanguageAdded={() => {}} />}
+      {/* Add language button moved to chip row */}
     </div>
   );
 }
