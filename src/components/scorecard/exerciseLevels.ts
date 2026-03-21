@@ -9,8 +9,8 @@ export const NON_KG_THRESHOLDS: Record<string, number[]> = {
   "Bird Dog": [8, 15, 25, 40],
   "Hanging Knee Raises": [5, 12, 20, 30],
   "Box Jumps": [5, 12, 20, 30],
-  "Bike Sprint (20s all-in + 3min rest)": [3, 5, 8, 12],
-  "Sprint / Jump Rope": [3, 5, 8, 12],
+  "Bike Sprint (20s all-in + 3min rest)": [1, 2, 4, 6],
+  "Sprint / Jump Rope": [1, 2, 4, 6],
 };
 
 export const LEVEL_DEFS = [
