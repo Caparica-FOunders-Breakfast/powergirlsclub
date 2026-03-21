@@ -32,8 +32,8 @@ export function WeeklyPlanPreview({ language, onStart }: WeeklyPlanPreviewProps)
           >
             <span className="text-lg">{day.emoji}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-extrabold text-foreground">{day.day}</p>
-              <p className="text-[10px] font-bold text-muted-foreground">{day.focus}</p>
+              <p className="text-xs font-extrabold text-foreground">{day.day} — {day.focus}</p>
+              <p className="text-[10px] font-bold text-muted-foreground italic">"{day.title}"</p>
             </div>
           </motion.div>
         ))}

@@ -158,6 +158,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
       {WEEKLY_PLAN.map((day, dayIdx) => {
         const done = isDayCompleted(dayIdx);
         const count = dayTaskCount(dayIdx);
+        const isWeekend = dayIdx === 5;
 
         return (
           <Collapsible key={day.day} defaultOpen={isCurrentWeek && !done && dayIdx === getDayOfWeekIndex()}>
@@ -167,21 +168,26 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
               transition={{ delay: dayIdx * 0.06 }}
               className={cn(
                 "rounded-2xl border-2 bg-card overflow-hidden transition-colors",
-                done ? "border-primary/30" : "border-border"
+                done ? "border-primary/30" : "border-border",
+                isWeekend && "border-dashed"
               )}
             >
               <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 group">
                 <span className="text-xl">{day.emoji}</span>
                 <div className="flex-1 text-left min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-extrabold text-foreground">{day.day}</p>
                     <span className="text-xs font-bold text-muted-foreground">— {day.focus}</span>
+                    {isWeekend && (
+                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">Optional</span>
+                    )}
                     {done && <Check className="w-4 h-4 text-primary" />}
                   </div>
-                  <p className="text-[10px] font-bold text-muted-foreground">{day.description}</p>
+                  <p className="text-[10px] font-bold text-primary/70 italic">"{day.title}"</p>
+                  <p className="text-[10px] font-bold text-muted-foreground mt-0.5">{day.description}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-bold text-muted-foreground">{count}/3</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">{count}/{day.tasks.length}</span>
                   <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                 </div>
               </CollapsibleTrigger>
@@ -201,7 +207,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                         <Checkbox
                           checked={checked}
                           onCheckedChange={() => handleToggle(dayIdx, taskIdx)}
-                          className="h-6 w-6 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className="h-6 w-6 rounded-full border-2 shrink-0 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <span className={cn(
                           "text-sm font-bold transition-colors",
