@@ -51,6 +51,37 @@ export function ExerciseScorecard() {
     );
   }
 
+  // Category mapping
+  const EXERCISE_CATEGORIES: Record<string, string> = {
+    "Goblet Squat": "🦵 Legs",
+    "Barbell Squat": "🦵 Legs",
+    "Smith Machine Lunges": "🦵 Legs",
+    "Step Ups": "🦵 Legs",
+    "Box Jumps": "🦵 Legs",
+    "Hip Thrust": "🍑 Glutes",
+    "Cable Kickbacks": "🍑 Glutes",
+    "Romanian Deadlift": "🍑 Glutes",
+    "Lat Pulldown": "💪 Upper Body",
+    "Dumbbell Shoulder Press": "💪 Upper Body",
+    "Seated Row": "💪 Upper Body",
+    "Cable Row": "💪 Upper Body",
+    "Push Ups": "💪 Upper Body",
+    "Back Extension": "💪 Upper Body",
+    "Plank": "🧘 Core",
+    "Dead Bug": "🧘 Core",
+    "Russian Twists": "🧘 Core",
+    "Side Plank": "🧘 Core",
+    "Bird Dog": "🧘 Core",
+    "Hanging Knee Raises": "🧘 Core",
+    "Kettlebell Swings": "⚡ Cardio & Power",
+    "Battle Ropes": "⚡ Cardio & Power",
+    "Sprint / Jump Rope": "⚡ Cardio & Power",
+    "Bike Sprint (20s all-in + 3min rest)": "⚡ Cardio & Power",
+    "Farmer Carry": "⚡ Cardio & Power",
+  };
+
+  const CATEGORY_ORDER = ["🦵 Legs", "🍑 Glutes", "💪 Upper Body", "🧘 Core", "⚡ Cardio & Power", "🏋️ Other"];
+
   // Build exercise cards sorted by most recent activity
   const exercises = Array.from(grouped.entries()).map(([name, entries]) => {
     const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -58,10 +89,21 @@ export function ExerciseScorecard() {
     const bestWeight = Math.max(...entries.map((e) => e.weight));
     const ratio = bw ? currentWeight / bw : 0;
     const level = getLevel(ratio);
-    return { name, entries: sorted, currentWeight, bestWeight, ratio, level };
+    const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
+    return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category };
   });
 
-  exercises.sort((a, b) => new Date(b.entries[0].date).getTime() - new Date(a.entries[0].date).getTime());
+  // Group by category
+  const groupedByCategory = new Map<string, typeof exercises>();
+  for (const ex of exercises) {
+    if (!groupedByCategory.has(ex.category)) groupedByCategory.set(ex.category, []);
+    groupedByCategory.get(ex.category)!.push(ex);
+  }
+  // Sort within each category by best weight descending
+  for (const [, exs] of groupedByCategory) {
+    exs.sort((a, b) => b.bestWeight - a.bestWeight);
+  }
+  const sortedCategories = CATEGORY_ORDER.filter((c) => groupedByCategory.has(c));
 
   // Detail view
   if (selectedExercise) {
