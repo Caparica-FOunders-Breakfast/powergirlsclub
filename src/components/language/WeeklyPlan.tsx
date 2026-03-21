@@ -16,6 +16,7 @@ import {
 } from "@/hooks/useLanguageLearning";
 import { cn } from "@/lib/utils";
 import { startOfWeek, addWeeks, addDays, format } from "date-fns";
+import { VocabSection } from "@/components/language/VocabSection";
 
 interface WeeklyPlanProps {
   language: { code: string; name: string; flag: string };
