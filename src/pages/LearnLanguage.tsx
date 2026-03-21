@@ -97,7 +97,7 @@ export default function LearnLanguage() {
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex gap-2 overflow-x-auto no-scrollbar"
+          className="flex items-center gap-2 overflow-x-auto no-scrollbar"
         >
           {languages.map((lang) => (
             <button
