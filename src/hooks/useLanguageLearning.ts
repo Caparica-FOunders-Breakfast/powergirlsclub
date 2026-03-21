@@ -29,7 +29,6 @@ export const WEEKLY_PLAN = [
       "🎙️ Listen to a short podcast in your target language",
       "🧠 Write down 5 words or phrases you recognize",
       "🎶 Listen to a song and translate one verse",
-      "🕒 Goal: Recognize patterns, not understand everything",
     ],
   },
   {
@@ -39,7 +38,6 @@ export const WEEKLY_PLAN = [
       "💭 Talk for 2–3 min about your morning (record yourself)",
       "🎙️ Practice repeating after a native speaker (shadowing)",
       "🪞 Have a short exchange with someone",
-      "🕒 Goal: Don't aim for perfect — aim for flow",
     ],
   },
   {
@@ -49,7 +47,6 @@ export const WEEKLY_PLAN = [
       "📱 Read a short news article or Instagram caption",
       "🖊️ Highlight 5 useful words or idioms",
       "💡 Look them up and write one sentence each",
-      "🕒 Goal: Discover words in context, not from a list",
     ],
   },
   {
@@ -59,7 +56,6 @@ export const WEEKLY_PLAN = [
       "📚 Watch a short explainer on one grammar topic",
       "✏️ Do a mini exercise (app or notebook)",
       "🔁 Break down a tricky sentence from this week",
-      "🕒 Goal: Connect grammar to real-life phrases",
     ],
   },
   {
@@ -69,7 +65,6 @@ export const WEEKLY_PLAN = [
       "🧘 Write a short journal entry in your target language",
       "💬 Send it to a friend or AI for gentle correction",
       "🔁 Review all words learned during the week",
-      "🕒 Goal: Express yourself authentically",
     ],
   },
   {
