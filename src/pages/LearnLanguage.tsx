@@ -20,6 +20,7 @@ export default function LearnLanguage() {
   const { toast } = useToast();
   const [activeLangCode, setActiveLangCode] = useState<string | null>(null);
   const [previewLang, setPreviewLang] = useState<Language | null>(null);
+  const [tab, setTab] = useState<"plan" | "words">("plan");
 
   // Auto-select first language if none selected
   const activeCode = activeLangCode || languages[0]?.language_code || null;
