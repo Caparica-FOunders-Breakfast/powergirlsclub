@@ -14,6 +14,8 @@ interface ExerciseDetailProps {
     bestWeight: number;
     ratio: number;
     level: { label: string; icon: string; index: number };
+    unit?: string;
+    useRatio?: boolean;
   };
   bodyWeight: number | null;
   onBack: () => void;
@@ -21,8 +23,8 @@ interface ExerciseDetailProps {
 
 export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
-  const { entries, name, currentWeight, bestWeight, level, ratio } = exercise;
-  const progress = bodyWeight ? getLevelProgress(ratio) : 0;
+  const { entries, name, currentWeight, bestWeight, level, ratio, unit = "kg", useRatio = true } = exercise;
+  const progress = bodyWeight && useRatio ? getLevelProgress(ratio) : 0;
 
   // Trend chart data (oldest first for chart)
   const chartEntries = [...entries].reverse().slice(-20);
@@ -65,23 +67,25 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className={cn("grid gap-3 mb-4", useRatio ? "grid-cols-3" : "grid-cols-2")}>
           <div className="text-center p-2 rounded-xl bg-muted/50">
             <p className="text-lg font-display text-foreground">{currentWeight}</p>
-            <p className="text-[10px] font-bold text-muted-foreground">Current (kg)</p>
+            <p className="text-[10px] font-bold text-muted-foreground">Current ({unit})</p>
           </div>
           <div className="text-center p-2 rounded-xl bg-muted/50">
             <p className="text-lg font-display text-primary">{bestWeight}</p>
-            <p className="text-[10px] font-bold text-muted-foreground">Best (kg)</p>
+            <p className="text-[10px] font-bold text-muted-foreground">Best ({unit})</p>
           </div>
-          <div className="text-center p-2 rounded-xl bg-muted/50">
-            <p className="text-lg font-display text-foreground">{bodyWeight ? ratio.toFixed(2) : "—"}</p>
-            <p className="text-[10px] font-bold text-muted-foreground">× BW</p>
-          </div>
+          {useRatio && (
+            <div className="text-center p-2 rounded-xl bg-muted/50">
+              <p className="text-lg font-display text-foreground">{bodyWeight ? ratio.toFixed(2) : "—"}</p>
+              <p className="text-[10px] font-bold text-muted-foreground">× BW</p>
+            </div>
+          )}
         </div>
 
         {/* Level progress */}
-        {bodyWeight && (
+        {useRatio && bodyWeight && (
           <div className="mb-4">
             <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
               <motion.div
@@ -144,7 +148,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
                     <span className="text-xs font-bold text-muted-foreground w-16">
                       {format(new Date(entry.date), "MMM d")}
                     </span>
-                    <span className="font-extrabold text-sm text-foreground">{entry.weight} kg</span>
+                    <span className="font-extrabold text-sm text-foreground">{entry.weight} {unit}</span>
                     {isPR && (
                       <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
                         PR
@@ -161,8 +165,8 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
                       className="overflow-hidden"
                     >
                       <div className="pt-2 text-xs font-bold text-muted-foreground space-y-0.5">
-                        {bodyWeight && <p>Ratio: {entryRatio.toFixed(2)}x BW</p>}
-                        <p>Level: {entryLevel.label}</p>
+                        {useRatio && bodyWeight && <p>Ratio: {entryRatio.toFixed(2)}x BW</p>}
+                        {useRatio && <p>Level: {entryLevel.label}</p>}
                       </div>
                     </motion.div>
                   )}

@@ -51,6 +51,27 @@ export function ExerciseScorecard() {
     );
   }
 
+  // Unit mapping: exercises not measured in kg
+  const EXERCISE_UNITS: Record<string, string> = {
+    "Plank": "sec",
+    "Side Plank": "sec",
+    "Battle Ropes": "sec",
+    "Farmer Carry": "sec",
+    "Push Ups": "reps",
+    "Dead Bug": "reps",
+    "Bird Dog": "reps",
+    "Hanging Knee Raises": "reps",
+    "Box Jumps": "reps",
+    "Bike Sprint (20s all-in + 3min rest)": "rounds",
+    "Sprint / Jump Rope": "rounds",
+    "Recovery Day": "—",
+    "Rest Day": "—",
+    "jkk": "reps",
+  };
+
+  const getUnit = (name: string) => EXERCISE_UNITS[name] || "kg";
+  const isWeightBased = (name: string) => getUnit(name) === "kg";
+
   // Category mapping
   const EXERCISE_CATEGORIES: Record<string, string> = {
     "Goblet Squat": "🦵 Legs",
@@ -87,10 +108,12 @@ export function ExerciseScorecard() {
     const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const currentWeight = sorted[0].weight;
     const bestWeight = Math.max(...entries.map((e) => e.weight));
-    const ratio = bw ? currentWeight / bw : 0;
-    const level = getLevel(ratio);
+    const unit = getUnit(name);
+    const useRatio = unit === "kg" && !!bw;
+    const ratio = useRatio ? currentWeight / bw! : 0;
+    const level = useRatio ? getLevel(ratio) : { label: "—" as const, icon: "📈", index: -1 };
     const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-    return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category };
+    return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio };
   });
 
   // Group by category
@@ -224,14 +247,14 @@ export function ExerciseScorecard() {
                 <div className="flex items-baseline gap-4 mb-3">
                   <div>
                     <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
-                    <span className="text-xs font-bold text-muted-foreground ml-1">kg</span>
+                    <span className="text-xs font-bold text-muted-foreground ml-1">{ex.unit}</span>
                   </div>
                   {ex.bestWeight > ex.currentWeight && (
                     <div className="text-xs font-bold text-muted-foreground">
-                      Best: <span className="text-primary">{ex.bestWeight} kg</span>
+                      Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
                     </div>
                   )}
-                  {bw && (
+                  {ex.useRatio && (
                     <div className="text-xs font-bold text-muted-foreground ml-auto">
                       {ex.ratio.toFixed(2)}x BW
                     </div>
@@ -239,7 +262,7 @@ export function ExerciseScorecard() {
                 </div>
 
                 {/* Progress bar */}
-                {bw ? (
+                {ex.useRatio ? (
                   <div className="space-y-1">
                     <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                       <motion.div
@@ -252,7 +275,9 @@ export function ExerciseScorecard() {
                     <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
                   </div>
                 ) : (
-                  <p className="text-[10px] font-bold text-muted-foreground">Set body weight to see level</p>
+                  <p className="text-[10px] font-bold text-muted-foreground italic">
+                    Tracked in {ex.unit}
+                  </p>
                 )}
 
                 {/* Mini trend dots */}
