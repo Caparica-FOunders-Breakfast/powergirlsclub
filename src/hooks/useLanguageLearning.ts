@@ -82,9 +82,8 @@ export const useRemoveLanguage = () => {
   });
 };
 
-export const useLanguageTasks = (languageCode: string | null) => {
+export const useLanguageTasks = (languageCode: string | null, weekStart: string) => {
   const { user } = useAuth();
-  const weekStart = getCurrentWeekStart();
 
   return useQuery({
     queryKey: ["language-tasks", user?.id, languageCode, weekStart],
@@ -102,10 +101,9 @@ export const useLanguageTasks = (languageCode: string | null) => {
   });
 };
 
-export const useToggleTask = () => {
+export const useToggleTask = (weekStart: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const weekStart = getCurrentWeekStart();
 
   return useMutation({
     mutationFn: async ({ languageCode, dayIndex, taskIndex, completed }: {

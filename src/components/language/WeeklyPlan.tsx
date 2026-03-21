@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   WEEKLY_PLAN,
   useLanguageTasks,
@@ -10,16 +11,37 @@ import {
   getCompletedDays,
 } from "@/hooks/useLanguageLearning";
 import { cn } from "@/lib/utils";
+import { startOfWeek, addWeeks, addDays, format, isSameWeek } from "date-fns";
 
 interface WeeklyPlanProps {
   language: { code: string; name: string; flag: string };
 }
 
+const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+
 export function WeeklyPlan({ language }: WeeklyPlanProps) {
-  const { data: tasks = [], isLoading } = useLanguageTasks(language.code);
-  const toggleTask = useToggleTask();
+  const now = new Date();
+  const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const selectedWeekDate = addWeeks(currentWeekDate, weekOffset);
+  const weekStart = getWeekStart(selectedWeekDate);
+  const isCurrentWeek = weekOffset === 0;
+
+  const { data: tasks = [], isLoading } = useLanguageTasks(language.code, weekStart);
+  const toggleTask = useToggleTask(weekStart);
 
   const completedDays = getCompletedDays(tasks);
+
+  const weekLabel = isCurrentWeek
+    ? "This Week"
+    : weekOffset === -1
+    ? "Last Week"
+    : weekOffset === 1
+    ? "Next Week"
+    : format(selectedWeekDate, "MMM d, yyyy");
+
+  const weekRange = `${format(selectedWeekDate, "MMM d")} – ${format(addDays(selectedWeekDate, 6), "MMM d")}`;
 
   const isTaskCompleted = (dayIndex: number, taskIndex: number) => {
     return tasks.some((t) => t.day_index === dayIndex && t.task_index === taskIndex && t.completed);
@@ -63,7 +85,44 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Week navigation */}
+      <motion.div
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="text-center space-y-1"
+      >
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setWeekOffset((o) => o - 1)}
+            className="h-8 w-8"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <span className="text-sm font-bold text-muted-foreground min-w-[140px]">
+            {weekRange}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setWeekOffset((o) => o + 1)}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+        </div>
+        {!isCurrentWeek && (
+          <button
+            onClick={() => setWeekOffset(0)}
+            className="text-[10px] font-bold text-primary uppercase tracking-wider hover:underline"
+          >
+            Back to this week
+          </button>
+        )}
+      </motion.div>
+
+      {/* Progress header */}
       <motion.div
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -74,7 +133,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
             <span className="text-2xl">{language.flag}</span>
             <div>
               <h3 className="font-display text-lg text-foreground">{language.name}</h3>
-              <p className="text-xs font-bold text-muted-foreground">This week's progress</p>
+              <p className="text-xs font-bold text-muted-foreground">{weekLabel}</p>
             </div>
           </div>
           <div className="text-right">
@@ -86,6 +145,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
         {/* Progress bar */}
         <div className="mt-3 h-2 w-full bg-muted rounded-full overflow-hidden">
           <motion.div
+            key={weekStart}
             initial={{ width: 0 }}
             animate={{ width: `${(completedDays / 5) * 100}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -100,7 +160,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
         const count = dayTaskCount(dayIdx);
 
         return (
-          <Collapsible key={day.day} defaultOpen={!done && dayIdx === getDayOfWeekIndex()}>
+          <Collapsible key={day.day} defaultOpen={isCurrentWeek && !done && dayIdx === getDayOfWeekIndex()}>
             <motion.div
               initial={{ x: -16, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -164,7 +224,6 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
 
 function getDayOfWeekIndex(): number {
   const day = new Date().getDay();
-  // Convert Sunday=0...Saturday=6 to Monday=0...Friday=4
-  if (day === 0 || day === 6) return 0; // weekend → show Monday
+  if (day === 0 || day === 6) return 0;
   return day - 1;
 }
