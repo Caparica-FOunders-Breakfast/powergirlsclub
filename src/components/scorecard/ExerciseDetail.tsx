@@ -25,8 +25,9 @@ interface ExerciseDetailProps {
 
 export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
-  const { entries, name, currentWeight, bestWeight, level, ratio, unit = "kg", useRatio = true } = exercise;
-  const progress = bodyWeight && useRatio ? getLevelProgress(ratio) : 0;
+  const { entries, name, currentWeight, bestWeight, level, ratio, unit = "kg", useRatio = true, hasThresholds = false } = exercise;
+  const progress = useRatio && bodyWeight ? getLevelProgress(ratio) : hasThresholds ? getNonKgProgress(name, currentWeight) : 0;
+  const showProgressBar = (useRatio && !!bodyWeight) || hasThresholds;
 
   // Trend chart data (oldest first for chart)
   const chartEntries = [...entries].reverse().slice(-20);
