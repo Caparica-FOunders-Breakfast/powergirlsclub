@@ -156,7 +156,12 @@ export function ExerciseScorecard() {
     const unit = getUnit(name);
     const useRatio = unit === "kg" && !!bw;
     const ratio = useRatio ? currentWeight / bw! : 0;
-    const level = useRatio ? getLevel(ratio) : { label: "—" as const, icon: "📈", index: -1 };
+    const hasThresholds = !useRatio && NON_KG_THRESHOLDS[name] != null;
+    const level = useRatio
+      ? getLevel(ratio)
+      : hasThresholds
+        ? getNonKgLevel(name, currentWeight)
+        : { label: "—" as const, icon: "📈", index: -1 };
     const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
     return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio };
   });
