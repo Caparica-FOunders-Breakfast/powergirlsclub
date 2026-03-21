@@ -22,11 +22,65 @@ export const AVAILABLE_LANGUAGES = [
 ];
 
 export const WEEKLY_PLAN = [
-  { day: "Monday", focus: "Listening", emoji: "🎧", description: "Immerse yourself in native audio", tasks: ["Listen to a 10-min podcast", "Repeat 5 key phrases aloud", "Note 3 new words you heard"] },
-  { day: "Tuesday", focus: "Speaking", emoji: "💬", description: "Practice pronunciation & fluency", tasks: ["Record yourself reading a passage", "Have a 5-min conversation (or self-talk)", "Practice 5 tongue twisters"] },
-  { day: "Wednesday", focus: "Reading", emoji: "📖", description: "Build vocabulary through text", tasks: ["Read a short article or story", "Highlight 5 unknown words", "Write a summary in target language"] },
-  { day: "Thursday", focus: "Grammar", emoji: "🧩", description: "Understand the structure", tasks: ["Study one grammar rule", "Complete 10 practice exercises", "Write 5 sentences using the rule"] },
-  { day: "Friday", focus: "Writing", emoji: "✍️", description: "Express yourself in writing", tasks: ["Write a short journal entry", "Translate 5 sentences", "Review and correct yesterday's writing"] },
+  {
+    day: "Monday", focus: "Listening", emoji: "🎧", title: "Tuning In",
+    description: "Train your ear for sounds, rhythm, and intonation.",
+    tasks: [
+      "🎙️ Listen to a short podcast in your target language",
+      "🧠 Write down 5 words or phrases you recognize",
+      "🎶 Listen to a song and translate one verse",
+      "🕒 Goal: Recognize patterns, not understand everything",
+    ],
+  },
+  {
+    day: "Tuesday", focus: "Speaking", emoji: "💬", title: "Say It Out Loud",
+    description: "Build speaking confidence & pronunciation.",
+    tasks: [
+      "💭 Talk for 2–3 min about your morning (record yourself)",
+      "🎙️ Practice repeating after a native speaker (shadowing)",
+      "🪞 Have a short exchange with someone",
+      "🕒 Goal: Don't aim for perfect — aim for flow",
+    ],
+  },
+  {
+    day: "Wednesday", focus: "Reading", emoji: "📖", title: "Expand Vocabulary",
+    description: "Learn natural expressions through text.",
+    tasks: [
+      "📱 Read a short news article or Instagram caption",
+      "🖊️ Highlight 5 useful words or idioms",
+      "💡 Look them up and write one sentence each",
+      "🕒 Goal: Discover words in context, not from a list",
+    ],
+  },
+  {
+    day: "Thursday", focus: "Grammar & Structure", emoji: "🧩", title: "Understand the Why",
+    description: "Make sense of how the language works.",
+    tasks: [
+      "📚 Watch a short explainer on one grammar topic",
+      "✏️ Do a mini exercise (app or notebook)",
+      "🔁 Break down a tricky sentence from this week",
+      "🕒 Goal: Connect grammar to real-life phrases",
+    ],
+  },
+  {
+    day: "Friday", focus: "Writing", emoji: "✍️", title: "Reflect & Create",
+    description: "Turn your week into words.",
+    tasks: [
+      "🧘 Write a short journal entry in your target language",
+      "💬 Send it to a friend or AI for gentle correction",
+      "🔁 Review all words learned during the week",
+      "🕒 Goal: Express yourself authentically",
+    ],
+  },
+  {
+    day: "Weekend", focus: "Culture & Connection", emoji: "🌍", title: "Bonus",
+    description: "Optional — immerse yourself in the culture.",
+    tasks: [
+      "🎬 Watch a movie or video with subtitles",
+      "🗣️ Go out and speak — markets, cafés, anywhere!",
+      "📓 Add new words to your notebook or second brain",
+    ],
+  },
 ];
 
 function getCurrentWeekStart(): string {
