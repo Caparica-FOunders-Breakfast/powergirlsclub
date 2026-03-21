@@ -173,7 +173,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
                     >
                       <div className="pt-2 text-xs font-bold text-muted-foreground space-y-0.5">
                         {useRatio && bodyWeight && <p>Ratio: {entryRatio.toFixed(2)}x BW</p>}
-                        {useRatio && <p>Level: {entryLevel.label}</p>}
+                        <p>Level: {entryLevel.label}</p>
                       </div>
                     </motion.div>
                   )}
