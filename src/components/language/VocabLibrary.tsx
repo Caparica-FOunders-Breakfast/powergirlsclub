@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, BookOpen, Trash2, X, ChevronDown } from "lucide-react";
+import { Search, BookOpen, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useVocabulary, useDeleteVocab, type VocabEntry } from "@/hooks/useVocabulary";
 import { useUserLanguages, WEEKLY_PLAN } from "@/hooks/useLanguageLearning";
