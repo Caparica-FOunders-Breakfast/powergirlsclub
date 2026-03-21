@@ -51,6 +51,27 @@ export function ExerciseScorecard() {
     );
   }
 
+  // Unit mapping: exercises not measured in kg
+  const EXERCISE_UNITS: Record<string, string> = {
+    "Plank": "sec",
+    "Side Plank": "sec",
+    "Battle Ropes": "sec",
+    "Farmer Carry": "sec",
+    "Push Ups": "reps",
+    "Dead Bug": "reps",
+    "Bird Dog": "reps",
+    "Hanging Knee Raises": "reps",
+    "Box Jumps": "reps",
+    "Bike Sprint (20s all-in + 3min rest)": "rounds",
+    "Sprint / Jump Rope": "rounds",
+    "Recovery Day": "—",
+    "Rest Day": "—",
+    "jkk": "reps",
+  };
+
+  const getUnit = (name: string) => EXERCISE_UNITS[name] || "kg";
+  const isWeightBased = (name: string) => getUnit(name) === "kg";
+
   // Category mapping
   const EXERCISE_CATEGORIES: Record<string, string> = {
     "Goblet Squat": "🦵 Legs",
@@ -87,10 +108,12 @@ export function ExerciseScorecard() {
     const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const currentWeight = sorted[0].weight;
     const bestWeight = Math.max(...entries.map((e) => e.weight));
-    const ratio = bw ? currentWeight / bw : 0;
-    const level = getLevel(ratio);
+    const unit = getUnit(name);
+    const useRatio = unit === "kg" && !!bw;
+    const ratio = useRatio ? currentWeight / bw! : 0;
+    const level = useRatio ? getLevel(ratio) : { label: "—" as const, icon: "📈", index: -1 };
     const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-    return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category };
+    return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio };
   });
 
   // Group by category
