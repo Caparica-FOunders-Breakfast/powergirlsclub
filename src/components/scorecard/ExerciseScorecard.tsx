@@ -278,7 +278,11 @@ export function ExerciseScorecard() {
 
           {groupedByCategory.get(category)!.map((ex, i) => {
             const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
-            const progress = bw ? getLevelProgress(ex.ratio) : 0;
+            const progress = ex.useRatio
+              ? (bw ? getLevelProgress(ex.ratio) : 0)
+              : ex.hasThresholds
+                ? getNonKgProgress(ex.name, ex.currentWeight)
+                : 0;
 
             return (
               <motion.button
