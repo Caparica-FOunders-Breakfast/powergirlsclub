@@ -8,6 +8,8 @@ import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
 import { useProfile } from "@/hooks/useProfile";
 
 const DEFAULT_RATIOS = [0.35, 0.60, 0.85, 1.20, 1.60];
+// Assisted: assistance weight goes DOWN (BW → 0). Fractions of BW still needed as assist.
+const ASSISTED_FRACTIONS = [1.0, 0.75, 0.50, 0.25, 0.0];
 
 const LEVEL_DEFS = [
   { icon: "🌱", label: "Beginner", hint: "< 0.35x" },
@@ -15,6 +17,14 @@ const LEVEL_DEFS = [
   { icon: "⚡", label: "Strong", hint: "0.60–0.85x" },
   { icon: "🔥", label: "Very Strong", hint: "0.85–1.20x" },
   { icon: "👑", label: "Elite", hint: "> 1.20x" },
+];
+
+const ASSISTED_LEVEL_DEFS = [
+  { icon: "🌱", label: "Beginner", hint: "= BW assist" },
+  { icon: "💪", label: "Getting Stronger", hint: "75% BW" },
+  { icon: "⚡", label: "Strong", hint: "50% BW" },
+  { icon: "🔥", label: "Very Strong", hint: "25% BW" },
+  { icon: "👑", label: "Elite", hint: "0 kg (unassisted)" },
 ];
 
 interface ExerciseEditorProps {
@@ -35,6 +45,11 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
   const getDefaultThresholds = (): number[] => {
     if (!bodyWeight) return DEFAULT_RATIOS.map((r) => Math.round(r * 70));
     return DEFAULT_RATIOS.map((r) => Math.round(r * bodyWeight));
+  };
+
+  const getAssistedDefaults = (): number[] => {
+    const bw = bodyWeight ?? 70;
+    return ASSISTED_FRACTIONS.map((f) => Math.round(f * bw));
   };
 
   const addExercise = () => {
@@ -90,9 +105,11 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
         </div>
 
         {exercises.map((ex, idx) => {
-          const thresholds = ex.levelThresholds || getDefaultThresholds();
+          const isAssisted = !!ex.isAssisted;
+          const thresholds = ex.levelThresholds || (isAssisted ? getAssistedDefaults() : getDefaultThresholds());
+          const levelDefs = isAssisted ? ASSISTED_LEVEL_DEFS : LEVEL_DEFS;
           const isLevelsOpen = levelsOpen[idx] ?? false;
-          const isWeightExercise = !ex.isBodyweight && !ex.isTimeBased && !ex.isRoundsBased;
+          const showLevels = !ex.isTimeBased && !ex.isRoundsBased;
 
           return (
             <motion.div
@@ -182,7 +199,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               </div>
 
               {/* Strength Level Thresholds */}
-              {isWeightExercise && (
+              {showLevels && (
                 <div>
                   <button
                     type="button"
@@ -208,7 +225,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                         className="overflow-hidden"
                       >
                         <div className="mt-2 space-y-1.5">
-                          {LEVEL_DEFS.map((level, lIdx) => (
+                          {levelDefs.map((level, lIdx) => (
                             <div key={lIdx} className="flex items-center gap-2">
                               <span className="text-sm w-5 text-center">{level.icon}</span>
                               <span className="text-[10px] font-bold text-foreground flex-1 min-w-0 truncate">
@@ -222,9 +239,11 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                                 value={thresholds[lIdx] ?? ""}
                                 onChange={(e) => updateThreshold(idx, lIdx, parseFloat(e.target.value) || 0)}
                                 className="h-6 w-16 text-[11px] text-center border-primary/20 shrink-0"
-                                placeholder="kg"
+                                placeholder={isAssisted ? "kg assist" : "kg"}
                               />
-                              <span className="text-[9px] text-muted-foreground font-bold">kg</span>
+                              <span className="text-[9px] text-muted-foreground font-bold">
+                                {isAssisted ? "kg assist" : "kg"}
+                              </span>
                             </div>
                           ))}
                           {!ex.levelThresholds && (
