@@ -8,6 +8,8 @@ export interface Exercise {
   isTimeBased?: boolean;
   isRoundsBased?: boolean;
   isAssisted?: boolean;
+  /** Custom strength-level weight thresholds [Beginner, GettingStronger, Strong, VeryStrong, Elite] (5 values in kg) */
+  levelThresholds?: number[];
 }
 
 export interface WorkoutDay {
