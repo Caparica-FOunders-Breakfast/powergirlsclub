@@ -536,8 +536,10 @@ function ExerciseCard({
   const levelEmoji = getLevelEmoji();
 
   // Ensure suggestedWeight displays with emoji
+  const EMOJI_ICONS = ["🌱", "💪", "⚡", "🔥", "👑"];
+  const hasEmojiPrefix = exercise.suggestedWeight ? EMOJI_ICONS.some(e => exercise.suggestedWeight!.startsWith(e)) : false;
   const displaySuggestedWeight = exercise.suggestedWeight
-    ? ((/^[\p{Emoji}]/u.test(exercise.suggestedWeight)) ? exercise.suggestedWeight : (levelEmoji ? `${levelEmoji} ${exercise.suggestedWeight}` : exercise.suggestedWeight))
+    ? (hasEmojiPrefix ? exercise.suggestedWeight : (levelEmoji ? `${levelEmoji} ${exercise.suggestedWeight}` : exercise.suggestedWeight))
     : "";
 
   return (
