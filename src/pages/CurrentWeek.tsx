@@ -549,16 +549,30 @@ function ExerciseCard({
               <span className="text-[11px] font-semibold text-muted-foreground">
                 Last week: {lastWeekWeight} {unit}
               </span>
-              <span className="text-[11px] font-bold text-neon-teal">
-                → Try {recommendedWeight != null && recommendedWeight >= 0 ? recommendedWeight : 0} {unit} {isAssisted ? "🎯" : isTime ? "⏱️" : isRounds ? "🔁" : "💪"}
+              {recommendedWeight != null && (
+                <span className="text-[11px] font-bold text-neon-teal">
+                  {isAssisted
+                    ? `→ Decrease to ${Math.max(0, recommendedWeight)} kg assist 🎯`
+                    : `→ Try ${recommendedWeight} ${unit} ${isTime ? "⏱️" : isRounds ? "🔁" : "💪"}`}
+                </span>
+              )}
+            </div>
+          )}
+
+          {!lastWeekWeight && (
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[11px] font-semibold text-neon-teal">
+                {isAssisted ? "🎯 Decrease weight assistance" : isTime ? "⏱️ Add time" : isRounds ? "🔁 Add reps" : "💪 Add weight"}
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-1 mt-1">
-            <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
-            <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
-          </div>
+          {lastWeekWeight != null && exercise.progression && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
+              <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
+            </div>
+          )}
         </div>
 
         <div className="shrink-0">
