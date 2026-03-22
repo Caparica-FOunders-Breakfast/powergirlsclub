@@ -164,15 +164,15 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               {/* Strength Level Selector */}
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">
-                  {isAssisted ? "Assistance Level" : "Strength Level"}
+                  {isAssisted ? "Assistance Level" : isTime ? "Time Level" : isReps ? "Reps Level" : "Strength Level"}
                 </label>
                 <div className="flex gap-1 mt-1">
                   {levelDefs.map((level, lIdx) => {
-                    const weight = thresholds[lIdx];
-                    const prevWeight = lIdx > 0 ? thresholds[lIdx - 1] : 0;
+                    const val = thresholds[lIdx];
+                    const prevVal = lIdx > 0 ? thresholds[lIdx - 1] : 0;
                     const rangeLabel = isAssisted
-                      ? (lIdx === 0 ? `≥ ${weight} kg` : lIdx === levelDefs.length - 1 ? `${weight} kg` : `${weight}–${thresholds[lIdx - 1]} kg`)
-                      : (lIdx === 0 ? `< ${weight} kg` : lIdx === levelDefs.length - 1 ? `≥ ${weight} kg` : `${prevWeight}–${weight} kg`);
+                      ? (lIdx === 0 ? `≥ ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `${val} ${unit}` : `${val}–${thresholds[lIdx - 1]} ${unit}`)
+                      : (lIdx === 0 ? `< ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `≥ ${val} ${unit}` : `${prevVal}–${val} ${unit}`);
                     const isSelected = ex.suggestedWeight === rangeLabel;
                     return (
                       <button
