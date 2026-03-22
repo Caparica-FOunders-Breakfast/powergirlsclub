@@ -179,7 +179,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                       <button
                         key={lIdx}
                         type="button"
-                        onClick={() => updateExercise(idx, "suggestedWeight", rangeLabel)}
+                        onClick={() => updateExercise(idx, "suggestedWeight", displayLabel)}
                         className={cn(
                           "flex-1 flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg border-2 transition-all text-center",
                           isSelected
