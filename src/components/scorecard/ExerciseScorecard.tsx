@@ -149,18 +149,23 @@ export function ExerciseScorecard() {
     .map(([name, entries]) => {
       const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       const currentWeight = sorted[0].weight;
-      const bestWeight = Math.max(...entries.map((e) => e.weight));
+      const isAssisted = ASSISTED_EXERCISES.has(name);
+      const bestWeight = isAssisted
+        ? Math.min(...entries.map((e) => e.weight)) // lower assistance = better
+        : Math.max(...entries.map((e) => e.weight));
       const unit = getUnit(name);
       const useRatio = unit === "kg" && !!bw;
       const ratio = useRatio ? currentWeight / bw! : 0;
-      const hasThresholds = !useRatio && NON_KG_THRESHOLDS[name] != null;
-      const level = useRatio
-        ? getLevel(ratio)
-        : hasThresholds
-          ? getNonKgLevel(name, currentWeight)
-          : { label: "—" as const, icon: "📈", index: -1 };
+      const hasThresholds = !useRatio && !isAssisted && NON_KG_THRESHOLDS[name] != null;
+      const level = isAssisted
+        ? getAssistedLevel(name, currentWeight)
+        : useRatio
+          ? getLevel(ratio)
+          : hasThresholds
+            ? getNonKgLevel(name, currentWeight)
+            : { label: "—" as const, icon: "📈", index: -1 };
       const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds };
+      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted };
     });
 
   // Group by category
