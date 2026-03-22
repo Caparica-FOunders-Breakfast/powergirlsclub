@@ -168,12 +168,12 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                     const rangeLabel = isAssisted
                       ? (lIdx === 0 ? `≥ ${weight} kg` : lIdx === levelDefs.length - 1 ? `${weight} kg` : `${weight}–${thresholds[lIdx - 1]} kg`)
                       : (lIdx === 0 ? `< ${weight} kg` : lIdx === levelDefs.length - 1 ? `≥ ${weight} kg` : `${prevWeight}–${weight} kg`);
-                    const isSelected = ex.suggestedWeight === `${weight}`;
+                    const isSelected = ex.suggestedWeight === rangeLabel;
                     return (
                       <button
                         key={lIdx}
                         type="button"
-                        onClick={() => updateExercise(idx, "suggestedWeight", `${weight}`)}
+                        onClick={() => updateExercise(idx, "suggestedWeight", rangeLabel)}
                         className={cn(
                           "flex-1 flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg border-2 transition-all text-center",
                           isSelected
