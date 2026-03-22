@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { ExerciseDetail } from "./ExerciseDetail";
 import { StrengthSummary } from "./StrengthSummary";
 import { AddExerciseModal } from "./AddExerciseModal";
-import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress } from "./exerciseLevels";
+import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress, ASSISTED_EXERCISES, getAssistedLevel, getAssistedProgress } from "./exerciseLevels";
 import { useToast } from "@/hooks/use-toast";
 
 // Unit mapping: exercises not measured in kg
