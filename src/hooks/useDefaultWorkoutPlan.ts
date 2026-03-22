@@ -9,11 +9,11 @@ export const useDefaultWorkoutPlan = () => {
     queryKey: ["default-workout-plan"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("default_workout_plans")
+        .from("default_workout_plans" as any)
         .select("*")
         .order("day_index");
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
@@ -47,7 +47,7 @@ export const useSaveDefaultDay = () => {
       restNote?: string;
     }) => {
       const { data, error } = await supabase
-        .from("default_workout_plans")
+        .from("default_workout_plans" as any)
         .upsert({
           day_index: dayIndex,
           exercises: exercises as any,
