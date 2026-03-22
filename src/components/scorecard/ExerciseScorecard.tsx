@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Trash2 } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -179,7 +180,6 @@ export function ExerciseScorecard() {
       if (a.isAssisted && b.isAssisted) return a.bestWeight - b.bestWeight; // lower assist = better
       return b.bestWeight - a.bestWeight;
     });
-  }
   }
   const sortedCategories = CATEGORY_ORDER.filter((c) => groupedByCategory.has(c));
 
