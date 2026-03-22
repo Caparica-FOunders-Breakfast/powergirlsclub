@@ -508,7 +508,9 @@ function ExerciseCard({
   const isAssisted = exercise.isAssisted;
   const isBodyweight = exercise.isBodyweight && !isTime;
   const unit = isAssisted ? "kg assist" : isRounds ? "reps" : isTime ? "sec" : "kg";
-  const increment = isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : isBodyweight ? 2 : 2;
+  // Parse increment from progression string (e.g. "+2.5 kg/week" → 2.5, "-2 kg/week" → -2)
+  const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.\-]/g, "") || "0");
+  const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
   const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
 
   return (
