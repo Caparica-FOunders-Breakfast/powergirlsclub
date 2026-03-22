@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Heart, User, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useUserRole } from "@/hooks/useProfile";
+import AdminDefaultPlanEditor from "@/components/AdminDefaultPlanEditor";
 
 const items = [
   { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜", description: "Team challenges & competitions" },
@@ -9,6 +11,7 @@ const items = [
 
 const More = () => {
   const navigate = useNavigate();
+  const { data: role } = useUserRole();
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -37,6 +40,12 @@ const More = () => {
           </motion.button>
         ))}
       </div>
+
+      {role === "admin" && (
+        <div className="mt-6">
+          <AdminDefaultPlanEditor />
+        </div>
+      )}
     </div>
   );
 };
