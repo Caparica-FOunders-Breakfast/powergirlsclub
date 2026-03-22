@@ -164,6 +164,10 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                 <div className="flex gap-1 mt-1">
                   {levelDefs.map((level, lIdx) => {
                     const weight = thresholds[lIdx];
+                    const prevWeight = lIdx > 0 ? thresholds[lIdx - 1] : 0;
+                    const rangeLabel = isAssisted
+                      ? (lIdx === 0 ? `≥ ${weight} kg` : lIdx === levelDefs.length - 1 ? `${weight} kg` : `${weight}–${thresholds[lIdx - 1]} kg`)
+                      : (lIdx === 0 ? `< ${weight} kg` : lIdx === levelDefs.length - 1 ? `≥ ${weight} kg` : `${prevWeight}–${weight} kg`);
                     const isSelected = ex.suggestedWeight === `${weight}`;
                     return (
                       <button
@@ -179,10 +183,10 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                       >
                         <span className="text-sm leading-none">{level.icon}</span>
                         <span className={cn(
-                          "text-[8px] font-bold leading-tight",
+                          "text-[7px] font-bold leading-tight whitespace-nowrap",
                           isSelected ? "text-primary" : "text-muted-foreground"
                         )}>
-                          {weight}{isAssisted ? " kg" : " kg"}
+                          {rangeLabel}
                         </span>
                       </button>
                     );
