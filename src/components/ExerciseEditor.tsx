@@ -207,7 +207,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                     onChange={(e) => {
                       const val = e.target.value;
                       const prefix = isAssisted ? "-" : "+";
-                      const unit = isAssisted ? " kg/week" : isTime ? " sec/week" : isReps ? " reps/week" : " kg/week";
+                      const unit = isAssisted ? " kg/week" : ex.isTimeBased ? " sec/week" : ex.isRoundsBased ? " reps/week" : " kg/week";
                       updateExercise(idx, "progression", val ? `${prefix}${val}${unit}` : "");
                     }}
                     placeholder={isAssisted ? "2" : "2.5"}
