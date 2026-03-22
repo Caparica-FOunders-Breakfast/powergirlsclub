@@ -211,9 +211,9 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
               <div className="flex flex-wrap gap-1.5">
                 {([
-                  { key: "isBodyweight", label: "Bodyweight" },
+                  { key: "isBodyweight", label: "Weight" },
                   { key: "isTimeBased", label: "Time-based" },
-                  { key: "isRoundsBased", label: "Rounds" },
+                  { key: "isRoundsBased", label: "Reps" },
                   { key: "isAssisted", label: "Assisted" },
                 ] as const).map(({ key, label }) => (
                   <button
