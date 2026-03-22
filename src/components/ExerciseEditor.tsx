@@ -173,7 +173,8 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                     const rangeLabel = isAssisted
                       ? (lIdx === 0 ? `≥ ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `${val} ${unit}` : `${val}–${thresholds[lIdx - 1]} ${unit}`)
                       : (lIdx === 0 ? `< ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `≥ ${val} ${unit}` : `${prevVal}–${val} ${unit}`);
-                    const isSelected = ex.suggestedWeight === rangeLabel;
+                    const displayLabel = `${level.icon} ${rangeLabel}`;
+                    const isSelected = ex.suggestedWeight === displayLabel || ex.suggestedWeight === rangeLabel;
                     return (
                       <button
                         key={lIdx}
