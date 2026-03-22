@@ -248,64 +248,61 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               </div>
 
               {/* Strength Level Thresholds */}
-              {showLevels && (
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setLevelsOpen((prev) => ({ ...prev, [idx]: !prev[idx] }))}
-                    className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors w-full"
-                  >
-                    <span>Strength Levels</span>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setLevelsOpen((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors w-full"
+                >
+                  <span>{isAssisted ? "Assistance" : isTime ? "Time" : isReps ? "Reps" : "Strength"} Levels</span>
+                  {!isTime && !isReps && (
                     <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground/70">
                       {bodyWeight ? `(${bodyWeight} kg BW)` : "(set BW in profile)"}
                     </span>
-                    <span className="ml-auto">
-                      {isLevelsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </span>
-                  </button>
+                  )}
+                  <span className="ml-auto">
+                    {isLevelsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </span>
+                </button>
 
-                  <AnimatePresence>
-                    {isLevelsOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="mt-2 space-y-1.5">
-                          {levelDefs.map((level, lIdx) => (
-                            <div key={lIdx} className="flex items-center gap-2">
-                              <span className="text-sm w-5 text-center">{level.icon}</span>
-                              <span className="text-[10px] font-bold text-foreground flex-1 min-w-0 truncate">
-                                {level.label}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground/60 shrink-0 w-16 text-right">
-                                {level.hint}
-                              </span>
-                              <Input
-                                type="number"
-                                value={thresholds[lIdx] ?? ""}
-                                onChange={(e) => updateThreshold(idx, lIdx, parseFloat(e.target.value) || 0)}
-                                className="h-6 w-16 text-[11px] text-center border-primary/20 shrink-0"
-                                placeholder={isAssisted ? "kg assist" : "kg"}
-                              />
-                              <span className="text-[9px] text-muted-foreground font-bold">
-                                {isAssisted ? "kg assist" : "kg"}
-                              </span>
-                            </div>
-                          ))}
-                          {!ex.levelThresholds && (
-                            <p className="text-[9px] text-muted-foreground/50 italic">
-                              Auto-calculated from body weight. Edit to customize.
-                            </p>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                <AnimatePresence>
+                  {isLevelsOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-2 space-y-1.5">
+                        {levelDefs.map((level, lIdx) => (
+                          <div key={lIdx} className="flex items-center gap-2">
+                            <span className="text-sm w-5 text-center">{level.icon}</span>
+                            <span className="text-[10px] font-bold text-foreground flex-1 min-w-0 truncate">
+                              {level.label}
+                            </span>
+                            <Input
+                              type="number"
+                              value={thresholds[lIdx] ?? ""}
+                              onChange={(e) => updateThreshold(idx, lIdx, parseFloat(e.target.value) || 0)}
+                              className="h-6 w-16 text-[11px] text-center border-primary/20 shrink-0"
+                              placeholder={unit}
+                            />
+                            <span className="text-[9px] text-muted-foreground font-bold">
+                              {unit}
+                            </span>
+                          </div>
+                        ))}
+                        {!ex.levelThresholds && (
+                          <p className="text-[9px] text-muted-foreground/50 italic">
+                            {isTime || isReps ? "Default values. Edit to customize." : "Auto-calculated from body weight. Edit to customize."}
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           );
         })}
