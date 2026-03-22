@@ -1,10 +1,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, GripVertical, RotateCcw, Save, X, Pencil } from "lucide-react";
+import { Plus, Trash2, GripVertical, RotateCcw, Save, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
+import { useProfile } from "@/hooks/useProfile";
+
+const DEFAULT_RATIOS = [0.35, 0.60, 0.85, 1.20, 1.60];
+
+const LEVEL_DEFS = [
+  { icon: "🌱", label: "Beginner", hint: "< 0.35x" },
+  { icon: "💪", label: "Getting Stronger", hint: "0.35–0.60x" },
+  { icon: "⚡", label: "Strong", hint: "0.60–0.85x" },
+  { icon: "🔥", label: "Very Strong", hint: "0.85–1.20x" },
+  { icon: "👑", label: "Elite", hint: "> 1.20x" },
+];
 
 interface ExerciseEditorProps {
   day: WorkoutDay;
@@ -17,6 +28,14 @@ interface ExerciseEditorProps {
 
 const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: ExerciseEditorProps) => {
   const [exercises, setExercises] = useState<Exercise[]>([...day.exercises]);
+  const [levelsOpen, setLevelsOpen] = useState<Record<number, boolean>>({});
+  const { data: profile } = useProfile();
+  const bodyWeight = profile?.body_weight ?? null;
+
+  const getDefaultThresholds = (): number[] => {
+    if (!bodyWeight) return DEFAULT_RATIOS.map((r) => Math.round(r * 70));
+    return DEFAULT_RATIOS.map((r) => Math.round(r * bodyWeight));
+  };
 
   const addExercise = () => {
     setExercises([...exercises, {
@@ -30,10 +49,24 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
   const removeExercise = (idx: number) => {
     setExercises(exercises.filter((_, i) => i !== idx));
+    setLevelsOpen((prev) => {
+      const next = { ...prev };
+      delete next[idx];
+      return next;
+    });
   };
 
   const updateExercise = (idx: number, field: keyof Exercise, value: any) => {
     setExercises(exercises.map((ex, i) => i === idx ? { ...ex, [field]: value } : ex));
+  };
+
+  const updateThreshold = (exIdx: number, levelIdx: number, value: number) => {
+    setExercises(exercises.map((ex, i) => {
+      if (i !== exIdx) return ex;
+      const thresholds = [...(ex.levelThresholds || getDefaultThresholds())];
+      thresholds[levelIdx] = value;
+      return { ...ex, levelThresholds: thresholds };
+    }));
   };
 
   const handleSave = () => {
@@ -56,94 +89,158 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
           </Button>
         </div>
 
-        {exercises.map((ex, idx) => (
-          <motion.div
-            key={idx}
-            layout
-            className="p-3 rounded-xl border-2 border-border bg-background space-y-2"
-          >
-            <div className="flex items-center gap-2">
-              <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
-              <Input
-                value={ex.name}
-                onChange={(e) => updateExercise(idx, "name", e.target.value)}
-                placeholder="Exercise name"
-                className="flex-1 h-8 text-sm font-bold border-primary/20"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeExercise(idx)}
-                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+        {exercises.map((ex, idx) => {
+          const thresholds = ex.levelThresholds || getDefaultThresholds();
+          const isLevelsOpen = levelsOpen[idx] ?? false;
+          const isWeightExercise = !ex.isBodyweight && !ex.isTimeBased && !ex.isRoundsBased;
 
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Sets</label>
+          return (
+            <motion.div
+              key={idx}
+              layout
+              className="p-3 rounded-xl border-2 border-border bg-background space-y-2"
+            >
+              <div className="flex items-center gap-2">
+                <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
                 <Input
-                  type="number"
-                  value={ex.sets}
-                  onChange={(e) => updateExercise(idx, "sets", parseInt(e.target.value) || 0)}
-                  className="h-7 text-xs text-center border-primary/20"
+                  value={ex.name}
+                  onChange={(e) => updateExercise(idx, "name", e.target.value)}
+                  placeholder="Exercise name"
+                  className="flex-1 h-8 text-sm font-bold border-primary/20"
                 />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Reps</label>
-                <Input
-                  value={ex.reps}
-                  onChange={(e) => updateExercise(idx, "reps", e.target.value)}
-                  placeholder="10"
-                  className="h-7 text-xs text-center border-primary/20"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Weight</label>
-                <Input
-                  value={ex.suggestedWeight}
-                  onChange={(e) => updateExercise(idx, "suggestedWeight", e.target.value)}
-                  placeholder="kg"
-                  className="h-7 text-xs text-center border-primary/20"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-muted-foreground uppercase">Progression</label>
-              <Input
-                value={ex.progression}
-                onChange={(e) => updateExercise(idx, "progression", e.target.value)}
-                placeholder="e.g. +2 kg, Add reps, -2 kg assist"
-                className="h-7 text-xs border-primary/20"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-1.5">
-              {([
-                { key: "isBodyweight", label: "Bodyweight" },
-                { key: "isTimeBased", label: "Time-based" },
-                { key: "isRoundsBased", label: "Rounds" },
-                { key: "isAssisted", label: "Assisted" },
-              ] as const).map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => updateExercise(idx, key, !ex[key])}
-                  className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors",
-                    ex[key]
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
-                  )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeExercise(idx)}
+                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Sets</label>
+                  <Input
+                    type="number"
+                    value={ex.sets}
+                    onChange={(e) => updateExercise(idx, "sets", parseInt(e.target.value) || 0)}
+                    className="h-7 text-xs text-center border-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Reps</label>
+                  <Input
+                    value={ex.reps}
+                    onChange={(e) => updateExercise(idx, "reps", e.target.value)}
+                    placeholder="10"
+                    className="h-7 text-xs text-center border-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Weight</label>
+                  <Input
+                    value={ex.suggestedWeight}
+                    onChange={(e) => updateExercise(idx, "suggestedWeight", e.target.value)}
+                    placeholder="kg"
+                    className="h-7 text-xs text-center border-primary/20"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Progression</label>
+                <Input
+                  value={ex.progression}
+                  onChange={(e) => updateExercise(idx, "progression", e.target.value)}
+                  placeholder="e.g. +2 kg, Add reps, -2 kg assist"
+                  className="h-7 text-xs border-primary/20"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {([
+                  { key: "isBodyweight", label: "Bodyweight" },
+                  { key: "isTimeBased", label: "Time-based" },
+                  { key: "isRoundsBased", label: "Rounds" },
+                  { key: "isAssisted", label: "Assisted" },
+                ] as const).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => updateExercise(idx, key, !ex[key])}
+                    className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors",
+                      ex[key]
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Strength Level Thresholds */}
+              {isWeightExercise && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setLevelsOpen((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+                    className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors w-full"
+                  >
+                    <span>Strength Levels</span>
+                    <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground/70">
+                      {bodyWeight ? `(${bodyWeight} kg BW)` : "(set BW in profile)"}
+                    </span>
+                    <span className="ml-auto">
+                      {isLevelsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </span>
+                  </button>
+
+                  <AnimatePresence>
+                    {isLevelsOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-2 space-y-1.5">
+                          {LEVEL_DEFS.map((level, lIdx) => (
+                            <div key={lIdx} className="flex items-center gap-2">
+                              <span className="text-sm w-5 text-center">{level.icon}</span>
+                              <span className="text-[10px] font-bold text-foreground flex-1 min-w-0 truncate">
+                                {level.label}
+                              </span>
+                              <span className="text-[9px] text-muted-foreground/60 shrink-0 w-16 text-right">
+                                {level.hint}
+                              </span>
+                              <Input
+                                type="number"
+                                value={thresholds[lIdx] ?? ""}
+                                onChange={(e) => updateThreshold(idx, lIdx, parseFloat(e.target.value) || 0)}
+                                className="h-6 w-16 text-[11px] text-center border-primary/20 shrink-0"
+                                placeholder="kg"
+                              />
+                              <span className="text-[9px] text-muted-foreground font-bold">kg</span>
+                            </div>
+                          ))}
+                          {!ex.levelThresholds && (
+                            <p className="text-[9px] text-muted-foreground/50 italic">
+                              Auto-calculated from body weight. Edit to customize.
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
 
         <Button
           variant="outline"
