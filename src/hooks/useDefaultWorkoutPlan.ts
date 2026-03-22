@@ -47,7 +47,7 @@ export const useSaveDefaultDay = () => {
       restNote?: string;
     }) => {
       const { data, error } = await supabase
-        .from("default_workout_plans")
+        .from("default_workout_plans" as any)
         .upsert({
           day_index: dayIndex,
           exercises: exercises as any,
