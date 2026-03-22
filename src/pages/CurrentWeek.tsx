@@ -26,6 +26,8 @@ const LEVEL_EMOJIS = ["🌱", "💪", "⚡", "🔥", "👑"];
 const CurrentWeek = () => {
   const { data: challenge } = useActiveChallenge();
   const progress = useChallengeProgress(challenge?.start_date ?? null);
+  const { data: profile } = useProfile();
+  const bodyWeight = profile?.body_weight ?? 70;
   const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
