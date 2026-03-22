@@ -135,7 +135,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                 </Button>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-muted-foreground uppercase">Sets</label>
                   <Input
@@ -154,13 +154,47 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                     className="h-7 text-xs text-center border-primary/20"
                   />
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Weight</label>
+              </div>
+
+              {/* Strength Level Selector */}
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                  {isAssisted ? "Assistance Level" : "Strength Level"}
+                </label>
+                <div className="flex gap-1 mt-1">
+                  {levelDefs.map((level, lIdx) => {
+                    const weight = thresholds[lIdx];
+                    const isSelected = ex.suggestedWeight === `${weight}`;
+                    return (
+                      <button
+                        key={lIdx}
+                        type="button"
+                        onClick={() => updateExercise(idx, "suggestedWeight", `${weight}`)}
+                        className={cn(
+                          "flex-1 flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg border-2 transition-all text-center",
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border hover:border-primary/30 bg-transparent"
+                        )}
+                      >
+                        <span className="text-sm leading-none">{level.icon}</span>
+                        <span className={cn(
+                          "text-[8px] font-bold leading-tight",
+                          isSelected ? "text-primary" : "text-muted-foreground"
+                        )}>
+                          {weight}{isAssisted ? " kg" : " kg"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="text-[9px] text-muted-foreground">or custom:</span>
                   <Input
                     value={ex.suggestedWeight}
                     onChange={(e) => updateExercise(idx, "suggestedWeight", e.target.value)}
-                    placeholder="kg"
-                    className="h-7 text-xs text-center border-primary/20"
+                    placeholder={isAssisted ? "kg assist" : "kg"}
+                    className="h-6 text-[11px] text-center border-primary/20 flex-1"
                   />
                 </div>
               </div>
