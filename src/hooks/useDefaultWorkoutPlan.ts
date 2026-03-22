@@ -13,7 +13,7 @@ export const useDefaultWorkoutPlan = () => {
         .select("*")
         .order("day_index");
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
