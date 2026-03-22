@@ -541,7 +541,7 @@ function ExerciseCard({
             <span className="text-xs font-bold text-primary">
               {isRounds ? `${exercise.sets} rounds` : `${exercise.sets} × ${exercise.reps}`}
             </span>
-            {!isRounds && displaySuggestedWeight && <span className="text-xs font-semibold text-muted-foreground">{displaySuggestedWeight}</span>}
+            {!isRounds && exercise.suggestedWeight && <span className="text-xs font-semibold text-muted-foreground">{exercise.suggestedWeight}</span>}
           </div>
 
           {/* Last week value + recommendation */}
