@@ -513,6 +513,33 @@ function ExerciseCard({
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
   const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
 
+  // Derive strength level emoji from current weight and thresholds
+  const LEVEL_EMOJIS = ["🌱", "💪", "⚡", "🔥", "👑"];
+  const currentVal = weight ? Number(weight) : lastWeekWeight ?? null;
+  const getLevelEmoji = () => {
+    if (currentVal == null) return "";
+    const thresholds = exercise.levelThresholds;
+    if (!thresholds || thresholds.length < 5) return "";
+    if (isAssisted) {
+      // Lower assistance = stronger (inverted)
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (currentVal <= thresholds[i]) return LEVEL_EMOJIS[i] || "👑";
+      }
+      return LEVEL_EMOJIS[0];
+    } else {
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (currentVal >= thresholds[i]) return LEVEL_EMOJIS[i] || "👑";
+      }
+      return LEVEL_EMOJIS[0];
+    }
+  };
+  const levelEmoji = getLevelEmoji();
+
+  // Ensure suggestedWeight displays with emoji
+  const displaySuggestedWeight = exercise.suggestedWeight
+    ? ((/^[\p{Emoji}]/u.test(exercise.suggestedWeight)) ? exercise.suggestedWeight : (levelEmoji ? `${levelEmoji} ${exercise.suggestedWeight}` : exercise.suggestedWeight))
+    : "";
+
   return (
     <motion.div
       layout
