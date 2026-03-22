@@ -31,6 +31,7 @@ const EXERCISE_UNITS: Record<string, string> = {
   "Sprint / Jump Rope": "rounds",
   "Recovery Day": "—",
   "Rest Day": "—",
+  "Pull Ups": "kg assist",
   "jkk": "reps",
 };
 
