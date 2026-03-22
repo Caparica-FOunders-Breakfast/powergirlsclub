@@ -550,7 +550,7 @@ function ExerciseCard({
                 Last week: {lastWeekWeight} {unit}
               </span>
               <span className="text-[11px] font-bold text-neon-teal">
-                → Try {recommendedWeight != null && recommendedWeight >= 0 ? recommendedWeight : 0} {unit} {isAssisted ? "🎯" : isTime ? "⏱️" : isBodyweight ? "🔁" : "💪"}
+                → Try {recommendedWeight != null && recommendedWeight >= 0 ? recommendedWeight : 0} {unit} {isAssisted ? "🎯" : isTime ? "⏱️" : isRounds ? "🔁" : "💪"}
               </span>
             </div>
           )}
