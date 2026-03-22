@@ -195,13 +195,28 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Progression</label>
-                <Input
-                  value={ex.progression}
-                  onChange={(e) => updateExercise(idx, "progression", e.target.value)}
-                  placeholder="e.g. +2 kg, Add reps, -2 kg assist"
-                  className="h-7 text-xs border-primary/20"
-                />
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                  Progression per week ({isAssisted ? "kg less assist" : isTime ? "sec" : isReps ? "reps" : "kg"})
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-muted-foreground">{isAssisted ? "−" : "+"}</span>
+                  <Input
+                    type="number"
+                    step="0.5"
+                    value={ex.progression?.replace(/[^0-9.\-]/g, "") || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const prefix = isAssisted ? "-" : "+";
+                      const unit = isAssisted ? " kg/week" : isTime ? " sec/week" : isReps ? " reps/week" : " kg/week";
+                      updateExercise(idx, "progression", val ? `${prefix}${val}${unit}` : "");
+                    }}
+                    placeholder={isAssisted ? "2" : "2.5"}
+                    className="h-7 text-xs text-center border-primary/20 flex-1"
+                  />
+                  <span className="text-[10px] font-bold text-muted-foreground shrink-0">
+                    {isAssisted ? "kg/week" : isTime ? "sec/week" : isReps ? "reps/week" : "kg/week"}
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
