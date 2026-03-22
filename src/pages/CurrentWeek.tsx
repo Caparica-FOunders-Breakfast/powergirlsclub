@@ -507,7 +507,7 @@ function ExerciseCard({
   const isTime = exercise.isTimeBased;
   const isAssisted = exercise.isAssisted;
   const isBodyweight = exercise.isBodyweight && !isTime;
-  const unit = isAssisted ? "kg assist" : isRounds ? "rounds" : isTime ? "sec" : isBodyweight ? "reps" : "kg";
+  const unit = isAssisted ? "kg assist" : isRounds ? "reps" : isTime ? "sec" : "kg";
   const increment = isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : isBodyweight ? 2 : 2;
   const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
 
