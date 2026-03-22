@@ -105,9 +105,11 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
         </div>
 
         {exercises.map((ex, idx) => {
-          const thresholds = ex.levelThresholds || getDefaultThresholds();
+          const isAssisted = !!ex.isAssisted;
+          const thresholds = ex.levelThresholds || (isAssisted ? getAssistedDefaults() : getDefaultThresholds());
+          const levelDefs = isAssisted ? ASSISTED_LEVEL_DEFS : LEVEL_DEFS;
           const isLevelsOpen = levelsOpen[idx] ?? false;
-          const isWeightExercise = !ex.isBodyweight && !ex.isTimeBased && !ex.isRoundsBased;
+          const showLevels = !ex.isTimeBased && !ex.isRoundsBased;
 
           return (
             <motion.div
