@@ -47,6 +47,11 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
     return DEFAULT_RATIOS.map((r) => Math.round(r * bodyWeight));
   };
 
+  const getAssistedDefaults = (): number[] => {
+    const bw = bodyWeight ?? 70;
+    return ASSISTED_FRACTIONS.map((f) => Math.round(f * bw));
+  };
+
   const addExercise = () => {
     setExercises([...exercises, {
       name: "",
