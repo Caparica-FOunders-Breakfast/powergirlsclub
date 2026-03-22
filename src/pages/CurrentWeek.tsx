@@ -414,7 +414,7 @@ const CurrentWeek = () => {
                                   className={cn(
                                     "inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all",
                                     restDone
-                                      ? "bg-secondary/10 border-secondary text-secondary-foreground"
+                                      ? "bg-secondary/10 border-secondary text-foreground"
                                       : "border-primary/30 text-muted-foreground hover:border-primary"
                                   )}
                                 >
