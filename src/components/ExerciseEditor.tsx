@@ -24,7 +24,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
       sets: 3,
       reps: "10",
       suggestedWeight: "",
-      progression: "+2 kg",
+      progression: "",
     }]);
   };
 
