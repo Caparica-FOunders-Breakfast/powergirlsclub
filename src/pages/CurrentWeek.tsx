@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, TrendingUp, Undo2 } from "lucide-react";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
+import { useProfile } from "@/hooks/useProfile";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
 import ExerciseEditor from "@/components/ExerciseEditor";
 
@@ -16,10 +17,17 @@ import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } from "date-fns";
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+const DEFAULT_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6];
+const DEFAULT_TIME_THRESHOLDS = [15, 30, 60, 90, 120];
+const DEFAULT_REPS_THRESHOLDS = [5, 10, 20, 35, 50];
+const ASSISTED_FRACTIONS = [1, 0.75, 0.5, 0.25, 0];
+const LEVEL_EMOJIS = ["🌱", "💪", "⚡", "🔥", "👑"];
 
 const CurrentWeek = () => {
   const { data: challenge } = useActiveChallenge();
   const progress = useChallengeProgress(challenge?.start_date ?? null);
+  const { data: profile } = useProfile();
+  const bodyWeight = profile?.body_weight ?? 70;
   const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
@@ -444,6 +452,7 @@ const CurrentWeek = () => {
                                 <ExerciseCard
                                   key={key}
                                   exercise={ex}
+                                  bodyWeight={bodyWeight}
                                   isDone={isDone}
                                   weight={localWeights[key] || ""}
                                   lastWeekWeight={lastWeekWeight}
@@ -488,6 +497,7 @@ const CurrentWeek = () => {
 
 function ExerciseCard({
   exercise,
+  bodyWeight,
   isDone,
   weight,
   lastWeekWeight,
@@ -496,6 +506,7 @@ function ExerciseCard({
   onToggle,
 }: {
   exercise: Exercise;
+  bodyWeight: number;
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
@@ -507,11 +518,34 @@ function ExerciseCard({
   const isTime = exercise.isTimeBased;
   const isAssisted = exercise.isAssisted;
   const isBodyweight = exercise.isBodyweight && !isTime;
-  const unit = isAssisted ? "kg assist" : isRounds ? "reps" : isTime ? "sec" : "kg";
-  // Parse increment from progression string (e.g. "+2.5 kg/week" → 2.5, "-2 kg/week" → -2)
+  const unit = isAssisted ? "kg" : isRounds ? "reps" : isTime ? "sec" : "kg";
+  const defaultThresholds = isAssisted
+    ? ASSISTED_FRACTIONS.map((fraction) => Math.round(fraction * bodyWeight))
+    : isTime
+      ? DEFAULT_TIME_THRESHOLDS
+      : isRounds
+        ? DEFAULT_REPS_THRESHOLDS
+        : DEFAULT_RATIOS.map((ratio) => Math.round(ratio * bodyWeight));
+  const thresholds = exercise.levelThresholds || defaultThresholds;
   const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.\-]/g, "") || "0");
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
   const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
+  const hasEmojiPrefix = !!exercise.suggestedWeight && LEVEL_EMOJIS.some((emoji) => exercise.suggestedWeight.startsWith(emoji));
+  const buildRangeLabel = (index: number) => {
+    const value = thresholds[index];
+    const prevValue = index > 0 ? thresholds[index - 1] : 0;
+    return isAssisted
+      ? (index === 0 ? `≥ ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `${value} ${unit}` : `${value}–${thresholds[index - 1]} ${unit}`)
+      : (index === 0 ? `< ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `≥ ${value} ${unit}` : `${prevValue}–${value} ${unit}`);
+  };
+  const matchedLevelIndex = exercise.suggestedWeight ? LEVEL_EMOJIS.findIndex((_, index) => buildRangeLabel(index) === exercise.suggestedWeight) : -1;
+  const displaySuggestedWeight = exercise.suggestedWeight
+    ? hasEmojiPrefix
+      ? exercise.suggestedWeight
+      : matchedLevelIndex >= 0
+        ? `${LEVEL_EMOJIS[matchedLevelIndex]} ${exercise.suggestedWeight}`
+        : exercise.suggestedWeight
+    : "";
 
 
   return (
@@ -541,7 +575,7 @@ function ExerciseCard({
             <span className="text-xs font-bold text-primary">
               {isRounds ? `${exercise.sets} rounds` : `${exercise.sets} × ${exercise.reps}`}
             </span>
-            {!isRounds && exercise.suggestedWeight && <span className="text-xs font-semibold text-muted-foreground">{exercise.suggestedWeight}</span>}
+            {!isRounds && displaySuggestedWeight && <span className="text-xs font-semibold text-muted-foreground">{displaySuggestedWeight}</span>}
           </div>
 
           {/* Last week value + recommendation */}
