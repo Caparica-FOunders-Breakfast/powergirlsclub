@@ -225,7 +225,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                         className="overflow-hidden"
                       >
                         <div className="mt-2 space-y-1.5">
-                          {LEVEL_DEFS.map((level, lIdx) => (
+                          {levelDefs.map((level, lIdx) => (
                             <div key={lIdx} className="flex items-center gap-2">
                               <span className="text-sm w-5 text-center">{level.icon}</span>
                               <span className="text-[10px] font-bold text-foreground flex-1 min-w-0 truncate">
@@ -239,9 +239,11 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                                 value={thresholds[lIdx] ?? ""}
                                 onChange={(e) => updateThreshold(idx, lIdx, parseFloat(e.target.value) || 0)}
                                 className="h-6 w-16 text-[11px] text-center border-primary/20 shrink-0"
-                                placeholder="kg"
+                                placeholder={isAssisted ? "kg assist" : "kg"}
                               />
-                              <span className="text-[9px] text-muted-foreground font-bold">kg</span>
+                              <span className="text-[9px] text-muted-foreground font-bold">
+                                {isAssisted ? "kg assist" : "kg"}
+                              </span>
                             </div>
                           ))}
                           {!ex.levelThresholds && (
