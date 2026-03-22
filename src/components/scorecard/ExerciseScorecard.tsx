@@ -181,7 +181,6 @@ export function ExerciseScorecard() {
       return b.bestWeight - a.bestWeight;
     });
   }
-  }
   const sortedCategories = CATEGORY_ORDER.filter((c) => groupedByCategory.has(c));
 
   // Detail view
