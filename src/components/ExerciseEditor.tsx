@@ -214,7 +214,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                     className="h-7 text-xs text-center border-primary/20 flex-1"
                   />
                   <span className="text-[10px] font-bold text-muted-foreground shrink-0">
-                    {isAssisted ? "kg/week" : isTime ? "sec/week" : isReps ? "reps/week" : "kg/week"}
+                    {isAssisted ? "kg/week" : ex.isTimeBased ? "sec/week" : ex.isRoundsBased ? "reps/week" : "kg/week"}
                   </span>
                 </div>
               </div>
