@@ -7,6 +7,7 @@ export interface Exercise {
   isBodyweight?: boolean;
   isTimeBased?: boolean;
   isRoundsBased?: boolean;
+  isAssisted?: boolean;
 }
 
 export interface WorkoutDay {

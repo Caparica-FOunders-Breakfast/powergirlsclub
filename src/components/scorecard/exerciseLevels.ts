@@ -13,6 +13,41 @@ export const NON_KG_THRESHOLDS: Record<string, number[]> = {
   "Sprint / Jump Rope": [1, 2, 4, 6],
 };
 
+// Assisted exercises: lower assistance = stronger (inverted scale)
+// Thresholds are assistance kg values going DOWN: [Beginner+, Early Int, Int, Int+, Advanced, Goal]
+export const ASSISTED_EXERCISE_THRESHOLDS: Record<string, { thresholds: number[]; labels: string[]; icons: string[] }> = {
+  "Pull Ups": {
+    // thresholds: assistance weight boundaries (descending — lower is better)
+    thresholds: [60, 50, 40, 30, 15, 0],
+    labels: ["🌱 Beginner", "🌿 Beginner+", "🌼 Early Intermediate", "🌻 Intermediate", "🔥 Intermediate+", "⚡ Advanced", "👑 Goal"],
+    icons: ["🌱", "🌿", "🌼", "🌻", "🔥", "⚡", "👑"],
+  },
+};
+
+export function getAssistedLevel(name: string, assistanceKg: number) {
+  const config = ASSISTED_EXERCISE_THRESHOLDS[name];
+  if (!config) return LEVEL_DEFS[0];
+  const { thresholds, labels, icons } = config;
+  // Walk thresholds descending — first one the value is <= determines level
+  for (let i = thresholds.length - 1; i >= 0; i--) {
+    if (assistanceKg <= thresholds[i]) {
+      return { label: labels[i + 1] || labels[labels.length - 1], icon: icons[i + 1] || icons[icons.length - 1], index: i + 1 };
+    }
+  }
+  return { label: labels[0], icon: icons[0], index: 0 };
+}
+
+export function getAssistedProgress(name: string, assistanceKg: number) {
+  const config = ASSISTED_EXERCISE_THRESHOLDS[name];
+  if (!config) return 0;
+  const max = config.thresholds[0]; // highest assistance (worst)
+  if (assistanceKg >= max) return 0;
+  if (assistanceKg <= 0) return 100;
+  return ((max - assistanceKg) / max) * 100;
+}
+
+export const ASSISTED_EXERCISES = new Set(Object.keys(ASSISTED_EXERCISE_THRESHOLDS));
+
 export const LEVEL_DEFS = [
   { label: "Beginner" as const, icon: "🌱", index: 0 },
   { label: "Getting Stronger" as const, icon: "💪", index: 1 },
