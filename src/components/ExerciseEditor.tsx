@@ -8,6 +8,8 @@ import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
 import { useProfile } from "@/hooks/useProfile";
 
 const DEFAULT_RATIOS = [0.35, 0.60, 0.85, 1.20, 1.60];
+// Assisted: assistance weight goes DOWN (BW → 0). Fractions of BW still needed as assist.
+const ASSISTED_FRACTIONS = [1.0, 0.75, 0.50, 0.25, 0.0];
 
 const LEVEL_DEFS = [
   { icon: "🌱", label: "Beginner", hint: "< 0.35x" },
@@ -15,6 +17,14 @@ const LEVEL_DEFS = [
   { icon: "⚡", label: "Strong", hint: "0.60–0.85x" },
   { icon: "🔥", label: "Very Strong", hint: "0.85–1.20x" },
   { icon: "👑", label: "Elite", hint: "> 1.20x" },
+];
+
+const ASSISTED_LEVEL_DEFS = [
+  { icon: "🌱", label: "Beginner", hint: "= BW assist" },
+  { icon: "💪", label: "Getting Stronger", hint: "75% BW" },
+  { icon: "⚡", label: "Strong", hint: "50% BW" },
+  { icon: "🔥", label: "Very Strong", hint: "25% BW" },
+  { icon: "👑", label: "Elite", hint: "0 kg (unassisted)" },
 ];
 
 interface ExerciseEditorProps {
