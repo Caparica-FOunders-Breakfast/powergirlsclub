@@ -325,10 +325,18 @@ export function ExerciseScorecard() {
                       <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
                       <span className="text-xs font-bold text-muted-foreground ml-1">{ex.unit}</span>
                     </div>
-                    {ex.bestWeight > ex.currentWeight && (
-                      <div className="text-xs font-bold text-muted-foreground">
-                        Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
-                      </div>
+                    {ex.isAssisted ? (
+                      ex.bestWeight < ex.currentWeight && (
+                        <div className="text-xs font-bold text-muted-foreground">
+                          Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
+                        </div>
+                      )
+                    ) : (
+                      ex.bestWeight > ex.currentWeight && (
+                        <div className="text-xs font-bold text-muted-foreground">
+                          Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
+                        </div>
+                      )
                     )}
                     {ex.useRatio && (
                       <div className="text-xs font-bold text-muted-foreground ml-auto">
