@@ -199,7 +199,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               </div>
 
               {/* Strength Level Thresholds */}
-              {isWeightExercise && (
+              {showLevels && (
                 <div>
                   <button
                     type="button"
