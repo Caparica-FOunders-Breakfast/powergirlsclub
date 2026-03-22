@@ -97,6 +97,45 @@ export type Database = {
         }
         Relationships: []
       }
+      default_workout_plans: {
+        Row: {
+          created_at: string
+          day_index: number
+          emoji: string
+          exercises: Json
+          id: string
+          is_recovery: boolean
+          is_rest: boolean
+          label: string
+          rest_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_index: number
+          emoji?: string
+          exercises?: Json
+          id?: string
+          is_recovery?: boolean
+          is_rest?: boolean
+          label: string
+          rest_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          emoji?: string
+          exercises?: Json
+          id?: string
+          is_recovery?: boolean
+          is_rest?: boolean
+          label?: string
+          rest_note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exercise_logs: {
         Row: {
           completed: boolean
