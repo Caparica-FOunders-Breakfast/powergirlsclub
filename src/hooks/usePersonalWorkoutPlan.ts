@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
+import { useDefaultWorkoutPlan } from "@/hooks/useDefaultWorkoutPlan";
+import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 
 export const usePersonalWorkoutPlan = () => {
   const { user } = useAuth();
+  const { plan: defaultPlan, isLoading: defaultsLoading } = useDefaultWorkoutPlan();
 
-  const { data: customPlans, isLoading } = useQuery({
+  const { data: customPlans, isLoading: customLoading } = useQuery({
     queryKey: ["personal-workout-plan", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -20,8 +22,8 @@ export const usePersonalWorkoutPlan = () => {
     enabled: !!user,
   });
 
-  // Merge custom plans with defaults
-  const plan: WorkoutDay[] = weeklyPlan.map((defaultDay, idx) => {
+  // Merge custom plans with DB defaults
+  const plan: WorkoutDay[] = defaultPlan.map((defaultDay, idx) => {
     const custom = customPlans?.find((c: any) => c.day_index === idx);
     if (!custom) return defaultDay;
     return {
@@ -35,7 +37,11 @@ export const usePersonalWorkoutPlan = () => {
     };
   });
 
-  return { plan, isLoading, hasCustom: (dayIdx: number) => !!customPlans?.find((c: any) => c.day_index === dayIdx) };
+  return {
+    plan,
+    isLoading: defaultsLoading || customLoading,
+    hasCustom: (dayIdx: number) => !!customPlans?.find((c: any) => c.day_index === dayIdx),
+  };
 };
 
 export const useSavePersonalDay = () => {
