@@ -193,7 +193,6 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                   })}
                 </div>
               </div>
-              </div>
 
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">Progression</label>
