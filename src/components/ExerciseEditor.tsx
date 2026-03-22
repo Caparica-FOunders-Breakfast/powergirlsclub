@@ -196,7 +196,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">
-                  Progression per week ({isAssisted ? "kg less assist" : isTime ? "sec" : isReps ? "reps" : "kg"})
+                  Progression per week ({isAssisted ? "kg less assist" : ex.isTimeBased ? "sec" : ex.isRoundsBased ? "reps" : "kg"})
                 </label>
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-muted-foreground">{isAssisted ? "−" : "+"}</span>
