@@ -108,10 +108,13 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
         {exercises.map((ex, idx) => {
           const isAssisted = !!ex.isAssisted;
-          const thresholds = ex.levelThresholds || (isAssisted ? getAssistedDefaults() : getDefaultThresholds());
+          const isTime = !!ex.isTimeBased;
+          const isReps = !!ex.isRoundsBased;
+          const unit = isAssisted ? "kg" : isTime ? "sec" : isReps ? "reps" : "kg";
+          const defaultThresholds = isAssisted ? getAssistedDefaults() : isTime ? DEFAULT_TIME_THRESHOLDS : isReps ? DEFAULT_REPS_THRESHOLDS : getDefaultThresholds();
+          const thresholds = ex.levelThresholds || defaultThresholds;
           const levelDefs = isAssisted ? ASSISTED_LEVEL_DEFS : LEVEL_DEFS;
           const isLevelsOpen = levelsOpen[idx] ?? false;
-          const showLevels = !ex.isTimeBased && !ex.isRoundsBased;
 
           return (
             <motion.div
