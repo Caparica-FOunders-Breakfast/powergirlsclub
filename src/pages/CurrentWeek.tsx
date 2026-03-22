@@ -497,6 +497,7 @@ const CurrentWeek = () => {
 
 function ExerciseCard({
   exercise,
+  bodyWeight,
   isDone,
   weight,
   lastWeekWeight,
@@ -505,6 +506,7 @@ function ExerciseCard({
   onToggle,
 }: {
   exercise: Exercise;
+  bodyWeight: number;
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
