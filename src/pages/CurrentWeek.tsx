@@ -452,6 +452,7 @@ const CurrentWeek = () => {
                                 <ExerciseCard
                                   key={key}
                                   exercise={ex}
+                                  bodyWeight={bodyWeight}
                                   isDone={isDone}
                                   weight={localWeights[key] || ""}
                                   lastWeekWeight={lastWeekWeight}
