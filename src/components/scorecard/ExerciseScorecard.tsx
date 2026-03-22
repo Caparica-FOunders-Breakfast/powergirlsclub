@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { ExerciseDetail } from "./ExerciseDetail";
 import { StrengthSummary } from "./StrengthSummary";
 import { AddExerciseModal } from "./AddExerciseModal";
-import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress } from "./exerciseLevels";
+import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress, ASSISTED_EXERCISES, getAssistedLevel, getAssistedProgress } from "./exerciseLevels";
 import { useToast } from "@/hooks/use-toast";
 
 // Unit mapping: exercises not measured in kg
@@ -31,6 +31,7 @@ const EXERCISE_UNITS: Record<string, string> = {
   "Sprint / Jump Rope": "rounds",
   "Recovery Day": "—",
   "Rest Day": "—",
+  "Pull Ups": "kg assist",
   "jkk": "reps",
 };
 
@@ -50,7 +51,8 @@ const EXERCISE_CATEGORIES: Record<string, string> = {
   "Dumbbell Shoulder Press": "💪 Upper Body",
   "Seated Row": "💪 Upper Body",
   "Cable Row": "💪 Upper Body",
-  "Push Ups": "💪 Upper Body",
+   "Push Ups": "💪 Upper Body",
+   "Pull Ups": "💪 Upper Body",
   "Back Extension": "💪 Upper Body",
   "Plank": "🧘 Core",
   "Dead Bug": "🧘 Core",
@@ -147,18 +149,23 @@ export function ExerciseScorecard() {
     .map(([name, entries]) => {
       const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       const currentWeight = sorted[0].weight;
-      const bestWeight = Math.max(...entries.map((e) => e.weight));
+      const isAssisted = ASSISTED_EXERCISES.has(name);
+      const bestWeight = isAssisted
+        ? Math.min(...entries.map((e) => e.weight)) // lower assistance = better
+        : Math.max(...entries.map((e) => e.weight));
       const unit = getUnit(name);
       const useRatio = unit === "kg" && !!bw;
       const ratio = useRatio ? currentWeight / bw! : 0;
-      const hasThresholds = !useRatio && NON_KG_THRESHOLDS[name] != null;
-      const level = useRatio
-        ? getLevel(ratio)
-        : hasThresholds
-          ? getNonKgLevel(name, currentWeight)
-          : { label: "—" as const, icon: "📈", index: -1 };
+      const hasThresholds = !useRatio && !isAssisted && NON_KG_THRESHOLDS[name] != null;
+      const level = isAssisted
+        ? getAssistedLevel(name, currentWeight)
+        : useRatio
+          ? getLevel(ratio)
+          : hasThresholds
+            ? getNonKgLevel(name, currentWeight)
+            : { label: "—" as const, icon: "📈", index: -1 };
       const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds };
+      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted };
     });
 
   // Group by category
@@ -168,7 +175,11 @@ export function ExerciseScorecard() {
     groupedByCategory.get(ex.category)!.push(ex);
   }
   for (const [, exs] of groupedByCategory) {
-    exs.sort((a, b) => b.bestWeight - a.bestWeight);
+    exs.sort((a, b) => {
+      if (a.isAssisted && b.isAssisted) return a.bestWeight - b.bestWeight; // lower assist = better
+      return b.bestWeight - a.bestWeight;
+    });
+  }
   }
   const sortedCategories = CATEGORY_ORDER.filter((c) => groupedByCategory.has(c));
 
@@ -273,12 +284,16 @@ export function ExerciseScorecard() {
           </motion.h3>
 
           {groupedByCategory.get(category)!.map((ex, i) => {
-            const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
-            const progress = ex.useRatio
-              ? (bw ? getLevelProgress(ex.ratio) : 0)
-              : ex.hasThresholds
-                ? getNonKgProgress(ex.name, ex.currentWeight)
-                : 0;
+            const isPR = ex.isAssisted
+              ? (ex.currentWeight === ex.bestWeight && ex.entries.length > 1) // best = lowest for assisted
+              : (ex.currentWeight === ex.bestWeight && ex.entries.length > 1);
+            const progress = ex.isAssisted
+              ? getAssistedProgress(ex.name, ex.currentWeight)
+              : ex.useRatio
+                ? (bw ? getLevelProgress(ex.ratio) : 0)
+                : ex.hasThresholds
+                  ? getNonKgProgress(ex.name, ex.currentWeight)
+                  : 0;
 
             return (
               <motion.div
@@ -310,10 +325,18 @@ export function ExerciseScorecard() {
                       <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
                       <span className="text-xs font-bold text-muted-foreground ml-1">{ex.unit}</span>
                     </div>
-                    {ex.bestWeight > ex.currentWeight && (
-                      <div className="text-xs font-bold text-muted-foreground">
-                        Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
-                      </div>
+                    {ex.isAssisted ? (
+                      ex.bestWeight < ex.currentWeight && (
+                        <div className="text-xs font-bold text-muted-foreground">
+                          Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
+                        </div>
+                      )
+                    ) : (
+                      ex.bestWeight > ex.currentWeight && (
+                        <div className="text-xs font-bold text-muted-foreground">
+                          Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
+                        </div>
+                      )
                     )}
                     {ex.useRatio && (
                       <div className="text-xs font-bold text-muted-foreground ml-auto">
@@ -323,7 +346,7 @@ export function ExerciseScorecard() {
                   </div>
 
                   {/* Progress bar */}
-                  {(ex.useRatio || ex.hasThresholds) ? (
+                  {(ex.useRatio || ex.hasThresholds || ex.isAssisted) ? (
                     <div className="space-y-1">
                       <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                         <motion.div
