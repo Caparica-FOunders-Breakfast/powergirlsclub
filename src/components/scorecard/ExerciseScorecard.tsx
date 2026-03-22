@@ -284,12 +284,16 @@ export function ExerciseScorecard() {
           </motion.h3>
 
           {groupedByCategory.get(category)!.map((ex, i) => {
-            const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
-            const progress = ex.useRatio
-              ? (bw ? getLevelProgress(ex.ratio) : 0)
-              : ex.hasThresholds
-                ? getNonKgProgress(ex.name, ex.currentWeight)
-                : 0;
+            const isPR = ex.isAssisted
+              ? (ex.currentWeight === ex.bestWeight && ex.entries.length > 1) // best = lowest for assisted
+              : (ex.currentWeight === ex.bestWeight && ex.entries.length > 1);
+            const progress = ex.isAssisted
+              ? getAssistedProgress(ex.name, ex.currentWeight)
+              : ex.useRatio
+                ? (bw ? getLevelProgress(ex.ratio) : 0)
+                : ex.hasThresholds
+                  ? getNonKgProgress(ex.name, ex.currentWeight)
+                  : 0;
 
             return (
               <motion.div
