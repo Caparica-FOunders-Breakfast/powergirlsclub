@@ -192,15 +192,6 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                     );
                   })}
                 </div>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="text-[9px] text-muted-foreground">or custom:</span>
-                  <Input
-                    value={ex.suggestedWeight}
-                    onChange={(e) => updateExercise(idx, "suggestedWeight", e.target.value)}
-                    placeholder={isAssisted ? "kg assist" : "kg"}
-                    className="h-6 text-[11px] text-center border-primary/20 flex-1"
-                  />
-                </div>
               </div>
 
               <div>
