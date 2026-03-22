@@ -8,6 +8,8 @@ import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
 import { useProfile } from "@/hooks/useProfile";
 
 const DEFAULT_RATIOS = [0.35, 0.60, 0.85, 1.20, 1.60];
+const DEFAULT_TIME_THRESHOLDS = [15, 30, 60, 90, 120]; // seconds
+const DEFAULT_REPS_THRESHOLDS = [5, 10, 20, 35, 50]; // reps
 // Assisted: assistance weight goes DOWN (BW → 0). Fractions of BW still needed as assist.
 const ASSISTED_FRACTIONS = [1.0, 0.75, 0.50, 0.25, 0.0];
 
@@ -106,10 +108,13 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
         {exercises.map((ex, idx) => {
           const isAssisted = !!ex.isAssisted;
-          const thresholds = ex.levelThresholds || (isAssisted ? getAssistedDefaults() : getDefaultThresholds());
+          const isTime = !!ex.isTimeBased;
+          const isReps = !!ex.isRoundsBased;
+          const unit = isAssisted ? "kg" : isTime ? "sec" : isReps ? "reps" : "kg";
+          const defaultThresholds = isAssisted ? getAssistedDefaults() : isTime ? DEFAULT_TIME_THRESHOLDS : isReps ? DEFAULT_REPS_THRESHOLDS : getDefaultThresholds();
+          const thresholds = ex.levelThresholds || defaultThresholds;
           const levelDefs = isAssisted ? ASSISTED_LEVEL_DEFS : LEVEL_DEFS;
           const isLevelsOpen = levelsOpen[idx] ?? false;
-          const showLevels = !ex.isTimeBased && !ex.isRoundsBased;
 
           return (
             <motion.div
@@ -159,15 +164,15 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               {/* Strength Level Selector */}
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">
-                  {isAssisted ? "Assistance Level" : "Strength Level"}
+                  {isAssisted ? "Assistance Level" : isTime ? "Time Level" : isReps ? "Reps Level" : "Strength Level"}
                 </label>
                 <div className="flex gap-1 mt-1">
                   {levelDefs.map((level, lIdx) => {
-                    const weight = thresholds[lIdx];
-                    const prevWeight = lIdx > 0 ? thresholds[lIdx - 1] : 0;
+                    const val = thresholds[lIdx];
+                    const prevVal = lIdx > 0 ? thresholds[lIdx - 1] : 0;
                     const rangeLabel = isAssisted
-                      ? (lIdx === 0 ? `≥ ${weight} kg` : lIdx === levelDefs.length - 1 ? `${weight} kg` : `${weight}–${thresholds[lIdx - 1]} kg`)
-                      : (lIdx === 0 ? `< ${weight} kg` : lIdx === levelDefs.length - 1 ? `≥ ${weight} kg` : `${prevWeight}–${weight} kg`);
+                      ? (lIdx === 0 ? `≥ ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `${val} ${unit}` : `${val}–${thresholds[lIdx - 1]} ${unit}`)
+                      : (lIdx === 0 ? `< ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `≥ ${val} ${unit}` : `${prevVal}–${val} ${unit}`);
                     const isSelected = ex.suggestedWeight === rangeLabel;
                     return (
                       <button
@@ -243,64 +248,61 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               </div>
 
               {/* Strength Level Thresholds */}
-              {showLevels && (
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setLevelsOpen((prev) => ({ ...prev, [idx]: !prev[idx] }))}
-                    className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors w-full"
-                  >
-                    <span>Strength Levels</span>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setLevelsOpen((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors w-full"
+                >
+                  <span>{isAssisted ? "Assistance" : isTime ? "Time" : isReps ? "Reps" : "Strength"} Levels</span>
+                  {!isTime && !isReps && (
                     <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground/70">
                       {bodyWeight ? `(${bodyWeight} kg BW)` : "(set BW in profile)"}
                     </span>
-                    <span className="ml-auto">
-                      {isLevelsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </span>
-                  </button>
+                  )}
+                  <span className="ml-auto">
+                    {isLevelsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </span>
+                </button>
 
-                  <AnimatePresence>
-                    {isLevelsOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="mt-2 space-y-1.5">
-                          {levelDefs.map((level, lIdx) => (
-                            <div key={lIdx} className="flex items-center gap-2">
-                              <span className="text-sm w-5 text-center">{level.icon}</span>
-                              <span className="text-[10px] font-bold text-foreground flex-1 min-w-0 truncate">
-                                {level.label}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground/60 shrink-0 w-16 text-right">
-                                {level.hint}
-                              </span>
-                              <Input
-                                type="number"
-                                value={thresholds[lIdx] ?? ""}
-                                onChange={(e) => updateThreshold(idx, lIdx, parseFloat(e.target.value) || 0)}
-                                className="h-6 w-16 text-[11px] text-center border-primary/20 shrink-0"
-                                placeholder={isAssisted ? "kg assist" : "kg"}
-                              />
-                              <span className="text-[9px] text-muted-foreground font-bold">
-                                {isAssisted ? "kg assist" : "kg"}
-                              </span>
-                            </div>
-                          ))}
-                          {!ex.levelThresholds && (
-                            <p className="text-[9px] text-muted-foreground/50 italic">
-                              Auto-calculated from body weight. Edit to customize.
-                            </p>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                <AnimatePresence>
+                  {isLevelsOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-2 space-y-1.5">
+                        {levelDefs.map((level, lIdx) => (
+                          <div key={lIdx} className="flex items-center gap-2">
+                            <span className="text-sm w-5 text-center">{level.icon}</span>
+                            <span className="text-[10px] font-bold text-foreground flex-1 min-w-0 truncate">
+                              {level.label}
+                            </span>
+                            <Input
+                              type="number"
+                              value={thresholds[lIdx] ?? ""}
+                              onChange={(e) => updateThreshold(idx, lIdx, parseFloat(e.target.value) || 0)}
+                              className="h-6 w-16 text-[11px] text-center border-primary/20 shrink-0"
+                              placeholder={unit}
+                            />
+                            <span className="text-[9px] text-muted-foreground font-bold">
+                              {unit}
+                            </span>
+                          </div>
+                        ))}
+                        {!ex.levelThresholds && (
+                          <p className="text-[9px] text-muted-foreground/50 italic">
+                            {isTime || isReps ? "Default values. Edit to customize." : "Auto-calculated from body weight. Edit to customize."}
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           );
         })}
