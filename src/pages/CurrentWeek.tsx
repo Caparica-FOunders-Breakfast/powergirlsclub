@@ -518,11 +518,34 @@ function ExerciseCard({
   const isTime = exercise.isTimeBased;
   const isAssisted = exercise.isAssisted;
   const isBodyweight = exercise.isBodyweight && !isTime;
-  const unit = isAssisted ? "kg assist" : isRounds ? "reps" : isTime ? "sec" : "kg";
-  // Parse increment from progression string (e.g. "+2.5 kg/week" → 2.5, "-2 kg/week" → -2)
+  const unit = isAssisted ? "kg" : isRounds ? "reps" : isTime ? "sec" : "kg";
+  const defaultThresholds = isAssisted
+    ? ASSISTED_FRACTIONS.map((fraction) => Math.round(fraction * bodyWeight))
+    : isTime
+      ? DEFAULT_TIME_THRESHOLDS
+      : isRounds
+        ? DEFAULT_REPS_THRESHOLDS
+        : DEFAULT_RATIOS.map((ratio) => Math.round(ratio * bodyWeight));
+  const thresholds = exercise.levelThresholds || defaultThresholds;
   const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.\-]/g, "") || "0");
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
   const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
+  const hasEmojiPrefix = !!exercise.suggestedWeight && LEVEL_EMOJIS.some((emoji) => exercise.suggestedWeight.startsWith(emoji));
+  const buildRangeLabel = (index: number) => {
+    const value = thresholds[index];
+    const prevValue = index > 0 ? thresholds[index - 1] : 0;
+    return isAssisted
+      ? (index === 0 ? `≥ ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `${value} ${unit}` : `${value}–${thresholds[index - 1]} ${unit}`)
+      : (index === 0 ? `< ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `≥ ${value} ${unit}` : `${prevValue}–${value} ${unit}`);
+  };
+  const matchedLevelIndex = exercise.suggestedWeight ? LEVEL_EMOJIS.findIndex((_, index) => buildRangeLabel(index) === exercise.suggestedWeight) : -1;
+  const displaySuggestedWeight = exercise.suggestedWeight
+    ? hasEmojiPrefix
+      ? exercise.suggestedWeight
+      : matchedLevelIndex >= 0
+        ? `${LEVEL_EMOJIS[matchedLevelIndex]} ${exercise.suggestedWeight}`
+        : exercise.suggestedWeight
+    : "";
 
 
   return (
