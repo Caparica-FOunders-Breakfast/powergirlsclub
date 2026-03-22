@@ -24,7 +24,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
       sets: 3,
       reps: "10",
       suggestedWeight: "",
-      progression: "+2 kg",
+      progression: "",
     }]);
   };
 
@@ -108,6 +108,39 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                   className="h-7 text-xs text-center border-primary/20"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase">Progression</label>
+              <Input
+                value={ex.progression}
+                onChange={(e) => updateExercise(idx, "progression", e.target.value)}
+                placeholder="e.g. +2 kg, Add reps, -2 kg assist"
+                className="h-7 text-xs border-primary/20"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { key: "isBodyweight", label: "Bodyweight" },
+                { key: "isTimeBased", label: "Time-based" },
+                { key: "isRoundsBased", label: "Rounds" },
+                { key: "isAssisted", label: "Assisted" },
+              ] as const).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => updateExercise(idx, key, !ex[key])}
+                  className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors",
+                    ex[key]
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </motion.div>
         ))}
