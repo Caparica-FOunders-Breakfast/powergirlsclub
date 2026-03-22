@@ -346,7 +346,7 @@ export function ExerciseScorecard() {
                   </div>
 
                   {/* Progress bar */}
-                  {(ex.useRatio || ex.hasThresholds) ? (
+                  {(ex.useRatio || ex.hasThresholds || ex.isAssisted) ? (
                     <div className="space-y-1">
                       <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                         <motion.div
