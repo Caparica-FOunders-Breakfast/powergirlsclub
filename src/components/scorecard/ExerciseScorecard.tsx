@@ -175,7 +175,11 @@ export function ExerciseScorecard() {
     groupedByCategory.get(ex.category)!.push(ex);
   }
   for (const [, exs] of groupedByCategory) {
-    exs.sort((a, b) => b.bestWeight - a.bestWeight);
+    exs.sort((a, b) => {
+      if (a.isAssisted && b.isAssisted) return a.bestWeight - b.bestWeight; // lower assist = better
+      return b.bestWeight - a.bestWeight;
+    });
+  }
   }
   const sortedCategories = CATEGORY_ORDER.filter((c) => groupedByCategory.has(c));
 
