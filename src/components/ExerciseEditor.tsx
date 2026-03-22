@@ -8,6 +8,8 @@ import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
 import { useProfile } from "@/hooks/useProfile";
 
 const DEFAULT_RATIOS = [0.35, 0.60, 0.85, 1.20, 1.60];
+const DEFAULT_TIME_THRESHOLDS = [15, 30, 60, 90, 120]; // seconds
+const DEFAULT_REPS_THRESHOLDS = [5, 10, 20, 35, 50]; // reps
 // Assisted: assistance weight goes DOWN (BW → 0). Fractions of BW still needed as assist.
 const ASSISTED_FRACTIONS = [1.0, 0.75, 0.50, 0.25, 0.0];
 
