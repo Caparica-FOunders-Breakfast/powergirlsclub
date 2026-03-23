@@ -73,22 +73,13 @@ const CATEGORY_ORDER = ["🦵 Legs", "🍑 Glutes", "💪 Upper Body", "🧘 Cor
 export function ExerciseScorecard() {
   const { data: grouped, isLoading } = useExerciseScorecard();
   const { data: profile } = useProfile();
-  const updateProfile = useUpdateProfile();
   const { hiddenExercises, hideExercise, unhideExercise } = useScorecardVisibility();
   const { toast } = useToast();
-  const [bodyWeight, setBodyWeight] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
-
-  const handleSaveWeight = async () => {
-    const val = parseFloat(bodyWeight);
-    if (!val || val <= 0) return;
-    await updateProfile.mutateAsync({ body_weight: val } as any);
-    setBodyWeight("");
-  };
 
   const handleRemoveExercise = useCallback((exerciseName: string) => {
     hideExercise.mutate(exerciseName);
