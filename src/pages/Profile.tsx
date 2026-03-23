@@ -22,6 +22,21 @@ const Profile = () => {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
+  const [bodyWeight, setBodyWeight] = useState("");
+
+  const bw = profile?.body_weight ? Number(profile.body_weight) : null;
+
+  const handleSaveWeight = async () => {
+    const val = parseFloat(bodyWeight);
+    if (!val || val <= 0) return;
+    try {
+      await updateProfile.mutateAsync({ body_weight: val } as any);
+      setBodyWeight("");
+      toast({ title: "Body weight updated! ⚖️" });
+    } catch {
+      toast({ title: "Error", variant: "destructive" });
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) return;
