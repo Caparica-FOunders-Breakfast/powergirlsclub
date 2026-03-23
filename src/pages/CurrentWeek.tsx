@@ -121,6 +121,13 @@ const CurrentWeek = () => {
   const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string) => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
+
+    // Require weight/value before marking as complete
+    if (newVal && !localWeights[key]?.trim()) {
+      toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time before completing." });
+      return;
+    }
+
     setLocalCompleted((prev) => ({ ...prev, [key]: newVal }));
     saveExercise(dayIdx, exIdx, exerciseName, localWeights[key] || "", newVal);
 
