@@ -1,28 +1,15 @@
 
 
-## Add Progression & Exercise Type Editing to ExerciseEditor
+## Plan: Auto-update Scorecard on exercise log changes
 
-### What's missing
-The `ExerciseEditor` component doesn't expose the `progression` field or the type toggles (`isBodyweight`, `isTimeBased`, `isRoundsBased`, `isAssisted`). Users can't customize how an exercise progresses week-to-week.
+**Problem**: When a user completes exercises in the weekly plan, the Exercise Scorecard doesn't refresh automatically because the `exercise-scorecard` query is never invalidated after saving an exercise log.
 
-### Changes — single file: `src/components/ExerciseEditor.tsx`
+**Fix**: Add `exercise-scorecard` to the list of invalidated queries in the `useSaveExerciseLog` mutation's `onSuccess` callback.
 
-1. **Add a "Progression" input field** below the sets/reps/weight row — a text input where users type the progression rule (e.g. "+2 kg", "Add reps", "-2 kg assist").
+### Changes
 
-2. **Add exercise type toggles** — small chip/toggle buttons for the boolean flags:
-   - Bodyweight
-   - Time-based
-   - Rounds-based
-   - Assisted (inverted progression like Pull Ups)
+**File: `src/hooks/useExerciseLogs.ts`**
+- In `useSaveExerciseLog`, add `queryClient.invalidateQueries({ queryKey: ["exercise-scorecard"] })` to the `onSuccess` handler (line ~69, alongside the existing invalidations).
 
-   These appear as a row of small toggleable badges below the progression input. Tapping toggles the flag on/off.
-
-3. **Update `addExercise` default** — new exercises get an empty `progression` string so users are prompted to fill it in.
-
-This reuses the existing save flow — the full `Exercise` object (including progression and flags) already gets passed to `onSave` and stored in `user_workout_plans.exercises` JSONB. No database changes needed.
-
-### Technical details
-- The toggles use the existing `cn()` utility for conditional styling (active = primary bg, inactive = muted border)
-- All fields are already part of the `Exercise` interface, so no type changes needed
-- Works for both personal plan editing and admin default plan editing since both use this component
+This is a one-line fix. After this, any time a user logs weight or toggles completion in the weekly plan, the scorecard data will automatically re-fetch.
 
