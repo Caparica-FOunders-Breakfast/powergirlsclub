@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { LogOut, Dumbbell, Flame, Trophy } from "lucide-react";
+import { LogOut, Dumbbell, Flame, Trophy, Scale } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
 import { useMyTeam } from "@/hooks/useTeams";
@@ -22,6 +22,21 @@ const Profile = () => {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
+  const [bodyWeight, setBodyWeight] = useState("");
+
+  const bw = profile?.body_weight ? Number(profile.body_weight) : null;
+
+  const handleSaveWeight = async () => {
+    const val = parseFloat(bodyWeight);
+    if (!val || val <= 0) return;
+    try {
+      await updateProfile.mutateAsync({ body_weight: val } as any);
+      setBodyWeight("");
+      toast({ title: "Body weight updated! ⚖️" });
+    } catch {
+      toast({ title: "Error", variant: "destructive" });
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) return;
@@ -91,6 +106,45 @@ const Profile = () => {
               style={{ backgroundColor: c }}
             />
           ))}
+        </div>
+      </motion.div>
+
+      {/* Body Weight */}
+      <motion.div
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-2xl border-2 border-border bg-card p-4 mb-6"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Scale className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Body Weight</p>
+              {bw ? (
+                <p className="text-2xl font-display text-foreground">{bw} <span className="text-sm font-bold text-muted-foreground">kg</span></p>
+              ) : (
+                <p className="text-sm font-bold text-muted-foreground">Not set</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              placeholder={bw ? String(bw) : "kg"}
+              value={bodyWeight}
+              onChange={(e) => setBodyWeight(e.target.value)}
+              className="w-20 h-9 text-center border-2 border-border"
+            />
+            <Button
+              size="sm"
+              onClick={handleSaveWeight}
+              disabled={!bodyWeight}
+              className="h-9 font-bold"
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </motion.div>
 

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useExerciseScorecard, getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
-import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfile";
 import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -73,22 +73,13 @@ const CATEGORY_ORDER = ["🦵 Legs", "🍑 Glutes", "💪 Upper Body", "🧘 Cor
 export function ExerciseScorecard() {
   const { data: grouped, isLoading } = useExerciseScorecard();
   const { data: profile } = useProfile();
-  const updateProfile = useUpdateProfile();
   const { hiddenExercises, hideExercise, unhideExercise } = useScorecardVisibility();
   const { toast } = useToast();
-  const [bodyWeight, setBodyWeight] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
-
-  const handleSaveWeight = async () => {
-    const val = parseFloat(bodyWeight);
-    if (!val || val <= 0) return;
-    await updateProfile.mutateAsync({ body_weight: val } as any);
-    setBodyWeight("");
-  };
 
   const handleRemoveExercise = useCallback((exerciseName: string) => {
     hideExercise.mutate(exerciseName);
@@ -201,41 +192,6 @@ export function ExerciseScorecard() {
 
   return (
     <div className="space-y-4">
-      {/* Body Weight Input */}
-      <motion.div
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="rounded-2xl border-2 border-border bg-card p-4"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Body Weight</p>
-            {bw ? (
-              <p className="text-2xl font-display text-foreground">{bw} <span className="text-sm font-bold text-muted-foreground">kg</span></p>
-            ) : (
-              <p className="text-sm font-bold text-muted-foreground">Not set</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              placeholder={bw ? String(bw) : "kg"}
-              value={bodyWeight}
-              onChange={(e) => setBodyWeight(e.target.value)}
-              className="w-20 h-9 text-center border-2 border-border"
-            />
-            <Button
-              size="sm"
-              onClick={handleSaveWeight}
-              disabled={!bodyWeight}
-              className="h-9 font-bold"
-            >
-              Save
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Strength Summary */}
       <StrengthSummary exercises={exercises} bodyWeight={bw} />
 
