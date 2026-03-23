@@ -121,6 +121,13 @@ const CurrentWeek = () => {
   const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string) => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
+
+    // Require weight/value before marking as complete
+    if (newVal && !localWeights[key]?.trim()) {
+      toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time before completing." });
+      return;
+    }
+
     setLocalCompleted((prev) => ({ ...prev, [key]: newVal }));
     saveExercise(dayIdx, exIdx, exerciseName, localWeights[key] || "", newVal);
 
@@ -146,6 +153,16 @@ const CurrentWeek = () => {
   };
 
   const handleCompleteDay = (dayIdx: number, day: WorkoutDay) => {
+    // Check all exercises have a weight/value entered
+    const missing = day.exercises.filter((_, i) => {
+      const key = getExKey(dayIdx, i);
+      return !localWeights[key]?.trim();
+    });
+    if (missing.length > 0) {
+      toast({ title: "Fill in all values first! ⚖️", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight/reps/time.` });
+      return;
+    }
+
     const updates: Record<string, boolean> = {};
     day.exercises.forEach((ex, i) => {
       const key = getExKey(dayIdx, i);
