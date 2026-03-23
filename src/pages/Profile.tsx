@@ -109,6 +109,45 @@ const Profile = () => {
         </div>
       </motion.div>
 
+      {/* Body Weight */}
+      <motion.div
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-2xl border-2 border-border bg-card p-4 mb-6"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Scale className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Body Weight</p>
+              {bw ? (
+                <p className="text-2xl font-display text-foreground">{bw} <span className="text-sm font-bold text-muted-foreground">kg</span></p>
+              ) : (
+                <p className="text-sm font-bold text-muted-foreground">Not set</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              placeholder={bw ? String(bw) : "kg"}
+              value={bodyWeight}
+              onChange={(e) => setBodyWeight(e.target.value)}
+              className="w-20 h-9 text-center border-2 border-border"
+            />
+            <Button
+              size="sm"
+              onClick={handleSaveWeight}
+              disabled={!bodyWeight}
+              className="h-9 font-bold"
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[

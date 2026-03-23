@@ -192,41 +192,6 @@ export function ExerciseScorecard() {
 
   return (
     <div className="space-y-4">
-      {/* Body Weight Input */}
-      <motion.div
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="rounded-2xl border-2 border-border bg-card p-4"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Body Weight</p>
-            {bw ? (
-              <p className="text-2xl font-display text-foreground">{bw} <span className="text-sm font-bold text-muted-foreground">kg</span></p>
-            ) : (
-              <p className="text-sm font-bold text-muted-foreground">Not set</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              placeholder={bw ? String(bw) : "kg"}
-              value={bodyWeight}
-              onChange={(e) => setBodyWeight(e.target.value)}
-              className="w-20 h-9 text-center border-2 border-border"
-            />
-            <Button
-              size="sm"
-              onClick={handleSaveWeight}
-              disabled={!bodyWeight}
-              className="h-9 font-bold"
-            >
-              Save
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Strength Summary */}
       <StrengthSummary exercises={exercises} bodyWeight={bw} />
 
