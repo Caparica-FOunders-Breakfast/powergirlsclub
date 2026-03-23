@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useExerciseScorecard, getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
-import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfile";
 import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
