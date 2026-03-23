@@ -67,6 +67,7 @@ export const useSaveExerciseLog = (weekStart: string) => {
       queryClient.invalidateQueries({ queryKey: ["exercise-logs"] });
       queryClient.invalidateQueries({ queryKey: ["scores"] });
       queryClient.invalidateQueries({ queryKey: ["weekly-winner"] });
+      queryClient.invalidateQueries({ queryKey: ["exercise-scorecard"] });
     },
   });
 };
