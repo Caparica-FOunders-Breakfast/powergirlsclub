@@ -273,6 +273,11 @@ export function ExerciseScorecard() {
                       {isPR && (
                         <span className="shrink-0 text-base" title="Personal Record">⭐</span>
                       )}
+                      {ex.failCount > 0 && (
+                        <span className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive" title={`${ex.failCount} failed attempt${ex.failCount > 1 ? 's' : ''}`}>
+                          {ex.failCount}F
+                        </span>
+                      )}
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   </div>
