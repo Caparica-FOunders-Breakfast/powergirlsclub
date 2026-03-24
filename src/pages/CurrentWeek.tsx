@@ -122,11 +122,12 @@ const CurrentWeek = () => {
 
   const saveExercise = useCallback(
     (dayIdx: number, exIdx: number, exerciseName: string, weight: string, completed: boolean) => {
+      const isFailed = weight.trim().toUpperCase() === "F";
       saveLog.mutate({
         dayIndex: dayIdx,
         exerciseIndex: exIdx,
         exerciseName,
-        weightUsed: weight ? Number(weight) : null,
+        weightUsed: isFailed ? -1 : weight ? Number(weight) : null,
         completed,
       });
     },
