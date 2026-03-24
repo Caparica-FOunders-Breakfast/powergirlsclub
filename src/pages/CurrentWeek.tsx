@@ -82,7 +82,7 @@ const CurrentWeek = () => {
     }
   }, [logs, initialized]);
 
-  // Build previous week weight map
+  // Build previous week weight map (includes -1 for failures)
   const prevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
     if (prevLogs) {
@@ -92,6 +92,17 @@ const CurrentWeek = () => {
     }
     return map;
   }, [prevLogs]);
+
+  // Build prev-prev week weight map (for looking back past failures)
+  const prevPrevWeightMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (prevPrevLogs) {
+      Object.entries(prevPrevLogs).forEach(([key, log]) => {
+        if (log.weight_used != null) map[key] = Number(log.weight_used);
+      });
+    }
+    return map;
+  }, [prevPrevLogs]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
