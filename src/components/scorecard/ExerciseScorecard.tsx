@@ -159,7 +159,7 @@ export function ExerciseScorecard() {
             ? getNonKgLevel(name, currentWeight)
             : { label: "—" as const, icon: "📈", index: -1 };
       const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted };
+      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted, failCount };
     });
 
   // Group by category
