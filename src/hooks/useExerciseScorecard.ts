@@ -8,6 +8,7 @@ export interface ExerciseEntry {
   date: string;
   weight: number;
   exerciseName: string;
+  failed?: boolean;
 }
 
 export interface ExerciseCard {
