@@ -138,9 +138,9 @@ const CurrentWeek = () => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
 
-    // Require weight/value before marking as complete
+    // Require weight/value before marking as complete (F is valid)
     if (newVal && !localWeights[key]?.trim()) {
-      toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time before completing." });
+      toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time or F for failed." });
       return;
     }
 
