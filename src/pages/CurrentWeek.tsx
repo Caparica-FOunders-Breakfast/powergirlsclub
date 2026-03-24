@@ -71,7 +71,9 @@ const CurrentWeek = () => {
       const w: Record<string, string> = {};
       const c: Record<string, boolean> = {};
       Object.entries(logs).forEach(([key, log]) => {
-        if (log.weight_used != null) w[key] = String(log.weight_used);
+        if (log.weight_used != null) {
+          w[key] = Number(log.weight_used) === -1 ? "F" : String(log.weight_used);
+        }
         c[key] = log.completed;
       });
       setLocalWeights(w);
