@@ -625,7 +625,19 @@ function ExerciseCard({
           </div>
 
           {/* Last week value + recommendation */}
-          {lastWeekWeight != null && (
+          {lastWeekFailed && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+              <span className="text-[11px] font-bold text-destructive">
+                ❌ Failed last week — try again!
+              </span>
+              {retryWeight != null && (
+                <span className="text-[11px] font-bold text-neon-teal">
+                  → {retryWeight} {unit} {isTime ? "⏱️" : isRounds ? "🔁" : "💪"}
+                </span>
+              )}
+            </div>
+          )}
+          {!lastWeekFailed && lastWeekWeight != null && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
               <span className="text-[11px] font-semibold text-muted-foreground">
                 Last week: {lastWeekWeight} {unit}
@@ -640,7 +652,7 @@ function ExerciseCard({
             </div>
           )}
 
-          {!lastWeekWeight && (
+          {!lastWeekWeight && !lastWeekFailed && (
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[11px] font-semibold text-neon-teal">
                 {isAssisted ? "🎯 Decrease weight assistance" : isTime ? "⏱️ Add time" : isRounds ? "🔁 Add reps" : "💪 Add weight"}
@@ -648,7 +660,7 @@ function ExerciseCard({
             </div>
           )}
 
-          {lastWeekWeight != null && exercise.progression && (
+          {!lastWeekFailed && lastWeekWeight != null && exercise.progression && (
             <div className="flex items-center gap-1 mt-0.5">
               <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
               <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
