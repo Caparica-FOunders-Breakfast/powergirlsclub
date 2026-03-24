@@ -140,7 +140,8 @@ export function ExerciseScorecard() {
     .filter(([name]) => !hiddenExercises.includes(name))
     .map(([name, entries]) => {
       const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      const currentWeight = sorted[0].weight;
+      const latestNonFailed = sorted.find((e) => !e.failed);
+      const currentWeight = latestNonFailed?.weight ?? 0;
       const isAssisted = ASSISTED_EXERCISES.has(name);
       const nonFailedEntries = entries.filter((e) => !e.failed);
       const bestWeight = nonFailedEntries.length === 0 ? 0 : isAssisted
