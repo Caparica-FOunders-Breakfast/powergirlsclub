@@ -489,6 +489,7 @@ const CurrentWeek = () => {
                                   isDone={isDone}
                                   weight={localWeights[key] || ""}
                                   lastWeekWeight={lastWeekWeight}
+                                  prevPrevWeekWeight={prevPrevWeightMap[key]}
                                   onWeightChange={(val) => handleWeightChange(dayIdx, exIdx, ex.name, val)}
                                   onWeightBlur={() => handleWeightBlur(dayIdx, exIdx, ex.name)}
                                   onToggle={() => toggleExercise(dayIdx, exIdx, ex.name)}
