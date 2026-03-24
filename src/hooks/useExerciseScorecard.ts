@@ -67,7 +67,7 @@ export const useExerciseScorecard = () => {
       // Group by exercise name
       const grouped = new Map<string, ExerciseEntry[]>();
       data?.forEach((log) => {
-        if (log.weight_used == null) return;
+        if (log.weight_used == null || Number(log.weight_used) === -1) return;
         const name = log.exercise_name;
         if (!grouped.has(name)) grouped.set(name, []);
         grouped.get(name)!.push({

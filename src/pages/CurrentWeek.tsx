@@ -670,13 +670,21 @@ function ExerciseCard({
 
         <div className="shrink-0">
           <Input
-            type="number"
-            placeholder={recommendedWeight != null ? `${recommendedWeight}` : unit}
+            type="text"
+            inputMode="decimal"
+            placeholder={lastWeekFailed && retryWeight != null ? `${retryWeight}` : recommendedWeight != null ? `${recommendedWeight}` : unit}
             value={weight}
-            onChange={(e) => onWeightChange(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              // Allow F/f, numbers, decimals
+              if (v === "" || /^[Ff]$/.test(v) || /^\d*\.?\d*$/.test(v)) {
+                onWeightChange(v.toUpperCase());
+              }
+            }}
             onBlur={onWeightBlur}
             className={cn(
-              "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
+              "w-16 h-8 text-center text-xs font-bold border-2 rounded-lg",
+              weight === "F" ? "border-destructive/50 text-destructive" : "border-primary/20",
               isDone && "opacity-50"
             )}
             disabled={isDone}
