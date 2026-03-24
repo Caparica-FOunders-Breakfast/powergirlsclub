@@ -29,10 +29,13 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
   const progress = useRatio && bodyWeight ? getLevelProgress(ratio) : hasThresholds ? getNonKgProgress(name, currentWeight) : 0;
   const showProgressBar = (useRatio && !!bodyWeight) || hasThresholds;
 
+  const failCount = entries.filter((e) => e.failed).length;
+
   // Trend chart data (oldest first for chart)
   const chartEntries = [...entries].reverse().slice(-20);
-  const maxW = Math.max(...chartEntries.map((e) => e.weight), 1);
-  const minW = Math.min(...chartEntries.map((e) => e.weight));
+  const nonFailedChart = chartEntries.filter((e) => !e.failed);
+  const maxW = Math.max(...nonFailedChart.map((e) => e.weight), 1);
+  const minW = Math.min(...nonFailedChart.map((e) => e.weight));
   const range = maxW - minW || 1;
 
   const chartW = 280;
