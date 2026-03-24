@@ -8,6 +8,7 @@ export interface ExerciseEntry {
   date: string;
   weight: number;
   exerciseName: string;
+  failed?: boolean;
 }
 
 export interface ExerciseCard {
@@ -67,13 +68,16 @@ export const useExerciseScorecard = () => {
       // Group by exercise name
       const grouped = new Map<string, ExerciseEntry[]>();
       data?.forEach((log) => {
-        if (log.weight_used == null || Number(log.weight_used) === -1) return;
+        if (log.weight_used == null) return;
         const name = log.exercise_name;
+        const w = Number(log.weight_used);
+        const failed = w === -1;
         if (!grouped.has(name)) grouped.set(name, []);
         grouped.get(name)!.push({
           date: log.completed_at || log.week_start,
-          weight: Number(log.weight_used),
+          weight: failed ? 0 : w,
           exerciseName: name,
+          failed,
         });
       });
 

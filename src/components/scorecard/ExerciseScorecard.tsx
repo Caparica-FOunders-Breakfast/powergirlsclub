@@ -140,11 +140,14 @@ export function ExerciseScorecard() {
     .filter(([name]) => !hiddenExercises.includes(name))
     .map(([name, entries]) => {
       const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      const currentWeight = sorted[0].weight;
+      const latestNonFailed = sorted.find((e) => !e.failed);
+      const currentWeight = latestNonFailed?.weight ?? 0;
       const isAssisted = ASSISTED_EXERCISES.has(name);
-      const bestWeight = isAssisted
-        ? Math.min(...entries.map((e) => e.weight)) // lower assistance = better
-        : Math.max(...entries.map((e) => e.weight));
+      const nonFailedEntries = entries.filter((e) => !e.failed);
+      const bestWeight = nonFailedEntries.length === 0 ? 0 : isAssisted
+        ? Math.min(...nonFailedEntries.map((e) => e.weight))
+        : Math.max(...nonFailedEntries.map((e) => e.weight));
+      const failCount = entries.filter((e) => e.failed).length;
       const unit = getUnit(name);
       const useRatio = unit === "kg" && !!bw;
       const ratio = useRatio ? currentWeight / bw! : 0;
@@ -157,7 +160,7 @@ export function ExerciseScorecard() {
             ? getNonKgLevel(name, currentWeight)
             : { label: "—" as const, icon: "📈", index: -1 };
       const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted };
+      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted, failCount };
     });
 
   // Group by category
@@ -271,6 +274,11 @@ export function ExerciseScorecard() {
                       {isPR && (
                         <span className="shrink-0 text-base" title="Personal Record">⭐</span>
                       )}
+                      {ex.failCount > 0 && (
+                        <span className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive" title={`${ex.failCount} failed attempt${ex.failCount > 1 ? 's' : ''}`}>
+                          {ex.failCount}F
+                        </span>
+                      )}
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   </div>
@@ -328,6 +336,16 @@ export function ExerciseScorecard() {
                   {/* Mini trend dots */}
                   <div className="flex items-end gap-[3px] mt-3 h-5">
                     {ex.entries.slice(0, 12).reverse().map((entry, j) => {
+                      if (entry.failed) {
+                        return (
+                          <div
+                            key={j}
+                            className="w-[5px] rounded-full bg-destructive/60"
+                            style={{ height: "20px" }}
+                            title="Failed"
+                          />
+                        );
+                      }
                       const max = ex.bestWeight || 1;
                       const h = Math.max(4, (entry.weight / max) * 20);
                       return (
