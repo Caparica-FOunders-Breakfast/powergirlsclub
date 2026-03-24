@@ -175,7 +175,7 @@ const CurrentWeek = () => {
       return !localWeights[key]?.trim();
     });
     if (missing.length > 0) {
-      toast({ title: "Fill in all values first! ⚖️", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight/reps/time.` });
+      toast({ title: "Fill in all values first! ⚖️", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight/reps/time (or F for failed).` });
       return;
     }
 
