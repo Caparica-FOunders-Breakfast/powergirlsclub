@@ -40,10 +40,12 @@ const CurrentWeek = () => {
   const selectedWeekDate = addWeeks(currentWeekDate, weekOffset);
   const weekStart = getWeekStart(selectedWeekDate);
   const prevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -1));
+  const prevPrevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -2));
   const isCurrentWeek = weekOffset === 0;
 
   const { data: logs, isLoading: logsLoading } = useExerciseLogs(weekStart);
   const { data: prevLogs } = useExerciseLogs(prevWeekStart);
+  const { data: prevPrevLogs } = useExerciseLogs(prevPrevWeekStart);
   const saveLog = useSaveExerciseLog(weekStart);
 
   const today = now.getDay();
