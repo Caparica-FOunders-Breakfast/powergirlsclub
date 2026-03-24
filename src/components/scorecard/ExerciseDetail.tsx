@@ -123,7 +123,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
               <path d={areaPath} fill="url(#chart-grad)" />
               <path d={linePath} fill="none" stroke="hsl(var(--primary))" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
               {points.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r={i === points.length - 1 ? 3.5 : 2} fill="hsl(var(--primary))" opacity={i === points.length - 1 ? 1 : 0.5} />
+                <circle key={i} cx={p.x} cy={p.y} r={i === points.length - 1 ? 3.5 : 2} fill={chartEntries[i]?.failed ? "hsl(var(--destructive))" : "hsl(var(--primary))"} opacity={i === points.length - 1 ? 1 : 0.5} />
               ))}
             </svg>
           </div>
