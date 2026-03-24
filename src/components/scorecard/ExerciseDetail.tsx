@@ -137,12 +137,15 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
         </div>
         <div className="divide-y divide-border">
           {entries.slice(0, 20).map((entry, i) => {
-            const isPR = entry.weight === bestWeight;
-            const entryLevel = useRatio && bodyWeight
-              ? getLevel(entry.weight / bodyWeight)
-              : hasThresholds
-                ? getNonKgLevel(name, entry.weight)
-                : { icon: "📈", label: "—", index: -1 };
+            const isFailed = !!entry.failed;
+            const isPR = !isFailed && entry.weight === bestWeight;
+            const entryLevel = isFailed
+              ? { icon: "❌", label: "Failed", index: -1 }
+              : useRatio && bodyWeight
+                ? getLevel(entry.weight / bodyWeight)
+                : hasThresholds
+                  ? getNonKgLevel(name, entry.weight)
+                  : { icon: "📈", label: "—", index: -1 };
             const entryRatio = bodyWeight ? entry.weight / bodyWeight : 0;
             const expanded = expandedIdx === i;
 
@@ -158,7 +161,11 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
                     <span className="text-xs font-bold text-muted-foreground w-16">
                       {format(new Date(entry.date), "MMM d")}
                     </span>
-                    <span className="font-extrabold text-sm text-foreground">{entry.weight} {unit}</span>
+                    {isFailed ? (
+                      <span className="font-extrabold text-sm text-destructive">Failed</span>
+                    ) : (
+                      <span className="font-extrabold text-sm text-foreground">{entry.weight} {unit}</span>
+                    )}
                     {isPR && (
                       <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
                         PR

@@ -335,6 +335,16 @@ export function ExerciseScorecard() {
                   {/* Mini trend dots */}
                   <div className="flex items-end gap-[3px] mt-3 h-5">
                     {ex.entries.slice(0, 12).reverse().map((entry, j) => {
+                      if (entry.failed) {
+                        return (
+                          <div
+                            key={j}
+                            className="w-[5px] rounded-full bg-destructive/60"
+                            style={{ height: "20px" }}
+                            title="Failed"
+                          />
+                        );
+                      }
                       const max = ex.bestWeight || 1;
                       const h = Math.max(4, (entry.weight / max) * 20);
                       return (
