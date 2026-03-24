@@ -40,10 +40,12 @@ const CurrentWeek = () => {
   const selectedWeekDate = addWeeks(currentWeekDate, weekOffset);
   const weekStart = getWeekStart(selectedWeekDate);
   const prevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -1));
+  const prevPrevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -2));
   const isCurrentWeek = weekOffset === 0;
 
   const { data: logs, isLoading: logsLoading } = useExerciseLogs(weekStart);
   const { data: prevLogs } = useExerciseLogs(prevWeekStart);
+  const { data: prevPrevLogs } = useExerciseLogs(prevPrevWeekStart);
   const saveLog = useSaveExerciseLog(weekStart);
 
   const today = now.getDay();
@@ -69,7 +71,9 @@ const CurrentWeek = () => {
       const w: Record<string, string> = {};
       const c: Record<string, boolean> = {};
       Object.entries(logs).forEach(([key, log]) => {
-        if (log.weight_used != null) w[key] = String(log.weight_used);
+        if (log.weight_used != null) {
+          w[key] = Number(log.weight_used) === -1 ? "F" : String(log.weight_used);
+        }
         c[key] = log.completed;
       });
       setLocalWeights(w);
@@ -78,7 +82,7 @@ const CurrentWeek = () => {
     }
   }, [logs, initialized]);
 
-  // Build previous week weight map
+  // Build previous week weight map (includes -1 for failures)
   const prevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
     if (prevLogs) {
@@ -88,6 +92,17 @@ const CurrentWeek = () => {
     }
     return map;
   }, [prevLogs]);
+
+  // Build prev-prev week weight map (for looking back past failures)
+  const prevPrevWeightMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (prevPrevLogs) {
+      Object.entries(prevPrevLogs).forEach(([key, log]) => {
+        if (log.weight_used != null) map[key] = Number(log.weight_used);
+      });
+    }
+    return map;
+  }, [prevPrevLogs]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
@@ -107,11 +122,12 @@ const CurrentWeek = () => {
 
   const saveExercise = useCallback(
     (dayIdx: number, exIdx: number, exerciseName: string, weight: string, completed: boolean) => {
+      const isFailed = weight.trim().toUpperCase() === "F";
       saveLog.mutate({
         dayIndex: dayIdx,
         exerciseIndex: exIdx,
         exerciseName,
-        weightUsed: weight ? Number(weight) : null,
+        weightUsed: isFailed ? -1 : weight ? Number(weight) : null,
         completed,
       });
     },
@@ -122,9 +138,9 @@ const CurrentWeek = () => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
 
-    // Require weight/value before marking as complete
+    // Require weight/value before marking as complete (F is valid)
     if (newVal && !localWeights[key]?.trim()) {
-      toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time before completing." });
+      toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time or F for failed." });
       return;
     }
 
@@ -159,7 +175,7 @@ const CurrentWeek = () => {
       return !localWeights[key]?.trim();
     });
     if (missing.length > 0) {
-      toast({ title: "Fill in all values first! ⚖️", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight/reps/time.` });
+      toast({ title: "Fill in all values first! ⚖️", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight/reps/time (or F for failed).` });
       return;
     }
 
@@ -473,6 +489,7 @@ const CurrentWeek = () => {
                                   isDone={isDone}
                                   weight={localWeights[key] || ""}
                                   lastWeekWeight={lastWeekWeight}
+                                  prevPrevWeekWeight={prevPrevWeightMap[key]}
                                   onWeightChange={(val) => handleWeightChange(dayIdx, exIdx, ex.name, val)}
                                   onWeightBlur={() => handleWeightBlur(dayIdx, exIdx, ex.name)}
                                   onToggle={() => toggleExercise(dayIdx, exIdx, ex.name)}
@@ -518,6 +535,7 @@ function ExerciseCard({
   isDone,
   weight,
   lastWeekWeight,
+  prevPrevWeekWeight,
   onWeightChange,
   onWeightBlur,
   onToggle,
@@ -527,6 +545,7 @@ function ExerciseCard({
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
+  prevPrevWeekWeight?: number;
   onWeightChange: (val: string) => void;
   onWeightBlur: () => void;
   onToggle: () => void;
@@ -546,7 +565,17 @@ function ExerciseCard({
   const thresholds = exercise.levelThresholds || defaultThresholds;
   const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.\-]/g, "") || "0");
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
-  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
+
+  // Failure logic: if last week was -1 (F), look back further
+  const lastWeekFailed = lastWeekWeight === -1;
+  const effectiveLastWeight = lastWeekFailed
+    ? (prevPrevWeekWeight != null && prevPrevWeekWeight !== -1 ? prevPrevWeekWeight : null)
+    : lastWeekWeight;
+  const recommendedWeight = effectiveLastWeight != null ? effectiveLastWeight + increment : null;
+  // If failed last week, recommend the same weight they would have tried
+  const retryWeight = lastWeekFailed && prevPrevWeekWeight != null && prevPrevWeekWeight !== -1
+    ? prevPrevWeekWeight + increment
+    : null;
   const hasEmojiPrefix = !!exercise.suggestedWeight && LEVEL_EMOJIS.some((emoji) => exercise.suggestedWeight.startsWith(emoji));
   const buildRangeLabel = (index: number) => {
     const value = thresholds[index];
@@ -596,7 +625,19 @@ function ExerciseCard({
           </div>
 
           {/* Last week value + recommendation */}
-          {lastWeekWeight != null && (
+          {lastWeekFailed && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+              <span className="text-[11px] font-bold text-destructive">
+                ❌ Failed last week — try again!
+              </span>
+              {retryWeight != null && (
+                <span className="text-[11px] font-bold text-neon-teal">
+                  → {retryWeight} {unit} {isTime ? "⏱️" : isRounds ? "🔁" : "💪"}
+                </span>
+              )}
+            </div>
+          )}
+          {!lastWeekFailed && lastWeekWeight != null && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
               <span className="text-[11px] font-semibold text-muted-foreground">
                 Last week: {lastWeekWeight} {unit}
@@ -611,7 +652,7 @@ function ExerciseCard({
             </div>
           )}
 
-          {!lastWeekWeight && (
+          {!lastWeekWeight && !lastWeekFailed && (
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[11px] font-semibold text-neon-teal">
                 {isAssisted ? "🎯 Decrease weight assistance" : isTime ? "⏱️ Add time" : isRounds ? "🔁 Add reps" : "💪 Add weight"}
@@ -619,7 +660,7 @@ function ExerciseCard({
             </div>
           )}
 
-          {lastWeekWeight != null && exercise.progression && (
+          {!lastWeekFailed && lastWeekWeight != null && exercise.progression && (
             <div className="flex items-center gap-1 mt-0.5">
               <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
               <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
@@ -629,13 +670,21 @@ function ExerciseCard({
 
         <div className="shrink-0">
           <Input
-            type="number"
-            placeholder={recommendedWeight != null ? `${recommendedWeight}` : unit}
+            type="text"
+            inputMode="decimal"
+            placeholder={lastWeekFailed && retryWeight != null ? `${retryWeight}` : recommendedWeight != null ? `${recommendedWeight}` : unit}
             value={weight}
-            onChange={(e) => onWeightChange(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              // Allow F/f, numbers, decimals
+              if (v === "" || /^[Ff]$/.test(v) || /^\d*\.?\d*$/.test(v)) {
+                onWeightChange(v.toUpperCase());
+              }
+            }}
             onBlur={onWeightBlur}
             className={cn(
-              "w-16 h-8 text-center text-xs font-bold border-2 border-primary/20 rounded-lg",
+              "w-16 h-8 text-center text-xs font-bold border-2 rounded-lg",
+              weight === "F" ? "border-destructive/50 text-destructive" : "border-primary/20",
               isDone && "opacity-50"
             )}
             disabled={isDone}
