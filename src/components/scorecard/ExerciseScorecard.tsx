@@ -142,9 +142,11 @@ export function ExerciseScorecard() {
       const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       const currentWeight = sorted[0].weight;
       const isAssisted = ASSISTED_EXERCISES.has(name);
-      const bestWeight = isAssisted
-        ? Math.min(...entries.map((e) => e.weight)) // lower assistance = better
-        : Math.max(...entries.map((e) => e.weight));
+      const nonFailedEntries = entries.filter((e) => !e.failed);
+      const bestWeight = nonFailedEntries.length === 0 ? 0 : isAssisted
+        ? Math.min(...nonFailedEntries.map((e) => e.weight))
+        : Math.max(...nonFailedEntries.map((e) => e.weight));
+      const failCount = entries.filter((e) => e.failed).length;
       const unit = getUnit(name);
       const useRatio = unit === "kg" && !!bw;
       const ratio = useRatio ? currentWeight / bw! : 0;
