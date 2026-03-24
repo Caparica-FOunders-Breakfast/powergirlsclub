@@ -535,6 +535,7 @@ function ExerciseCard({
   isDone,
   weight,
   lastWeekWeight,
+  prevPrevWeekWeight,
   onWeightChange,
   onWeightBlur,
   onToggle,
@@ -544,6 +545,7 @@ function ExerciseCard({
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
+  prevPrevWeekWeight?: number;
   onWeightChange: (val: string) => void;
   onWeightBlur: () => void;
   onToggle: () => void;
@@ -563,7 +565,17 @@ function ExerciseCard({
   const thresholds = exercise.levelThresholds || defaultThresholds;
   const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.\-]/g, "") || "0");
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
-  const recommendedWeight = lastWeekWeight != null ? lastWeekWeight + increment : null;
+
+  // Failure logic: if last week was -1 (F), look back further
+  const lastWeekFailed = lastWeekWeight === -1;
+  const effectiveLastWeight = lastWeekFailed
+    ? (prevPrevWeekWeight != null && prevPrevWeekWeight !== -1 ? prevPrevWeekWeight : null)
+    : lastWeekWeight;
+  const recommendedWeight = effectiveLastWeight != null ? effectiveLastWeight + increment : null;
+  // If failed last week, recommend the same weight they would have tried
+  const retryWeight = lastWeekFailed && prevPrevWeekWeight != null && prevPrevWeekWeight !== -1
+    ? prevPrevWeekWeight + increment
+    : null;
   const hasEmojiPrefix = !!exercise.suggestedWeight && LEVEL_EMOJIS.some((emoji) => exercise.suggestedWeight.startsWith(emoji));
   const buildRangeLabel = (index: number) => {
     const value = thresholds[index];
