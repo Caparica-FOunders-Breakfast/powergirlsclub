@@ -239,6 +239,16 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                     />
                   ) : (
                     <>
+                      {/* Edit tasks — right-aligned */}
+                      <div className="flex justify-end">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingDay(dayIdx); }}
+                          className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Edit Tasks
+                        </button>
+                      </div>
                       {plan.tasks.map((task, taskIdx) => {
                         const checked = isTaskCompleted(dayIdx, taskIdx);
                         return (
@@ -263,16 +273,6 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                           </motion.label>
                         );
                       })}
-
-
-                      {/* Edit tasks button */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditingDay(dayIdx); }}
-                        className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Pencil className="w-3 h-3" />
-                        Edit tasks
-                      </button>
 
                       {/* Day link */}
                       <div className="pt-1">
