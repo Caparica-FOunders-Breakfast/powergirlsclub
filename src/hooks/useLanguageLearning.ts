@@ -251,6 +251,103 @@ export const useUpsertDayLink = () => {
   });
 };
 
+// Custom plan hooks
+export interface CustomDayPlan {
+  id: string;
+  user_id: string;
+  language_code: string;
+  day_index: number;
+  focus: string;
+  emoji: string;
+  title: string;
+  description: string;
+  tasks: string[];
+}
+
+export const useCustomPlans = (languageCode: string | null) => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["custom-plans", user?.id, languageCode],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("language_custom_plans" as any)
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("language_code", languageCode!);
+      if (error) throw error;
+      return data as any as CustomDayPlan[];
+    },
+    enabled: !!user && !!languageCode,
+  });
+};
+
+export const useUpsertCustomPlan = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (plan: {
+      languageCode: string; dayIndex: number;
+      focus: string; emoji: string; title: string; description: string; tasks: string[];
+    }) => {
+      const { error } = await supabase
+        .from("language_custom_plans" as any)
+        .upsert({
+          user_id: user!.id,
+          language_code: plan.languageCode,
+          day_index: plan.dayIndex,
+          focus: plan.focus,
+          emoji: plan.emoji,
+          title: plan.title,
+          description: plan.description,
+          tasks: plan.tasks,
+          updated_at: new Date().toISOString(),
+        } as any, { onConflict: "user_id,language_code,day_index" });
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["custom-plans", user?.id, vars.languageCode] });
+    },
+  });
+};
+
+export const useResetCustomPlan = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ languageCode, dayIndex }: { languageCode: string; dayIndex: number }) => {
+      const { error } = await supabase
+        .from("language_custom_plans" as any)
+        .delete()
+        .eq("user_id", user!.id)
+        .eq("language_code", languageCode)
+        .eq("day_index", dayIndex);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["custom-plans", user?.id, vars.languageCode] });
+    },
+  });
+};
+
+/** Get the effective plan for a day: custom if set, otherwise default */
+export const getEffectivePlan = (dayIndex: number, customPlans: CustomDayPlan[]) => {
+  const custom = customPlans.find((p) => p.day_index === dayIndex);
+  if (custom) {
+    return {
+      day: WEEKLY_PLAN[dayIndex]?.day ?? `Day ${dayIndex + 1}`,
+      focus: custom.focus,
+      emoji: custom.emoji,
+      title: custom.title,
+      description: custom.description,
+      tasks: custom.tasks,
+      isCustom: true,
+    };
+  }
+  const defaults = WEEKLY_PLAN[dayIndex];
+  if (!defaults) return null;
+  return { ...defaults, isCustom: false };
+};
+
 export const useRemoveDayLink = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
