@@ -178,6 +178,48 @@ export type Database = {
         }
         Relationships: []
       }
+      language_custom_plans: {
+        Row: {
+          created_at: string
+          day_index: number
+          description: string
+          emoji: string
+          focus: string
+          id: string
+          language_code: string
+          tasks: Json
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_index: number
+          description?: string
+          emoji?: string
+          focus: string
+          id?: string
+          language_code: string
+          tasks?: Json
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          description?: string
+          emoji?: string
+          focus?: string
+          id?: string
+          language_code?: string
+          tasks?: Json
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       language_daily_tasks: {
         Row: {
           completed: boolean
