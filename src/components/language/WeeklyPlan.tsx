@@ -186,7 +186,8 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                 isWeekend && "border-dashed"
               )}
             >
-              <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 group">
+              <div className="flex items-center gap-2 px-4 pt-3 pb-0">
+                <CollapsibleTrigger className="flex-1 flex items-center gap-3 group min-w-0">
                 <span className="text-xl">{plan.emoji}</span>
                 <div className="flex-1 text-left min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
