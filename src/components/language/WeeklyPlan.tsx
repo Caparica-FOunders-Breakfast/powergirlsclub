@@ -272,14 +272,6 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                         );
                       })}
 
-                      {/* Edit button */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditingDay(dayIdx); }}
-                        className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Pencil className="w-3 h-3" />
-                        Edit tasks
-                      </button>
 
                       {/* Day link */}
                       <div className="pt-1">
