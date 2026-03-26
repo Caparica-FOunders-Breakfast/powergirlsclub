@@ -186,28 +186,36 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                 isWeekend && "border-dashed"
               )}
             >
-              <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 group">
-                <span className="text-xl">{plan.emoji}</span>
-                <div className="flex-1 text-left min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-extrabold text-foreground">{plan.day ?? defaultDay.day}</p>
-                    <span className="text-xs font-bold text-muted-foreground">— {plan.focus}</span>
-                    {isWeekend && (
-                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">Optional</span>
-                    )}
-                    {plan.isCustom && (
-                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Custom</span>
-                    )}
-                    {done && <Check className="w-4 h-4 text-primary" />}
+              <div className="flex items-center gap-2 px-4 py-3">
+                <CollapsibleTrigger className="flex-1 flex items-center gap-3 group min-w-0">
+                  <span className="text-xl">{plan.emoji}</span>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-extrabold text-foreground">{plan.day ?? defaultDay.day}</p>
+                      <span className="text-xs font-bold text-muted-foreground">— {plan.focus}</span>
+                      {isWeekend && (
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">Optional</span>
+                      )}
+                      {plan.isCustom && (
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Custom</span>
+                      )}
+                      {done && <Check className="w-4 h-4 text-primary" />}
+                    </div>
+                    <p className="text-[10px] font-bold text-primary/70 italic">"{plan.title}"</p>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-0.5">{plan.description}</p>
                   </div>
-                  <p className="text-[10px] font-bold text-primary/70 italic">"{plan.title}"</p>
-                  <p className="text-[10px] font-bold text-muted-foreground mt-0.5">{plan.description}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-bold text-muted-foreground">{count}/{plan.tasks.length}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-                </div>
-              </CollapsibleTrigger>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-bold text-muted-foreground">{count}/{plan.tasks.length}</span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingDay(dayIdx); }}
+                  className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
               <CollapsibleContent>
                 <div className="px-4 pb-4 space-y-3">
@@ -264,14 +272,6 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                         );
                       })}
 
-                      {/* Edit button */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditingDay(dayIdx); }}
-                        className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Pencil className="w-3 h-3" />
-                        Edit tasks
-                      </button>
 
                       {/* Day link */}
                       <div className="pt-1">
