@@ -10,6 +10,8 @@ import { useProfile } from "@/hooks/useProfile";
 const DEFAULT_RATIOS = [0.35, 0.60, 0.85, 1.20, 1.60];
 const DEFAULT_TIME_THRESHOLDS = [15, 30, 60, 90, 120]; // seconds
 const DEFAULT_REPS_THRESHOLDS = [5, 10, 20, 35, 50]; // reps
+// Assisted: assistance weight goes DOWN (BW → 0). Fractions of BW still needed as assist.
+const ASSISTED_FRACTIONS = [1.0, 0.75, 0.50, 0.25, 0.0];
 
 const LEVEL_DEFS = [
   { icon: "🌱", label: "Beginner", hint: "< 0.35x" },
@@ -19,6 +21,13 @@ const LEVEL_DEFS = [
   { icon: "👑", label: "Elite", hint: "> 1.20x" },
 ];
 
+const ASSISTED_LEVEL_DEFS = [
+  { icon: "🌱", label: "Beginner", hint: "= BW assist" },
+  { icon: "💪", label: "Getting Stronger", hint: "75% BW" },
+  { icon: "⚡", label: "Strong", hint: "50% BW" },
+  { icon: "🔥", label: "Very Strong", hint: "25% BW" },
+  { icon: "👑", label: "Elite", hint: "0 kg (unassisted)" },
+];
 
 interface ExerciseEditorProps {
   day: WorkoutDay;
@@ -40,6 +49,10 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
     return DEFAULT_RATIOS.map((r) => Math.round(r * bodyWeight));
   };
 
+  const getAssistedDefaults = (): number[] => {
+    const bw = bodyWeight ?? 70;
+    return ASSISTED_FRACTIONS.map((f) => Math.round(f * bw));
+  };
 
   const addExercise = () => {
     setExercises([...exercises, {
@@ -94,12 +107,13 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
         </div>
 
         {exercises.map((ex, idx) => {
+          const isAssisted = !!ex.isAssisted;
           const isTime = !!ex.isTimeBased;
           const isReps = !!ex.isRoundsBased;
-          const unit = isTime ? "sec" : isReps ? "reps" : "kg";
-          const defaultThresholds = isTime ? DEFAULT_TIME_THRESHOLDS : isReps ? DEFAULT_REPS_THRESHOLDS : getDefaultThresholds();
+          const unit = isAssisted ? "kg" : isTime ? "sec" : isReps ? "reps" : "kg";
+          const defaultThresholds = isAssisted ? getAssistedDefaults() : isTime ? DEFAULT_TIME_THRESHOLDS : isReps ? DEFAULT_REPS_THRESHOLDS : getDefaultThresholds();
           const thresholds = ex.levelThresholds || defaultThresholds;
-          const levelDefs = LEVEL_DEFS;
+          const levelDefs = isAssisted ? ASSISTED_LEVEL_DEFS : LEVEL_DEFS;
           const isLevelsOpen = levelsOpen[idx] ?? false;
 
           return (
@@ -150,13 +164,15 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
               {/* Strength Level Selector */}
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">
-                   {isTime ? "Time Level" : isReps ? "Reps Level" : "Strength Level"}
+                  {isAssisted ? "Assistance Level" : isTime ? "Time Level" : isReps ? "Reps Level" : "Strength Level"}
                 </label>
                 <div className="flex gap-1 mt-1">
                   {levelDefs.map((level, lIdx) => {
                     const val = thresholds[lIdx];
                     const prevVal = lIdx > 0 ? thresholds[lIdx - 1] : 0;
-                    const rangeLabel = lIdx === 0 ? `< ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `≥ ${val} ${unit}` : `${prevVal}–${val} ${unit}`;
+                    const rangeLabel = isAssisted
+                      ? (lIdx === 0 ? `≥ ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `${val} ${unit}` : `${val}–${thresholds[lIdx - 1]} ${unit}`)
+                      : (lIdx === 0 ? `< ${val} ${unit}` : lIdx === levelDefs.length - 1 ? `≥ ${val} ${unit}` : `${prevVal}–${val} ${unit}`);
                     const displayLabel = `${level.icon} ${rangeLabel}`;
                     const isSelected = ex.suggestedWeight === displayLabel || ex.suggestedWeight === rangeLabel;
                     return (
@@ -186,49 +202,50 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">
-                   Progression per week ({ex.isTimeBased ? "sec" : ex.isRoundsBased ? "reps" : "kg"})
+                  Progression per week ({isAssisted ? "kg less assist" : ex.isTimeBased ? "sec" : ex.isRoundsBased ? "reps" : "kg"})
                 </label>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-muted-foreground">+</span>
-                   <Input
-                     type="number"
-                     step="0.5"
-                     value={ex.progression?.replace(/[^0-9.\-]/g, "") || ""}
-                     onChange={(e) => {
-                       const val = e.target.value;
-                       const prefix = "+";
-                       const unit = ex.isTimeBased ? " sec/week" : ex.isRoundsBased ? " reps/week" : " kg/week";
-                       updateExercise(idx, "progression", val ? `${prefix}${val}${unit}` : "");
-                     }}
-                     placeholder="2.5"
+                  <span className="text-xs font-bold text-muted-foreground">{isAssisted ? "−" : "+"}</span>
+                  <Input
+                    type="number"
+                    step="0.5"
+                    value={ex.progression?.replace(/[^0-9.\-]/g, "") || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const prefix = isAssisted ? "-" : "+";
+                      const unit = isAssisted ? " kg/week" : ex.isTimeBased ? " sec/week" : ex.isRoundsBased ? " reps/week" : " kg/week";
+                      updateExercise(idx, "progression", val ? `${prefix}${val}${unit}` : "");
+                    }}
+                    placeholder={isAssisted ? "2" : "2.5"}
                     className="h-7 text-xs text-center border-primary/20 flex-1"
                   />
                   <span className="text-[10px] font-bold text-muted-foreground shrink-0">
-                     {ex.isTimeBased ? "sec/week" : ex.isRoundsBased ? "reps/week" : "kg/week"}
+                    {isAssisted ? "kg/week" : ex.isTimeBased ? "sec/week" : ex.isRoundsBased ? "reps/week" : "kg/week"}
                   </span>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
                 {([
-                   { key: "isBodyweight", label: "Weight" },
-                   { key: "isTimeBased", label: "Time-based" },
-                   { key: "isRoundsBased", label: "Reps" },
-                 ] as const).map(({ key, label }) => (
+                  { key: "isBodyweight", label: "Weight" },
+                  { key: "isTimeBased", label: "Time-based" },
+                  { key: "isRoundsBased", label: "Reps" },
+                  { key: "isAssisted", label: "Assisted" },
+                ] as const).map(({ key, label }) => (
                   <button
-                     key={key}
-                     type="button"
-                     onClick={() => updateExercise(idx, key, !ex[key])}
-                     className={cn(
-                       "px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors",
-                       ex[key]
-                         ? "bg-primary text-primary-foreground border-primary"
-                         : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
-                     )}
-                   >
-                     {label}
-                   </button>
-                 ))}
+                    key={key}
+                    type="button"
+                    onClick={() => updateExercise(idx, key, !ex[key])}
+                    className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors",
+                      ex[key]
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
 
               {/* Strength Level Thresholds */}
@@ -238,7 +255,7 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                   onClick={() => setLevelsOpen((prev) => ({ ...prev, [idx]: !prev[idx] }))}
                   className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors w-full"
                 >
-                  <span>{isTime ? "Time" : isReps ? "Reps" : "Strength"} Levels</span>
+                  <span>{isAssisted ? "Assistance" : isTime ? "Time" : isReps ? "Reps" : "Strength"} Levels</span>
                   {!isTime && !isReps && (
                     <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground/70">
                       {bodyWeight ? `(${bodyWeight} kg BW)` : "(set BW in profile)"}
