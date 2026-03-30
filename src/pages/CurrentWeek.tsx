@@ -671,7 +671,7 @@ function ExerciseCard({
         <div className="shrink-0">
           <Input
             type="text"
-            inputMode="decimal"
+            inputMode="text"
             placeholder={lastWeekFailed && retryWeight != null ? `${retryWeight}` : recommendedWeight != null ? `${recommendedWeight}` : unit}
             value={weight}
             onChange={(e) => {
