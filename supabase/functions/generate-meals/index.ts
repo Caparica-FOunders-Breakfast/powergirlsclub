@@ -73,14 +73,16 @@ Return ONLY valid JSON with this exact structure:
   "daily_protein_estimate": number,
   "protein_tips": ["string", "string"],
   "grocery_list": {
-    "protein": ["string"],
-    "vegetables": ["string"],
-    "fruit": ["string"],
-    "dairy": ["string"],
-    "grains": ["string"],
-    "pantry": ["string"]
+    "protein": ["item — quantity (e.g. 'Chicken breast — 1.5 kg')"],
+    "vegetables": ["item — quantity"],
+    "fruit": ["item — quantity"],
+    "dairy": ["item — quantity"],
+    "grains": ["item — quantity"],
+    "pantry": ["item — quantity"]
   }
-}`;
+}
+
+IMPORTANT: Every grocery list item MUST include the amount/quantity needed for the full week (7 days, ${numPeople} person(s)). Format each item as "Item — quantity" (e.g. "Chicken breast — 1.5 kg", "Spinach — 400g", "Olive oil — 1 bottle").`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
