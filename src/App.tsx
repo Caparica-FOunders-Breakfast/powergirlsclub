@@ -12,6 +12,7 @@ import CurrentWeek from "@/pages/CurrentWeek";
 import LearnLanguage from "@/pages/LearnLanguage";
 import TeamManagement from "@/pages/TeamManagement";
 import Profile from "@/pages/Profile";
+import MealPlan from "@/pages/MealPlan";
 import More from "@/pages/More";
 import NotFound from "@/pages/NotFound";
 
