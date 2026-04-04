@@ -178,6 +178,39 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_meal_plans: {
+        Row: {
+          created_at: string
+          daily_protein_estimate: number
+          daily_protein_target: number
+          grocery_list: Json
+          id: string
+          meals: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_protein_estimate?: number
+          daily_protein_target?: number
+          grocery_list?: Json
+          id?: string
+          meals?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_protein_estimate?: number
+          daily_protein_target?: number
+          grocery_list?: Json
+          id?: string
+          meals?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       language_custom_plans: {
         Row: {
           created_at: string
@@ -328,6 +361,54 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_preferences: {
+        Row: {
+          allergies: string[]
+          budget: string
+          cooking_time: string
+          created_at: string
+          daily_protein_target: number
+          dietary_preference: string
+          disliked_foods: string[]
+          favorite_foods: string[]
+          id: string
+          ingredients_at_home: string[]
+          num_people: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string[]
+          budget?: string
+          cooking_time?: string
+          created_at?: string
+          daily_protein_target?: number
+          dietary_preference?: string
+          disliked_foods?: string[]
+          favorite_foods?: string[]
+          id?: string
+          ingredients_at_home?: string[]
+          num_people?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string[]
+          budget?: string
+          cooking_time?: string
+          created_at?: string
+          daily_protein_target?: number
+          dietary_preference?: string
+          disliked_foods?: string[]
+          favorite_foods?: string[]
+          id?: string
+          ingredients_at_home?: string[]
+          num_people?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string
@@ -428,6 +509,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_meals: {
+        Row: {
+          created_at: string
+          id: string
+          ingredients: Json
+          is_favorite: boolean
+          is_locked: boolean
+          meal_type: string
+          prep_time: number
+          protein: number
+          steps: Json
+          title: string
+          updated_at: string
+          user_id: string
+          variation_index: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingredients?: Json
+          is_favorite?: boolean
+          is_locked?: boolean
+          meal_type: string
+          prep_time?: number
+          protein?: number
+          steps?: Json
+          title: string
+          updated_at?: string
+          user_id: string
+          variation_index?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingredients?: Json
+          is_favorite?: boolean
+          is_locked?: boolean
+          meal_type?: string
+          prep_time?: number
+          protein?: number
+          steps?: Json
+          title?: string
+          updated_at?: string
+          user_id?: string
+          variation_index?: number
+        }
+        Relationships: []
       }
       scorecard_hidden_exercises: {
         Row: {
