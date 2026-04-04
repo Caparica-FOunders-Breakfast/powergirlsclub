@@ -1,4 +1,4 @@
-import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal, Heart, User } from "lucide-react";
+import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal, Heart, User, UtensilsCrossed } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
