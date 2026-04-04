@@ -20,6 +20,7 @@ const allTabs = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
+  { path: "/meals", icon: UtensilsCrossed, label: "Meals", emoji: "🥗" },
   { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];

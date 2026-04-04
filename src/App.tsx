@@ -42,6 +42,7 @@ const ProtectedLayout = () => {
               <Route path="/" element={<Leaderboard />} />
               <Route path="/week" element={<CurrentWeek />} />
               <Route path="/learn" element={<LearnLanguage />} />
+              <Route path="/meals" element={<MealPlan />} />
               <Route path="/teams" element={<TeamManagement />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/more" element={<More />} />
