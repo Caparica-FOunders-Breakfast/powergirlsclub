@@ -72,16 +72,19 @@ function RoutineDayCard({ day, emoji, meals, totalProtein, proteinTarget, index 
   );
 }
 
+// Rotation pattern: 3 variations across 7 days, each used at least 2x
+const variationPattern = [0, 0, 1, 1, 2, 2, 0];
+
 function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; proteinTarget: number }) {
   const [tab, setTab] = useState<"plan" | "grocery">("plan");
 
-  const breakfast = plan.meals.breakfast?.[0];
-  const lunch = plan.meals.lunch?.[0];
-  const dinner = plan.meals.dinner?.[0];
-  const snack = plan.meals.snack?.[0];
-
-  const dailyProtein =
-    (breakfast?.protein || 0) + (lunch?.protein || 0) + (dinner?.protein || 0) + (snack?.protein || 0);
+  const avgProtein = variationPattern.reduce((sum, vi) => {
+    const b = plan.meals.breakfast?.[vi] || plan.meals.breakfast?.[0];
+    const l = plan.meals.lunch?.[vi] || plan.meals.lunch?.[0];
+    const d = plan.meals.dinner?.[vi] || plan.meals.dinner?.[0];
+    const s = plan.meals.snack?.[vi] || plan.meals.snack?.[0];
+    return sum + (b?.protein || 0) + (l?.protein || 0) + (d?.protein || 0) + (s?.protein || 0);
+  }, 0) / 7;
 
   return (
     <div className="space-y-4">
@@ -89,7 +92,7 @@ function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; prote
         <p className="text-3xl mb-1">📋</p>
         <h2 className="text-xl font-display text-foreground">Your Weekly Plan</h2>
         <p className="text-xs font-bold text-muted-foreground mt-1">
-          Based on your Power Routine • ~{dailyProtein}g/day
+          Based on your Power Routine • ~{Math.round(avgProtein)}g/day avg
         </p>
       </motion.div>
 
@@ -105,13 +108,19 @@ function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; prote
       {tab === "plan" ? (
         <div className="space-y-3">
           {dayNames.map((day, i) => {
+            const vi = variationPattern[i];
+            const breakfast = plan.meals.breakfast?.[vi] || plan.meals.breakfast?.[0];
+            const lunch = plan.meals.lunch?.[vi] || plan.meals.lunch?.[0];
+            const snack = plan.meals.snack?.[vi] || plan.meals.snack?.[0];
+            const dinner = plan.meals.dinner?.[vi] || plan.meals.dinner?.[0];
+            const totalProtein = (breakfast?.protein || 0) + (lunch?.protein || 0) + (snack?.protein || 0) + (dinner?.protein || 0);
             const meals: RoutineMealInfo[] = [
               { emoji: "🍳", title: breakfast?.title || "Breakfast", protein: breakfast?.protein || 0, prepTime: breakfast?.prep_time || 0 },
               { emoji: "🥗", title: lunch?.title || "Lunch", protein: lunch?.protein || 0, prepTime: lunch?.prep_time || 0 },
               { emoji: "🥜", title: snack?.title || "Snack", protein: snack?.protein || 0, prepTime: snack?.prep_time || 0 },
               { emoji: "🍽️", title: dinner?.title || "Dinner", protein: dinner?.protein || 0, prepTime: dinner?.prep_time || 0 },
             ];
-            return <RoutineDayCard key={day} day={day} emoji={dayEmojis[i]} meals={meals} totalProtein={dailyProtein} proteinTarget={proteinTarget} index={i} />;
+            return <RoutineDayCard key={day} day={day} emoji={dayEmojis[i]} meals={meals} totalProtein={totalProtein} proteinTarget={proteinTarget} index={i} />;
           })}
         </div>
       ) : (
