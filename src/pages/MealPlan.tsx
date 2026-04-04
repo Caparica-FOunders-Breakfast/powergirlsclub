@@ -56,8 +56,8 @@ function DayCard({ day, index }: { day: DayPlan; index: number }) {
             <div className="px-4 pb-4 space-y-1 border-t border-border pt-3">
               <MealCard label="Breakfast" emoji="🍳" meal={day.breakfast} />
               <MealCard label="Lunch" emoji="🥗" meal={day.lunch} />
-              <MealCard label="Dinner" emoji="🍽️" meal={day.dinner} />
               <MealCard label="Snack" emoji="🥜" meal={day.snack} />
+              <MealCard label="Dinner" emoji="🍽️" meal={day.dinner} />
             </div>
           </CollapsibleContent>
         </div>
