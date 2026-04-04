@@ -73,16 +73,16 @@ Return ONLY valid JSON with this exact structure:
   "daily_protein_estimate": number,
   "protein_tips": ["string", "string"],
   "grocery_list": {
-    "protein": ["item — quantity (e.g. 'Chicken breast — 1.5 kg')"],
-    "vegetables": ["item — quantity"],
-    "fruit": ["item — quantity"],
-    "dairy": ["item — quantity"],
-    "grains": ["item — quantity"],
-    "pantry": ["item — quantity"]
+    "protein": ["Chicken breast — 1.5 kg", "Greek yogurt — 3 tubs (500g each)"],
+    "vegetables": ["Spinach — 400g", "Broccoli — 2 heads"],
+    "fruit": ["Banana — 7", "Mixed berries (frozen) — 1 kg bag"],
+    "dairy": ["Feta cheese — 200g block"],
+    "grains": ["Brown rice — 1 kg bag"],
+    "pantry": ["Olive oil — 1 bottle (500ml)"]
   }
 }
 
-IMPORTANT: Every grocery list item MUST include the amount/quantity needed for the full week (7 days, ${numPeople} person(s)). Format each item as "Item — quantity" (e.g. "Chicken breast — 1.5 kg", "Spinach — 400g", "Olive oil — 1 bottle").`;
+CRITICAL RULE FOR GROCERY LIST: Every single grocery list item MUST include the specific quantity/amount needed for the full week (${numPeople} person(s), 7 days). Use the exact format "Item name — amount" with a dash separator. Examples: "Chicken breast — 1.5 kg", "Eggs — 2 dozen", "Spinach — 400g", "Banana — 7", "Olive oil — 1 bottle". NEVER list an item without its quantity.`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
