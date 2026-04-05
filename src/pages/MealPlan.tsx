@@ -59,13 +59,8 @@ function RoutineDayCard({ day, emoji, meals, totalProtein, proteinTarget, index,
               {meals.map((m, i) => {
                 const done = isCompleted(i);
                 return (
-                  <div key={i} className={cn("flex items-start gap-3 py-2 rounded-lg px-2 -mx-2 transition-colors", done && "opacity-60")}>
-                    <Checkbox
-                      checked={done}
-                      onCheckedChange={() => onToggle(i)}
-                      className="mt-1"
-                    />
-                    <span className="text-lg mt-0.5">{m.emoji}</span>
+                  <div key={i} className={cn("flex items-center gap-3 py-2 rounded-lg px-2 -mx-2 transition-colors", done && "opacity-60")}>
+                    <span className="text-lg">{m.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <p className={cn("text-sm font-bold text-foreground leading-tight", done && "line-through")}>{m.title}</p>
                       <div className="flex items-center gap-3 mt-1">
@@ -75,6 +70,10 @@ function RoutineDayCard({ day, emoji, meals, totalProtein, proteinTarget, index,
                         </span>
                       </div>
                     </div>
+                    <Checkbox
+                      checked={done}
+                      onCheckedChange={() => onToggle(i)}
+                    />
                   </div>
                 );
               })}
