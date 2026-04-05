@@ -361,6 +361,42 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_completions: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          day_index: number
+          id: string
+          meal_index: number
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_index: number
+          id?: string
+          meal_index: number
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_index?: number
+          id?: string
+          meal_index?: number
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       meal_preferences: {
         Row: {
           allergies: string[]
