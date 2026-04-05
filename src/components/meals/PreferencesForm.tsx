@@ -18,44 +18,26 @@ const budgetOptions = [
   { value: "high", label: "High", emoji: "💰💰💰" },
 ];
 
-interface Props {
-  preferences: MealPreferences;
-  onSave: (prefs: MealPreferences) => void;
-  onClose: () => void;
-  isSaving: boolean;
-}
+type TagField = "allergies" | "disliked_foods" | "favorite_foods" | "ingredients_at_home";
 
-export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Props) {
-  const [form, setForm] = useState<MealPreferences>({ ...preferences });
-  const [allergyInput, setAllergyInput] = useState("");
-  const [dislikedInput, setDislikedInput] = useState("");
-  const [favoriteInput, setFavoriteInput] = useState("");
-  const [atHomeInput, setAtHomeInput] = useState("");
+function TagInput({
+  label,
+  emoji,
+  tags,
+  onAdd,
+  onRemove,
+  placeholder,
+}: {
+  label: string;
+  emoji: string;
+  tags: string[];
+  onAdd: (value: string) => void;
+  onRemove: (idx: number) => void;
+  placeholder: string;
+}) {
+  const [inputValue, setInputValue] = useState("");
 
-  const addTag = (field: "allergies" | "disliked_foods" | "favorite_foods" | "ingredients_at_home", value: string) => {
-    if (!value.trim()) return;
-    setForm((f) => ({ ...f, [field]: [...f[field], value.trim()] }));
-  };
-
-  const removeTag = (field: "allergies" | "disliked_foods" | "favorite_foods" | "ingredients_at_home", idx: number) => {
-    setForm((f) => ({ ...f, [field]: f[field].filter((_, i) => i !== idx) }));
-  };
-
-  const TagInput = ({
-    label,
-    emoji,
-    field,
-    inputValue,
-    setInputValue,
-    placeholder,
-  }: {
-    label: string;
-    emoji: string;
-    field: "allergies" | "disliked_foods" | "favorite_foods" | "ingredients_at_home";
-    inputValue: string;
-    setInputValue: (v: string) => void;
-    placeholder: string;
-  }) => (
+  return (
     <div className="space-y-2">
       <Label className="text-xs font-extrabold text-foreground">
         {emoji} {label}
@@ -67,8 +49,10 @@ export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Prop
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              addTag(field, inputValue);
-              setInputValue("");
+              if (inputValue.trim()) {
+                onAdd(inputValue.trim());
+                setInputValue("");
+              }
             }
           }}
           placeholder={placeholder}
@@ -80,22 +64,24 @@ export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Prop
           size="sm"
           className="h-9 shrink-0"
           onClick={() => {
-            addTag(field, inputValue);
-            setInputValue("");
+            if (inputValue.trim()) {
+              onAdd(inputValue.trim());
+              setInputValue("");
+            }
           }}
         >
           Add
         </Button>
       </div>
-      {form[field].length > 0 && (
+      {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {form[field].map((item, idx) => (
+          {tags.map((item, idx) => (
             <span
               key={idx}
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold"
             >
               {item}
-              <button onClick={() => removeTag(field, idx)} className="hover:text-destructive">
+              <button onClick={() => onRemove(idx)} className="hover:text-destructive">
                 <X className="w-3 h-3" />
               </button>
             </span>
@@ -104,6 +90,25 @@ export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Prop
       )}
     </div>
   );
+}
+
+interface Props {
+  preferences: MealPreferences;
+  onSave: (prefs: MealPreferences) => void;
+  onClose: () => void;
+  isSaving: boolean;
+}
+
+export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Props) {
+  const [form, setForm] = useState<MealPreferences>({ ...preferences });
+
+  const addTag = (field: TagField, value: string) => {
+    setForm((f) => ({ ...f, [field]: [...f[field], value] }));
+  };
+
+  const removeTag = (field: TagField, idx: number) => {
+    setForm((f) => ({ ...f, [field]: f[field].filter((_, i) => i !== idx) }));
+  };
 
   return (
     <motion.div
@@ -209,33 +214,33 @@ export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Prop
       <TagInput
         label="Allergies / Exclusions"
         emoji="🚫"
-        field="allergies"
-        inputValue={allergyInput}
-        setInputValue={setAllergyInput}
+        tags={form.allergies}
+        onAdd={(v) => addTag("allergies", v)}
+        onRemove={(i) => removeTag("allergies", i)}
         placeholder="e.g. pork, shellfish..."
       />
       <TagInput
         label="Disliked Foods"
         emoji="👎"
-        field="disliked_foods"
-        inputValue={dislikedInput}
-        setInputValue={setDislikedInput}
+        tags={form.disliked_foods}
+        onAdd={(v) => addTag("disliked_foods", v)}
+        onRemove={(i) => removeTag("disliked_foods", i)}
         placeholder="e.g. tofu, mushrooms..."
       />
       <TagInput
         label="Favorite Foods"
         emoji="❤️"
-        field="favorite_foods"
-        inputValue={favoriteInput}
-        setInputValue={setFavoriteInput}
+        tags={form.favorite_foods}
+        onAdd={(v) => addTag("favorite_foods", v)}
+        onRemove={(i) => removeTag("favorite_foods", i)}
         placeholder="e.g. chicken, eggs..."
       />
       <TagInput
         label="Ingredients at Home"
         emoji="🏠"
-        field="ingredients_at_home"
-        inputValue={atHomeInput}
-        setInputValue={setAtHomeInput}
+        tags={form.ingredients_at_home}
+        onAdd={(v) => addTag("ingredients_at_home", v)}
+        onRemove={(i) => removeTag("ingredients_at_home", i)}
         placeholder="e.g. rice, olive oil..."
       />
 
