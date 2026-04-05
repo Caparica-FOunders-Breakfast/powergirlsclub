@@ -214,33 +214,33 @@ export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Prop
       <TagInput
         label="Allergies / Exclusions"
         emoji="🚫"
-        field="allergies"
-        inputValue={allergyInput}
-        setInputValue={setAllergyInput}
+        tags={form.allergies}
+        onAdd={(v) => addTag("allergies", v)}
+        onRemove={(i) => removeTag("allergies", i)}
         placeholder="e.g. pork, shellfish..."
       />
       <TagInput
         label="Disliked Foods"
         emoji="👎"
-        field="disliked_foods"
-        inputValue={dislikedInput}
-        setInputValue={setDislikedInput}
+        tags={form.disliked_foods}
+        onAdd={(v) => addTag("disliked_foods", v)}
+        onRemove={(i) => removeTag("disliked_foods", i)}
         placeholder="e.g. tofu, mushrooms..."
       />
       <TagInput
         label="Favorite Foods"
         emoji="❤️"
-        field="favorite_foods"
-        inputValue={favoriteInput}
-        setInputValue={setFavoriteInput}
+        tags={form.favorite_foods}
+        onAdd={(v) => addTag("favorite_foods", v)}
+        onRemove={(i) => removeTag("favorite_foods", i)}
         placeholder="e.g. chicken, eggs..."
       />
       <TagInput
         label="Ingredients at Home"
         emoji="🏠"
-        field="ingredients_at_home"
-        inputValue={atHomeInput}
-        setInputValue={setAtHomeInput}
+        tags={form.ingredients_at_home}
+        onAdd={(v) => addTag("ingredients_at_home", v)}
+        onRemove={(i) => removeTag("ingredients_at_home", i)}
         placeholder="e.g. rice, olive oil..."
       />
 
