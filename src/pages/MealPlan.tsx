@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMealPreferences } from "@/hooks/useMealPreferences";
 import { useGeneratedMeals, type GeneratedPlan } from "@/hooks/useGeneratedMeals";
 import { useSavedMeals } from "@/hooks/useSavedMeals";
+import { useMealCompletions } from "@/hooks/useMealCompletions";
 import { PreferencesForm } from "@/components/meals/PreferencesForm";
 import { MealCard } from "@/components/meals/MealCard";
 import { GroceryListView } from "@/components/meals/GroceryListView";
@@ -27,21 +28,25 @@ interface RoutineMealInfo {
   prepTime: number;
 }
 
-function RoutineDayCard({ day, emoji, meals, totalProtein, proteinTarget, index }: {
+function RoutineDayCard({ day, emoji, meals, totalProtein, proteinTarget, index, dayIndex, isCompleted, onToggle, completedCount }: {
   day: string; emoji: string; meals: RoutineMealInfo[]; totalProtein: number; proteinTarget: number; index: number;
+  dayIndex: number; isCompleted: (mealIndex: number) => boolean; onToggle: (mealIndex: number) => void; completedCount: number;
 }) {
   const [open, setOpen] = useState(false);
   const proteinPct = Math.min((totalProtein / proteinTarget) * 100, 100);
+  const allDone = completedCount === meals.length;
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
       <Collapsible open={open} onOpenChange={setOpen}>
-        <div className="rounded-2xl border-2 border-border bg-card overflow-hidden">
+        <div className={cn("rounded-2xl border-2 bg-card overflow-hidden transition-colors", allDone ? "border-primary/40 bg-primary/5" : "border-border")}>
           <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3 text-left">
             <div className="flex items-center gap-3">
-              <span className="text-xl">{emoji}</span>
+              <span className="text-xl">{allDone ? "✅" : emoji}</span>
               <div>
                 <p className="text-sm font-extrabold text-foreground">{day}</p>
-                <p className="text-[10px] font-bold text-muted-foreground">{totalProtein}g protein</p>
+                <p className="text-[10px] font-bold text-muted-foreground">
+                  {completedCount}/{meals.length} meals • {totalProtein}g protein
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -51,20 +56,28 @@ function RoutineDayCard({ day, emoji, meals, totalProtein, proteinTarget, index 
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="px-4 pb-4 space-y-1 border-t border-border pt-3">
-              {meals.map((m, i) => (
-                <div key={i} className="flex items-start gap-3 py-2">
-                  <span className="text-lg mt-0.5">{m.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground leading-tight">{m.title}</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[10px] font-extrabold text-primary">{m.protein}g protein</span>
-                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-muted-foreground">
-                        <Clock className="w-3 h-3" />{m.prepTime}min
-                      </span>
+              {meals.map((m, i) => {
+                const done = isCompleted(i);
+                return (
+                  <div key={i} className={cn("flex items-start gap-3 py-2 rounded-lg px-2 -mx-2 transition-colors", done && "opacity-60")}>
+                    <Checkbox
+                      checked={done}
+                      onCheckedChange={() => onToggle(i)}
+                      className="mt-1"
+                    />
+                    <span className="text-lg mt-0.5">{m.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn("text-sm font-bold text-foreground leading-tight", done && "line-through")}>{m.title}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] font-extrabold text-primary">{m.protein}g protein</span>
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-muted-foreground">
+                          <Clock className="w-3 h-3" />{m.prepTime}min
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CollapsibleContent>
         </div>
