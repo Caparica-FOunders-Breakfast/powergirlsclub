@@ -82,7 +82,7 @@ Return ONLY valid JSON with this exact structure:
   }
 }
 
-CRITICAL RULE FOR GROCERY LIST: Every single grocery list item MUST include the specific quantity/amount needed for the full week (${numPeople} person(s), 7 days). Use the exact format "Item name — amount" with a dash separator. Examples: "Chicken breast — 1.5 kg", "Eggs — 2 dozen", "Spinach — 400g", "Banana — 7", "Olive oil — 1 bottle". NEVER list an item without its quantity.`;
+CRITICAL RULE FOR GROCERY LIST: Every single grocery list item MUST include the specific quantity/amount needed for the full week (${numPeople} person(s), 7 days). Use the exact format "Item name — amount" with a dash separator. ALWAYS use European metric units: kilograms (kg), grams (g), liters (L), milliliters (ml), and pieces/units for countable items. NEVER use pounds, ounces, cups, or other imperial units. Examples: "Chicken breast — 1.5 kg", "Eggs — 14 pieces", "Spinach — 400g", "Olive oil — 500 ml", "Greek yogurt — 1.5 kg", "Banana — 7 pieces". NEVER list an item without its quantity.`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
