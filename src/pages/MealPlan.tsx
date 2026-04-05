@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Sparkles, ShoppingCart, Heart, Utensils, Loader2, ChevronDown, Clock, CalendarDays } from "lucide-react";
+import { Settings, Sparkles, ShoppingCart, Heart, Utensils, Loader2, ChevronDown, Clock, CalendarDays, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
