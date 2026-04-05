@@ -91,6 +91,7 @@ const variationPattern = [0, 0, 1, 1, 2, 2, 0];
 
 function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; proteinTarget: number }) {
   const [tab, setTab] = useState<"plan" | "grocery">("plan");
+  const { isCompleted, completedCountForDay, toggle } = useMealCompletions();
 
   const avgProtein = variationPattern.reduce((sum, vi) => {
     const b = plan.meals.breakfast?.[vi] || plan.meals.breakfast?.[0];
