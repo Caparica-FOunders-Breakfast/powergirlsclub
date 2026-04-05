@@ -135,7 +135,7 @@ function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; prote
               { emoji: "🥜", title: snack?.title || "Snack", protein: snack?.protein || 0, prepTime: snack?.prep_time || 0 },
               { emoji: "🍽️", title: dinner?.title || "Dinner", protein: dinner?.protein || 0, prepTime: dinner?.prep_time || 0 },
             ];
-            return <RoutineDayCard key={day} day={day} emoji={dayEmojis[i]} meals={meals} totalProtein={totalProtein} proteinTarget={proteinTarget} index={i} />;
+            return <RoutineDayCard key={day} day={day} emoji={dayEmojis[i]} meals={meals} totalProtein={totalProtein} proteinTarget={proteinTarget} index={i} dayIndex={i} isCompleted={(mealIndex) => isCompleted(i, mealIndex)} onToggle={(mealIndex) => toggle.mutate({ dayIndex: i, mealIndex })} completedCount={completedCountForDay(i)} />;
           })}
         </div>
       ) : (
