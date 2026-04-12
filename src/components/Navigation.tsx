@@ -28,6 +28,7 @@ const allTabs = [
 const mobileTabs = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/meals", icon: UtensilsCrossed, label: "Meals", emoji: "🥗" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
   { path: "/more", icon: MoreHorizontal, label: "More", emoji: "⋯" },
 ];
@@ -78,8 +79,8 @@ export function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">
         {mobileTabs.map(({ path, icon: Icon, label }) => {
           const isActive = path === "/more"
             ? ["/more", "/teams", "/profile"].includes(location.pathname)
@@ -90,8 +91,8 @@ export function BottomNav() {
               to={path}
               end
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200",
-                "text-muted-foreground hover:text-foreground"
+                "flex flex-col items-center gap-0.5 min-w-[56px] min-h-[44px] justify-center px-2 py-1 rounded-xl transition-all duration-200",
+                "text-muted-foreground hover:text-foreground active:scale-95"
               )}
               activeClassName="text-primary scale-110"
             >

@@ -88,10 +88,26 @@
   }
   body {
     @apply bg-background text-foreground font-body;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: contain;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Bangers', cursive;
     letter-spacing: 0.05em;
+  }
+  /* Prevent text selection on interactive elements */
+  button, a, [role="button"] {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  /* Minimum touch target for standalone interactive elements on mobile */
+  @media (pointer: coarse) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
