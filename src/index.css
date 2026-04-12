@@ -102,9 +102,12 @@
     -webkit-touch-callout: none;
     user-select: none;
   }
-  /* Minimum touch target size */
-  button, [role="button"], a {
-    min-height: 44px;
+  /* Minimum touch target for standalone interactive elements on mobile */
+  @media (pointer: coarse) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
