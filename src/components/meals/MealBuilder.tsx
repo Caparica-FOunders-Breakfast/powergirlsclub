@@ -280,6 +280,27 @@ export function MealBuilder() {
     }
   };
 
+  const handleSaveRecipeToMeals = () => {
+    if (!recipe) return;
+    const prepMinutes = parseInt(recipe.prep_time) || 10;
+    saveMeal.mutate(
+      {
+        meal: {
+          title: recipe.title,
+          ingredients: recipe.ingredients,
+          steps: recipe.steps,
+          protein: recipe.nutrition.protein,
+          prep_time: prepMinutes,
+        },
+        mealType: "dinner",
+      },
+      {
+        onSuccess: () => toast({ description: "✅ Recipe saved to My Meals!" }),
+        onError: (e) => toast({ description: `Error: ${e.message}`, variant: "destructive" }),
+      }
+    );
+  };
+
   return (
     <div className="space-y-5">
       <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-4 bg-card rounded-2xl border-2 border-border">
