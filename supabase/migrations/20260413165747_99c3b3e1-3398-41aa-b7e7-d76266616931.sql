@@ -1,0 +1,1 @@
+ALTER TABLE public.meal_combos ADD COLUMN fats text[] NOT NULL DEFAULT '{}';
