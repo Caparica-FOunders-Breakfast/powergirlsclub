@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, ChefHat, Sparkles, Clock, Users, X } from "lucide-react";
+import { Plus, Trash2, ChefHat, Sparkles, Clock, Users, X, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useMealCombos, type MealCombo } from "@/hooks/useMealCombos";
 import { supabase } from "@/integrations/supabase/client";
+import { useSavedMeals } from "@/hooks/useSavedMeals";
 
 interface Ingredient {
   emoji: string;
