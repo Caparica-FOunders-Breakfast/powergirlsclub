@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, ChefHat, Sparkles, Clock, Users, X } from "lucide-react";
+import { Plus, Trash2, ChefHat, Sparkles, Clock, Users, X, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useMealCombos, type MealCombo } from "@/hooks/useMealCombos";
 import { supabase } from "@/integrations/supabase/client";
+import { useSavedMeals } from "@/hooks/useSavedMeals";
 
 interface Ingredient {
   emoji: string;
@@ -117,7 +118,7 @@ function CategoryGrid({ label, emoji, items, selected, onToggle }: CategoryGridP
   );
 }
 
-function RecipeCard({ recipe, onClose }: { recipe: Recipe; onClose: () => void }) {
+function RecipeCard({ recipe, onClose, onSave, isSaving }: { recipe: Recipe; onClose: () => void; onSave: () => void; isSaving: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -190,6 +191,11 @@ function RecipeCard({ recipe, onClose }: { recipe: Recipe; onClose: () => void }
           <p className="text-xs font-bold text-muted-foreground">💡 {recipe.tips}</p>
         </div>
       )}
+
+      <Button onClick={onSave} disabled={isSaving} variant="secondary" className="w-full rounded-xl font-extrabold h-11">
+        <Bookmark className="w-4 h-4 mr-2" />
+        {isSaving ? "Saving..." : "Save to My Meals"}
+      </Button>
     </motion.div>
   );
 }
@@ -223,6 +229,7 @@ function SavedComboCard({ combo, onRemove }: { combo: MealCombo; onRemove: () =>
 
 export function MealBuilder() {
   const { combos, isLoading, save, remove } = useMealCombos();
+  const { saveMeal } = useSavedMeals();
   const { toast } = useToast();
 
   const [proteins, setProteins] = useState<string[]>([]);
@@ -271,6 +278,30 @@ export function MealBuilder() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleSaveRecipeToMeals = () => {
+    if (!recipe) return;
+    const prepMinutes = parseInt(recipe.prep_time) || 10;
+    saveMeal.mutate(
+      {
+        meal: {
+          title: recipe.title,
+          ingredients: recipe.ingredients.map((ing) => {
+            const match = ing.match(/^([\d.,]+\s*\w*)\s+(.+)$/);
+            return match ? { quantity: match[1].trim(), item: match[2].trim() } : { quantity: "", item: ing };
+          }),
+          steps: recipe.steps,
+          protein: recipe.nutrition.protein,
+          prep_time: prepMinutes,
+        },
+        mealType: "dinner",
+      },
+      {
+        onSuccess: () => toast({ description: "✅ Recipe saved to My Meals!" }),
+        onError: (e) => toast({ description: `Error: ${e.message}`, variant: "destructive" }),
+      }
+    );
   };
 
   return (
@@ -326,7 +357,7 @@ export function MealBuilder() {
 
       <AnimatePresence>
         {recipe && (
-          <RecipeCard recipe={recipe} onClose={() => setRecipe(null)} />
+          <RecipeCard recipe={recipe} onClose={() => setRecipe(null)} onSave={handleSaveRecipeToMeals} isSaving={saveMeal.isPending} />
         )}
       </AnimatePresence>
 
