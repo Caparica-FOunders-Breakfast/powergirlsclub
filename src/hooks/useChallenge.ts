@@ -87,28 +87,25 @@ export const useJoinChallenge = () => {
 
   return useMutation({
     mutationFn: async (inviteCode: string) => {
-      // Find challenge by code
-      const { data: challenge, error: findErr } = await supabase
-        .from("challenges" as any)
-        .select("*")
-        .eq("invite_code", inviteCode.trim().toLowerCase())
-        .single();
-      if (findErr || !challenge) throw new Error("Challenge not found. Check the code and try again.");
-
-      const ch = challenge as any;
+      // Find challenge by invite code using secure RPC (avoids exposing all invite codes)
+      const { data: challenges, error: findErr } = await supabase
+        .rpc("find_challenge_by_invite_code", { _code: inviteCode });
+      if (findErr) throw findErr;
+      const challenge = challenges?.[0];
+      if (!challenge) throw new Error("Challenge not found. Check the code and try again.");
 
       // Join by updating profile
       const { error: joinErr } = await supabase
         .from("profiles")
         .update({
-          challenge_id: ch.id,
-          challenge_start: ch.start_date,
-          challenge_end: ch.end_date,
+          challenge_id: challenge.id,
+          challenge_start: challenge.start_date,
+          challenge_end: challenge.end_date,
         } as any)
         .eq("user_id", user!.id);
       if (joinErr) throw joinErr;
 
-      return ch;
+      return challenge;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
