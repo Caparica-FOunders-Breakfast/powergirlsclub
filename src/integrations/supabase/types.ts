@@ -361,6 +361,39 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_combos: {
+        Row: {
+          carbs: string[]
+          created_at: string
+          id: string
+          name: string
+          proteins: string[]
+          updated_at: string
+          user_id: string
+          veggies: string[]
+        }
+        Insert: {
+          carbs?: string[]
+          created_at?: string
+          id?: string
+          name?: string
+          proteins?: string[]
+          updated_at?: string
+          user_id: string
+          veggies?: string[]
+        }
+        Update: {
+          carbs?: string[]
+          created_at?: string
+          id?: string
+          name?: string
+          proteins?: string[]
+          updated_at?: string
+          user_id?: string
+          veggies?: string[]
+        }
+        Relationships: []
+      }
       meal_completions: {
         Row: {
           completed: boolean

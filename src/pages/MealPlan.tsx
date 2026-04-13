@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Sparkles, ShoppingCart, Heart, Utensils, Loader2, ChevronDown, Clock, CalendarDays, Check } from "lucide-react";
+import { Settings, Sparkles, ShoppingCart, Heart, Utensils, Loader2, ChevronDown, Clock, CalendarDays, Check, ChefHat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { PreferencesForm } from "@/components/meals/PreferencesForm";
 import { MealCard } from "@/components/meals/MealCard";
 import { GroceryListView } from "@/components/meals/GroceryListView";
 import { SavedMealsView } from "@/components/meals/SavedMealsView";
+import { MealBuilder } from "@/components/meals/MealBuilder";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 // ─── 7-Day Plan built from Power Routine ───
@@ -323,7 +324,7 @@ function PowerRoutine() {
 // ─── Main page ───
 
 export default function MealPlan() {
-  const [mode, setMode] = useState<"power" | "weekly">("power");
+  const [mode, setMode] = useState<"power" | "weekly" | "builder">("power");
   const { plan, isLoading } = useGeneratedMeals();
   const { preferences } = useMealPreferences();
 
@@ -350,6 +351,16 @@ export default function MealPlan() {
           <CalendarDays className="w-3.5 h-3.5" />
           7-Day Plan
         </button>
+        <button
+          onClick={() => setMode("builder")}
+          className={cn(
+            "flex-1 py-2.5 text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5",
+            mode === "builder" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <ChefHat className="w-3.5 h-3.5" />
+          Builder
+        </button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -357,7 +368,7 @@ export default function MealPlan() {
           <motion.div key="power" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <PowerRoutine />
           </motion.div>
-        ) : (
+        ) : mode === "weekly" ? (
           <motion.div key="weekly" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -368,6 +379,10 @@ export default function MealPlan() {
             ) : (
               <EmptyWeeklyPlan />
             )}
+          </motion.div>
+        ) : (
+          <motion.div key="builder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <MealBuilder />
           </motion.div>
         )}
       </AnimatePresence>
