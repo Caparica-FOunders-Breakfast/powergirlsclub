@@ -105,7 +105,7 @@ function CategoryGrid({ label, emoji, items, selected, onToggle }: CategoryGridP
 }
 
 function SavedComboCard({ combo, onRemove }: { combo: MealCombo; onRemove: () => void }) {
-  const all = [...combo.proteins, ...combo.veggies, ...combo.carbs];
+  const all = [...combo.proteins, ...combo.veggies, ...combo.carbs, ...(combo.fats || [])];
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -138,23 +138,25 @@ export function MealBuilder() {
   const [proteins, setProteins] = useState<string[]>([]);
   const [veggies, setVeggies] = useState<string[]>([]);
   const [carbs, setCarbs] = useState<string[]>([]);
+  const [fats, setFats] = useState<string[]>([]);
   const [name, setName] = useState("");
 
   const toggle = (list: string[], setList: (v: string[]) => void, item: string) => {
     setList(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
   };
 
-  const hasSelection = proteins.length > 0 || veggies.length > 0 || carbs.length > 0;
+  const hasSelection = proteins.length > 0 || veggies.length > 0 || carbs.length > 0 || fats.length > 0;
 
   const handleSave = () => {
     save.mutate(
-      { name: name.trim(), proteins, veggies, carbs },
+      { name: name.trim(), proteins, veggies, carbs, fats },
       {
         onSuccess: () => {
           toast({ description: "✅ Combo saved!" });
           setProteins([]);
           setVeggies([]);
           setCarbs([]);
+          setFats([]);
           setName("");
         },
         onError: (e) => toast({ description: `Error: ${e.message}`, variant: "destructive" }),
@@ -167,12 +169,13 @@ export function MealBuilder() {
       <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-4 bg-card rounded-2xl border-2 border-border">
         <p className="text-3xl mb-1">🍽️</p>
         <h2 className="text-xl font-display text-foreground">Build Your Plate</h2>
-        <p className="text-xs font-bold text-muted-foreground mt-1">Pick your proteins, veggies & carbs</p>
+        <p className="text-xs font-bold text-muted-foreground mt-1">Pick your proteins, veggies, carbs & fats</p>
       </motion.div>
 
       <CategoryGrid label="Proteins" emoji="🥩" items={PROTEINS} selected={proteins} onToggle={(n) => toggle(proteins, setProteins, n)} />
       <CategoryGrid label="Veggies" emoji="🥦" items={VEGGIES} selected={veggies} onToggle={(n) => toggle(veggies, setVeggies, n)} />
       <CategoryGrid label="Carbs" emoji="🍚" items={CARBS} selected={carbs} onToggle={(n) => toggle(carbs, setCarbs, n)} />
+      <CategoryGrid label="Fats" emoji="🥑" items={FATS} selected={fats} onToggle={(n) => toggle(fats, setFats, n)} />
 
       <AnimatePresence>
         {hasSelection && (
@@ -186,7 +189,7 @@ export function MealBuilder() {
               <ChefHat className="w-3.5 h-3.5" /> Your Plate
             </p>
             <p className="text-sm font-bold text-foreground">
-              {[...proteins, ...veggies, ...carbs].join(" + ")}
+              {[...proteins, ...veggies, ...carbs, ...fats].join(" + ")}
             </p>
             <Input
               placeholder="Name your combo (optional)"
