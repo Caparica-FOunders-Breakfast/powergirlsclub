@@ -51,6 +51,19 @@ const CARBS: Ingredient[] = [
   { emoji: "🌽", name: "Corn" },
 ];
 
+const FATS: Ingredient[] = [
+  { emoji: "🧀", name: "Feta" },
+  { emoji: "🥜", name: "Almonds" },
+  { emoji: "🥑", name: "Avocado" },
+  { emoji: "🫒", name: "Olive Oil" },
+  { emoji: "🥜", name: "Peanut Butter" },
+  { emoji: "🌰", name: "Walnuts" },
+  { emoji: "🥥", name: "Coconut" },
+  { emoji: "🧈", name: "Butter" },
+  { emoji: "🌻", name: "Seeds" },
+  { emoji: "🫕", name: "Tahini" },
+];
+
 interface CategoryGridProps {
   label: string;
   emoji: string;
