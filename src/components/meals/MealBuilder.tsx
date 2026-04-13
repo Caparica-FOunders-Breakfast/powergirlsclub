@@ -229,6 +229,7 @@ function SavedComboCard({ combo, onRemove }: { combo: MealCombo; onRemove: () =>
 
 export function MealBuilder() {
   const { combos, isLoading, save, remove } = useMealCombos();
+  const { saveMeal } = useSavedMeals();
   const { toast } = useToast();
 
   const [proteins, setProteins] = useState<string[]>([]);
