@@ -1,15 +1,28 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, ChefHat } from "lucide-react";
+import { Plus, Trash2, ChefHat, Sparkles, Clock, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useMealCombos, type MealCombo } from "@/hooks/useMealCombos";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Ingredient {
   emoji: string;
   name: string;
+}
+
+interface Recipe {
+  title: string;
+  description: string;
+  prep_time: string;
+  cook_time: string;
+  servings: number;
+  ingredients: string[];
+  steps: string[];
+  nutrition: { calories: number; protein: number; carbs: number; fat: number };
+  tips?: string;
 }
 
 const PROTEINS: Ingredient[] = [
@@ -104,6 +117,83 @@ function CategoryGrid({ label, emoji, items, selected, onToggle }: CategoryGridP
   );
 }
 
+function RecipeCard({ recipe, onClose }: { recipe: Recipe; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl border-2 border-primary/30 bg-card p-5 space-y-4"
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-lg font-extrabold text-foreground">{recipe.title}</h3>
+          <p className="text-xs font-bold text-muted-foreground mt-1">{recipe.description}</p>
+        </div>
+        <button onClick={onClose} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
+          <Clock className="w-3.5 h-3.5" /> Prep {recipe.prep_time}
+        </div>
+        <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
+          <Clock className="w-3.5 h-3.5" /> Cook {recipe.cook_time}
+        </div>
+        <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
+          <Users className="w-3.5 h-3.5" /> {recipe.servings} servings
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { label: "Cal", value: recipe.nutrition.calories },
+          { label: "Protein", value: `${recipe.nutrition.protein}g` },
+          { label: "Carbs", value: `${recipe.nutrition.carbs}g` },
+          { label: "Fat", value: `${recipe.nutrition.fat}g` },
+        ].map((n) => (
+          <div key={n.label} className="rounded-xl bg-primary/5 border border-primary/20 p-2 text-center">
+            <p className="text-xs font-extrabold text-primary">{n.value}</p>
+            <p className="text-[10px] font-bold text-muted-foreground">{n.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-2">Ingredients</p>
+        <ul className="space-y-1">
+          {recipe.ingredients.map((ing, i) => (
+            <li key={i} className="text-sm font-bold text-foreground flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span> {ing}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-2">Steps</p>
+        <ol className="space-y-2">
+          {recipe.steps.map((step, i) => (
+            <li key={i} className="text-sm font-bold text-foreground flex items-start gap-2">
+              <span className="text-xs font-extrabold text-primary bg-primary/10 rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                {i + 1}
+              </span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {recipe.tips && (
+        <div className="rounded-xl bg-accent/50 p-3">
+          <p className="text-xs font-bold text-muted-foreground">💡 {recipe.tips}</p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 function SavedComboCard({ combo, onRemove }: { combo: MealCombo; onRemove: () => void }) {
   const all = [...combo.proteins, ...combo.veggies, ...combo.carbs, ...(combo.fats || [])];
   return (
@@ -140,6 +230,8 @@ export function MealBuilder() {
   const [carbs, setCarbs] = useState<string[]>([]);
   const [fats, setFats] = useState<string[]>([]);
   const [name, setName] = useState("");
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   const toggle = (list: string[], setList: (v: string[]) => void, item: string) => {
     setList(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
@@ -162,6 +254,23 @@ export function MealBuilder() {
         onError: (e) => toast({ description: `Error: ${e.message}`, variant: "destructive" }),
       }
     );
+  };
+
+  const handleGenerateRecipe = async () => {
+    setGenerating(true);
+    setRecipe(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-recipe", {
+        body: { proteins, veggies, carbs, fats },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setRecipe(data.recipe);
+    } catch (e: any) {
+      toast({ description: e.message || "Failed to generate recipe", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -197,10 +306,27 @@ export function MealBuilder() {
               onChange={(e) => setName(e.target.value)}
               className="rounded-xl text-sm"
             />
-            <Button onClick={handleSave} disabled={save.isPending} className="w-full rounded-xl font-extrabold h-11">
-              <Plus className="w-4 h-4 mr-2" /> Save Combo
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleSave} disabled={save.isPending} className="flex-1 rounded-xl font-extrabold h-11">
+                <Plus className="w-4 h-4 mr-2" /> Save Combo
+              </Button>
+              <Button
+                onClick={handleGenerateRecipe}
+                disabled={generating}
+                variant="secondary"
+                className="flex-1 rounded-xl font-extrabold h-11"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {generating ? "Generating..." : "Generate Recipe"}
+              </Button>
+            </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {recipe && (
+          <RecipeCard recipe={recipe} onClose={() => setRecipe(null)} />
         )}
       </AnimatePresence>
 
