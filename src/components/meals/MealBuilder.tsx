@@ -118,7 +118,7 @@ function CategoryGrid({ label, emoji, items, selected, onToggle }: CategoryGridP
   );
 }
 
-function RecipeCard({ recipe, onClose }: { recipe: Recipe; onClose: () => void }) {
+function RecipeCard({ recipe, onClose, onSave, isSaving }: { recipe: Recipe; onClose: () => void; onSave: () => void; isSaving: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -191,6 +191,11 @@ function RecipeCard({ recipe, onClose }: { recipe: Recipe; onClose: () => void }
           <p className="text-xs font-bold text-muted-foreground">💡 {recipe.tips}</p>
         </div>
       )}
+
+      <Button onClick={onSave} disabled={isSaving} variant="secondary" className="w-full rounded-xl font-extrabold h-11">
+        <Bookmark className="w-4 h-4 mr-2" />
+        {isSaving ? "Saving..." : "Save to My Meals"}
+      </Button>
     </motion.div>
   );
 }
