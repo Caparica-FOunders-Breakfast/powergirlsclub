@@ -287,7 +287,10 @@ export function MealBuilder() {
       {
         meal: {
           title: recipe.title,
-          ingredients: recipe.ingredients,
+          ingredients: recipe.ingredients.map((ing) => {
+            const match = ing.match(/^([\d.,]+\s*\w*)\s+(.+)$/);
+            return match ? { quantity: match[1].trim(), item: match[2].trim() } : { quantity: "", item: ing };
+          }),
           steps: recipe.steps,
           protein: recipe.nutrition.protein,
           prep_time: prepMinutes,
