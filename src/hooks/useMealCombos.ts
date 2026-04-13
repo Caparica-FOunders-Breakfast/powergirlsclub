@@ -8,6 +8,7 @@ export interface MealCombo {
   proteins: string[];
   veggies: string[];
   carbs: string[];
+  fats: string[];
   created_at: string;
 }
 
@@ -30,7 +31,7 @@ export function useMealCombos() {
   });
 
   const save = useMutation({
-    mutationFn: async (combo: { name: string; proteins: string[]; veggies: string[]; carbs: string[] }) => {
+    mutationFn: async (combo: { name: string; proteins: string[]; veggies: string[]; carbs: string[]; fats: string[] }) => {
       const { error } = await supabase.from("meal_combos").insert({
         user_id: user!.id,
         ...combo,

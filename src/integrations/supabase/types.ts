@@ -365,6 +365,7 @@ export type Database = {
         Row: {
           carbs: string[]
           created_at: string
+          fats: string[]
           id: string
           name: string
           proteins: string[]
@@ -375,6 +376,7 @@ export type Database = {
         Insert: {
           carbs?: string[]
           created_at?: string
+          fats?: string[]
           id?: string
           name?: string
           proteins?: string[]
@@ -385,6 +387,7 @@ export type Database = {
         Update: {
           carbs?: string[]
           created_at?: string
+          fats?: string[]
           id?: string
           name?: string
           proteins?: string[]
