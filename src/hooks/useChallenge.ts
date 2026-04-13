@@ -94,20 +94,18 @@ export const useJoinChallenge = () => {
       const challenge = challenges?.[0];
       if (!challenge) throw new Error("Challenge not found. Check the code and try again.");
 
-      const ch = challenge as any;
-
       // Join by updating profile
       const { error: joinErr } = await supabase
         .from("profiles")
         .update({
-          challenge_id: ch.id,
-          challenge_start: ch.start_date,
-          challenge_end: ch.end_date,
+          challenge_id: challenge.id,
+          challenge_start: challenge.start_date,
+          challenge_end: challenge.end_date,
         } as any)
         .eq("user_id", user!.id);
       if (joinErr) throw joinErr;
 
-      return ch;
+      return challenge;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
