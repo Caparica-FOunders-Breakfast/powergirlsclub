@@ -357,7 +357,7 @@ export function MealBuilder() {
 
       <AnimatePresence>
         {recipe && (
-          <RecipeCard recipe={recipe} onClose={() => setRecipe(null)} />
+          <RecipeCard recipe={recipe} onClose={() => setRecipe(null)} onSave={handleSaveRecipeToMeals} isSaving={saveMeal.isPending} />
         )}
       </AnimatePresence>
 
