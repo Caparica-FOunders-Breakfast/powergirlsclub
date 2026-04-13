@@ -876,6 +876,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_challenge_by_invite_code: {
+        Args: { _code: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
