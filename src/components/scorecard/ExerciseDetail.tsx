@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
 import { getNonKgLevel, getNonKgProgress, NON_KG_THRESHOLDS } from "./exerciseLevels";
@@ -21,9 +21,10 @@ interface ExerciseDetailProps {
   };
   bodyWeight: number | null;
   onBack: () => void;
+  onRemove?: (name: string) => void;
 }
 
-export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailProps) {
+export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: ExerciseDetailProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const { entries, name, currentWeight, bestWeight, level, ratio, unit = "kg", useRatio = true, hasThresholds = false } = exercise;
   const progress = useRatio && bodyWeight ? getLevelProgress(ratio) : hasThresholds ? getNonKgProgress(name, currentWeight) : 0;
@@ -59,9 +60,21 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack }: ExerciseDetailP
       className="space-y-4"
     >
       {/* Back button + header */}
-      <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground font-bold -ml-2">
-        <ArrowLeft className="w-4 h-4 mr-1" /> Back
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground font-bold -ml-2">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Back
+        </Button>
+        {onRemove && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onRemove(name)}
+            className="text-destructive font-bold hover:bg-destructive/10"
+          >
+            <Trash2 className="w-4 h-4 mr-1" /> Remove from Scorecard
+          </Button>
+        )}
+      </div>
 
       <div className="rounded-2xl border-2 border-border bg-card p-5">
         <div className="flex items-center gap-3 mb-4">

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import {
   Sidebar,
   SidebarContent,
@@ -47,46 +48,102 @@ const memberMobileTabs: NavItem[] = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
-  const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { data: profile } = useProfile();
   const tabs = isAdmin ? adminSidebarTabs : memberSidebarTabs;
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Power Girl";
+  const avatarColor = profile?.avatar_color || "#FF2D87";
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r-2 border-primary/20">
-      <SidebarContent className="bg-card pt-4">
-        <div className="px-4 pb-4 border-b border-border">
-          <h2 className="text-2xl font-display text-primary tracking-wider">Power Girls Club</h2>
-          <p className="text-xs font-bold text-muted-foreground">💜 Stronger Together</p>
-        </div>
+    <>
+      {/* Mobile/tablet: offcanvas sidebar (Sheet on mobile, hidden-by-default on tablet) */}
+      <div className="contents lg:hidden">
+        <Sidebar collapsible="offcanvas" className="border-r-2 border-primary/20">
+          <SidebarContent className="bg-card pt-4">
+            <div className="px-4 pb-4 border-b border-border">
+              <h2 className="text-2xl font-display text-primary tracking-wider">Power Girls Club</h2>
+              <p className="text-xs font-bold text-muted-foreground">💜 Stronger Together</p>
+            </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+            <SidebarGroup>
+              <SidebarGroupLabel className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                Navigate
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {tabs.map((item) => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.path}
+                          end
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-foreground hover:bg-primary/10 transition-colors"
+                          activeClassName="bg-primary/10 text-primary"
+                        >
+                          <item.icon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
+      </div>
+
+      {/* Desktop (lg+): permanent dark sidebar with pink uppercase logo + avatar footer */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 lg:sticky lg:top-0 lg:h-screen bg-[#1a0a2e] text-white border-r border-white/10">
+        <div className="px-6 py-7 border-b border-white/10">
+          <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF2D87] leading-none">
+            Power Girls Club
+          </h2>
+          <p className="text-xs font-bold text-white/60 mt-2 uppercase tracking-wider">💜 Stronger Together</p>
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <p className="px-3 mb-3 font-bold text-[11px] uppercase tracking-widest text-white/40">
             Navigate
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {tabs.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.path}
-                      end
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-foreground hover:bg-primary/10 transition-colors"
-                      activeClassName="bg-primary/10 text-primary"
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.label}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+          </p>
+          <nav className="flex flex-col gap-2">
+            {tabs.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end
+                className="flex items-center gap-3.5 px-5 py-3.5 rounded-xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                activeClassName="bg-[#FF2D87]/15 text-[#FF2D87]"
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+        <div className="px-4 py-4 border-t border-white/10">
+          <NavLink
+            to="/profile"
+            end
+            className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors"
+            activeClassName=""
+          >
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-extrabold text-white shrink-0"
+              style={{ backgroundColor: avatarColor }}
+            >
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate">{displayName}</p>
+              <p className="text-[11px] font-semibold text-white/50 truncate">
+                {isAdmin ? "Admin" : "Member"}
+              </p>
+            </div>
+          </NavLink>
+        </div>
+      </aside>
+    </>
   );
 }
 
@@ -126,7 +183,7 @@ export function BottomNav() {
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20">
+    <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20 lg:hidden">
       <SidebarTrigger className="text-foreground hover:text-primary" />
       <h1 className="text-xl font-display text-primary tracking-wider">Power Girls Club</h1>
     </header>

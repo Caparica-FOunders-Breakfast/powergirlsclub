@@ -45,7 +45,7 @@ export default function LearnLanguage() {
 
   if (isLoading) {
     return (
-      <div className="p-4 pb-24 max-w-lg mx-auto space-y-3">
+      <div className="p-4 pb-24 max-w-lg mx-auto space-y-3 lg:max-w-5xl lg:px-8 lg:pb-8">
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-20 bg-muted rounded-2xl animate-pulse" />
         ))}
@@ -56,7 +56,7 @@ export default function LearnLanguage() {
   // No languages yet — onboarding
   if (languages.length === 0 && !previewLang) {
     return (
-      <div className="p-4 pb-24 max-w-lg mx-auto space-y-6">
+      <div className="p-4 pb-24 max-w-lg mx-auto space-y-6 lg:max-w-5xl lg:px-8 lg:pb-8">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -76,7 +76,7 @@ export default function LearnLanguage() {
   // Preview screen after adding first language
   if (previewLang) {
     return (
-      <div className="p-4 pb-24 max-w-lg mx-auto space-y-4">
+      <div className="p-4 pb-24 max-w-lg mx-auto space-y-4 lg:max-w-5xl lg:px-8 lg:pb-8">
         <WeeklyPlanPreview
           language={{ name: previewLang.language_name, flag: previewLang.flag_emoji }}
           onStart={() => {
@@ -91,7 +91,7 @@ export default function LearnLanguage() {
   const activeLang = languages.find((l) => l.language_code === activeCode);
 
   return (
-    <div className="p-4 pb-24 max-w-lg mx-auto space-y-4">
+    <div className="p-4 pb-24 max-w-lg mx-auto space-y-4 lg:max-w-5xl lg:px-8 lg:pb-8">
       {/* Language toggle */}
       {languages.length > 0 && (
         <motion.div

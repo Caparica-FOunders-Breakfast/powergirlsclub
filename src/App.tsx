@@ -40,7 +40,7 @@ const ProtectedLayout = () => {
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 lg:bg-[#f4f4f7]">
           <AppHeader />
           <main className="flex-1">
             <Routes>

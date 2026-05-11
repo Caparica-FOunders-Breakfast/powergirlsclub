@@ -225,9 +225,9 @@ const CurrentWeek = () => {
     : format(selectedWeekDate, "MMM d, yyyy");
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-7xl lg:px-8 lg:pb-8">
       {/* Header */}
-      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-4">
+      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-4 lg:text-left">
         <h1 className="text-4xl font-display text-foreground">
           <Dumbbell className="inline w-8 h-8 text-neon-teal mr-2" />
           {weekLabel}
@@ -273,25 +273,37 @@ const CurrentWeek = () => {
         )}
       </motion.div>
 
-      {/* Weekly progress */}
+      {/* Weekly progress — card on mobile, slim strip on lg+ */}
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="mb-4 p-4 rounded-2xl bg-card border-2 border-border"
+        className="mb-4 p-4 rounded-2xl bg-card border-2 border-border lg:p-3 lg:px-4 lg:rounded-lg lg:border"
       >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-extrabold text-foreground">Weekly Progress</span>
-          <span className="text-sm font-display text-primary">{weeklyScore}%</span>
+        <div className="lg:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-extrabold text-foreground">Weekly Progress</span>
+            <span className="text-sm font-display text-primary">{weeklyScore}%</span>
+          </div>
+          <Progress value={weeklyScore} className="h-3 bg-muted [&>div]:gradient-primary" />
+          <p className="text-xs text-muted-foreground font-semibold mt-1.5">
+            {completedDays}/{totalWorkoutDays} workout days completed
+          </p>
         </div>
-        <Progress value={weeklyScore} className="h-3 bg-muted [&>div]:gradient-primary" />
-        <p className="text-xs text-muted-foreground font-semibold mt-1.5">
-          {completedDays}/{totalWorkoutDays} workout days completed
-        </p>
+        <div className="hidden lg:flex lg:items-center lg:gap-4">
+          <span className="text-sm font-extrabold text-foreground shrink-0">Weekly Progress</span>
+          <Progress value={weeklyScore} className="h-2 flex-1 bg-muted [&>div]:gradient-primary" />
+          <span className="text-sm font-display text-primary shrink-0 tabular-nums">{weeklyScore}%</span>
+          <span className="text-xs text-muted-foreground font-semibold shrink-0 tabular-nums">
+            {completedDays}/{totalWorkoutDays} days
+          </span>
+        </div>
       </motion.div>
 
+      <div className="lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
+      <div className="lg:min-w-0">
       {/* Loading state */}
       {logsLoading && (
-        <div className="space-y-3">
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />
           ))}
@@ -300,7 +312,7 @@ const CurrentWeek = () => {
 
       {/* Day cards */}
       {!logsLoading && (
-        <div className="space-y-3">
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start">
           {weeklyPlan.map((day, dayIdx) => {
             const expanded = expandedDay === dayIdx;
             const completion = getDayCompletion(dayIdx, day);
@@ -525,9 +537,146 @@ const CurrentWeek = () => {
           })}
         </div>
       )}
+      </div>
+
+      <DesktopRightPanel
+        weeklyPlan={weeklyPlan}
+        getDayCompletion={getDayCompletion}
+        todayIndex={todayIndex}
+        isCurrentWeek={isCurrentWeek}
+        completedDays={completedDays}
+        totalWorkoutDays={totalWorkoutDays}
+        weeklyScore={weeklyScore}
+        localCompleted={localCompleted}
+      />
+      </div>
     </div>
   );
 };
+
+function DesktopRightPanel({
+  weeklyPlan,
+  getDayCompletion,
+  todayIndex,
+  isCurrentWeek,
+  completedDays,
+  totalWorkoutDays,
+  weeklyScore,
+  localCompleted,
+}: {
+  weeklyPlan: WorkoutDay[];
+  getDayCompletion: (dayIdx: number, day: WorkoutDay) => number;
+  todayIndex: number;
+  isCurrentWeek: boolean;
+  completedDays: number;
+  totalWorkoutDays: number;
+  weeklyScore: number;
+  localCompleted: Record<string, boolean>;
+}) {
+  const dayLetters = ["M", "T", "W", "T", "F", "S", "S"];
+  const dayCompletion = weeklyPlan.map((d, i) => getDayCompletion(i, d));
+  const exercisesDone = Object.values(localCompleted).filter(Boolean).length;
+  const daysLeft = Math.max(0, totalWorkoutDays - completedDays);
+
+  const upcoming = weeklyPlan
+    .map((d, i) => ({ day: d, idx: i, completion: dayCompletion[i] }))
+    .filter(({ idx, completion }) => (!isCurrentWeek || idx >= todayIndex) && completion < 100)
+    .slice(0, 4);
+
+  return (
+    <aside className="hidden lg:block lg:sticky lg:top-6 space-y-4">
+      {/* Stats 2x2 grid */}
+      <div className="grid grid-cols-2 gap-3">
+        <StatTile label="Workouts" value={`${completedDays}/${totalWorkoutDays}`} accent="text-primary" />
+        <StatTile label="Progress" value={`${weeklyScore}%`} accent="text-neon-teal" />
+        <StatTile label="Exercises" value={String(exercisesDone)} accent="text-neon-yellow" />
+        <StatTile label="Days Left" value={String(daysLeft)} accent="text-neon-blue" />
+      </div>
+
+      {/* 7-day streak tracker */}
+      <div className="p-4 rounded-2xl bg-card border-2 border-border">
+        <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
+          7-Day Streak
+        </p>
+        <div className="flex items-center justify-between">
+          {weeklyPlan.map((_, i) => {
+            const done = dayCompletion[i] === 100;
+            const isToday = isCurrentWeek && i === todayIndex;
+            return (
+              <div key={i} className="flex flex-col items-center gap-1.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold transition-all",
+                    done
+                      ? "bg-secondary text-secondary-foreground"
+                      : isToday
+                      ? "border-2 border-primary text-primary"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {done ? <Check className="w-3.5 h-3.5" /> : dayLetters[i]}
+                </div>
+                <span className={cn("text-[9px] font-bold uppercase", isToday ? "text-primary" : "text-muted-foreground")}>
+                  {dayLetters[i]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Upcoming workouts */}
+      <div className="p-4 rounded-2xl bg-card border-2 border-border">
+        <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
+          Upcoming Workouts
+        </p>
+        {upcoming.length === 0 ? (
+          <p className="text-sm font-semibold text-muted-foreground">
+            All done — crushed the week! 🔥
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {upcoming.map(({ day, idx }) => {
+              const isToday = isCurrentWeek && idx === todayIndex;
+              return (
+                <li key={idx} className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "w-9 h-9 rounded-lg flex items-center justify-center text-base shrink-0",
+                      isToday ? "bg-primary/15" : "bg-muted"
+                    )}
+                  >
+                    {day.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-extrabold text-foreground truncate">
+                      {day.day}
+                      {isToday && (
+                        <span className="ml-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                          Today
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[11px] font-semibold text-muted-foreground truncate">{day.label}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+function StatTile({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div className="p-3 rounded-xl bg-card border-2 border-border">
+      <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={cn("text-2xl font-display tabular-nums mt-1", accent)}>{value}</p>
+    </div>
+  );
+}
 
 function ExerciseCard({
   exercise,

@@ -329,7 +329,7 @@ export default function MealPlan() {
   const { preferences } = useMealPreferences();
 
   return (
-    <div className="p-4 pb-24 max-w-lg mx-auto space-y-4">
+    <div className="p-4 pb-24 max-w-lg mx-auto space-y-4 lg:max-w-7xl lg:px-8 lg:pb-8">
       <div className="flex rounded-xl border-2 border-border overflow-hidden">
         <button
           onClick={() => setMode("power")}
