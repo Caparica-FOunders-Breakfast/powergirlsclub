@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, TrendingUp, Undo2 } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, Play, TrendingUp, Undo2 } from "lucide-react";
 import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
 import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { useProfile } from "@/hooks/useProfile";
@@ -8,6 +8,7 @@ import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from 
 import ExerciseEditor from "@/components/ExerciseEditor";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,30 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } from "date-fns";
+
+// Accepts the common YouTube URL shapes (watch?v=, youtu.be/, /shorts/, /embed/) — including
+// variants that carry extra query params like ?si=… — and returns a clean
+// https://www.youtube.com/embed/VIDEO_ID URL for the iframe. Returns null if no ID is found.
+function toYouTubeEmbedUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  // Video IDs use [A-Za-z0-9_-]. The character class stops on the first ?, &, or /
+  // so any trailing query (e.g. ?si=…&feature=…) is dropped automatically.
+  const patterns = [
+    /youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/i,
+    /youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/i,
+    /youtu\.be\/([A-Za-z0-9_-]{6,})/i,
+    /[?&]v=([A-Za-z0-9_-]{6,})/i,
+  ];
+
+  for (const re of patterns) {
+    const match = trimmed.match(re);
+    if (match) return `https://www.youtube.com/embed/${match[1]}`;
+  }
+  return null;
+}
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 const DEFAULT_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6];
@@ -56,6 +81,8 @@ const CurrentWeek = () => {
   const [localWeights, setLocalWeights] = useState<Record<string, string>>({});
   const [localCompleted, setLocalCompleted] = useState<Record<string, boolean>>({});
   const [initialized, setInitialized] = useState(false);
+  const [videoModal, setVideoModal] = useState<{ name: string; url: string } | null>(null);
+  const embedUrl = toYouTubeEmbedUrl(videoModal?.url);
 
   // Reset state when week changes
   useEffect(() => {
@@ -505,6 +532,7 @@ const CurrentWeek = () => {
                                   onWeightChange={(val) => handleWeightChange(dayIdx, exIdx, ex.name, val)}
                                   onWeightBlur={() => handleWeightBlur(dayIdx, exIdx, ex.name)}
                                   onToggle={() => toggleExercise(dayIdx, exIdx, ex.name)}
+                                  onVideoClick={(url) => setVideoModal({ name: ex.name, url })}
                                 />
                               );
                             })}
@@ -550,6 +578,42 @@ const CurrentWeek = () => {
         localCompleted={localCompleted}
       />
       </div>
+
+      <Dialog open={!!videoModal} onOpenChange={(open) => !open && setVideoModal(null)}>
+        <DialogContent
+          className={cn(
+            "p-0 gap-0 overflow-hidden flex flex-col",
+            // Mobile: full-screen (override defaults explicitly so tailwind-merge picks these up)
+            "left-0 top-0 right-0 bottom-0 translate-x-0 translate-y-0 w-screen h-screen max-w-none max-h-none rounded-none border-0",
+            // sm+: centered modal with rounded corners + dark overlay (overlay comes from DialogOverlay)
+            "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:right-auto sm:bottom-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] sm:rounded-lg sm:border"
+          )}
+        >
+          <DialogHeader className="px-5 py-4 border-b border-border shrink-0 pr-12">
+            <DialogTitle className="font-display text-xl text-foreground text-left">
+              {videoModal?.name ?? ""}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video w-full bg-black shrink-0">
+            {embedUrl ? (
+              <iframe
+                key={videoModal?.name ?? ""}
+                src={embedUrl}
+                title={videoModal ? `${videoModal.name} tutorial` : "Exercise tutorial"}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white/70 text-sm font-bold p-4 text-center">
+                Saved URL isn't a recognized YouTube link. Edit the exercise to fix it.
+              </div>
+            )}
+          </div>
+          {/* Fills remaining vertical space below the video on mobile full-screen */}
+          <div className="flex-1 bg-background sm:hidden" />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -688,6 +752,7 @@ function ExerciseCard({
   onWeightChange,
   onWeightBlur,
   onToggle,
+  onVideoClick,
 }: {
   exercise: Exercise;
   bodyWeight: number;
@@ -698,7 +763,10 @@ function ExerciseCard({
   onWeightChange: (val: string) => void;
   onWeightBlur: () => void;
   onToggle: () => void;
+  onVideoClick: (url: string) => void;
 }) {
+  const videoUrl = exercise.videoUrl?.trim();
+  const hasVideo = !!videoUrl;
   const isRounds = exercise.isRoundsBased;
   const isTime = exercise.isTimeBased;
   const isAssisted = exercise.isAssisted;
@@ -763,9 +831,25 @@ function ExerciseCard({
         </button>
 
         <div className="flex-1 min-w-0">
-          <p className={cn("font-extrabold text-sm text-foreground", isDone && "line-through opacity-50")}>
-            {exercise.name}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <span className={cn("font-extrabold text-sm text-foreground truncate", isDone && "line-through opacity-50")}>
+              {exercise.name}
+            </span>
+            {hasVideo && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVideoClick(videoUrl!);
+                }}
+                aria-label={`Watch tutorial for ${exercise.name}`}
+                title="Watch tutorial"
+                className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              >
+                <Play className="w-3 h-3 fill-current" />
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
             <span className="text-xs font-bold text-primary">
               {isRounds ? `${exercise.sets} rounds` : `${exercise.sets} × ${exercise.reps}`}

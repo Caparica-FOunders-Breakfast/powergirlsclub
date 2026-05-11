@@ -140,6 +140,20 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                 </Button>
               </div>
 
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                  Video URL (YouTube)
+                </label>
+                <Input
+                  type="url"
+                  inputMode="url"
+                  value={ex.videoUrl ?? ""}
+                  onChange={(e) => updateExercise(idx, "videoUrl", e.target.value)}
+                  placeholder="https://youtube.com/watch?v=..."
+                  className="h-7 text-xs border-primary/20"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-muted-foreground uppercase">Sets</label>

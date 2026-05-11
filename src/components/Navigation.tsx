@@ -62,7 +62,7 @@ export function AppSidebar() {
         <Sidebar collapsible="offcanvas" className="border-r-2 border-primary/20">
           <SidebarContent className="bg-card pt-4">
             <div className="px-4 pb-4 border-b border-border">
-              <h2 className="text-2xl font-display text-primary tracking-wider">Power Girls Club</h2>
+              <h2 className="text-2xl font-display text-primary tracking-wider">Power Club</h2>
               <p className="text-xs font-bold text-muted-foreground">💜 Stronger Together</p>
             </div>
 
@@ -98,7 +98,7 @@ export function AppSidebar() {
       <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 lg:sticky lg:top-0 lg:h-screen bg-[#1a0a2e] text-white border-r border-white/10">
         <div className="px-6 py-7 border-b border-white/10">
           <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF2D87] leading-none">
-            Power Girls Club
+            Power Club
           </h2>
           <p className="text-xs font-bold text-white/60 mt-2 uppercase tracking-wider">💜 Stronger Together</p>
         </div>
@@ -185,7 +185,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20 lg:hidden">
       <SidebarTrigger className="text-foreground hover:text-primary" />
-      <h1 className="text-xl font-display text-primary tracking-wider">Power Girls Club</h1>
+      <h1 className="text-xl font-display text-primary tracking-wider">Power Club</h1>
     </header>
   );
 }
