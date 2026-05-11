@@ -1,12 +1,13 @@
 import { useState, useRef, useCallback } from "react";
-import { Trash2 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useExerciseScorecard, getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
+import { useActivityData } from "@/hooks/useActivityData";
 import { useProfile } from "@/hooks/useProfile";
 import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
+import { ActivityOverview } from "./ActivityOverview";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -70,13 +71,23 @@ const EXERCISE_CATEGORIES: Record<string, string> = {
 
 const CATEGORY_ORDER = ["🦵 Legs", "🍑 Glutes", "💪 Upper Body", "🧘 Core", "⚡ Cardio & Power", "🏋️ Other"];
 
+const CATEGORY_FILTERS: { key: string; label: string; match: (cat: string) => boolean }[] = [
+  { key: "all", label: "All", match: () => true },
+  { key: "lower", label: "Lower Body", match: (c) => c.includes("Legs") || c.includes("Glutes") },
+  { key: "upper", label: "Upper Body", match: (c) => c.includes("Upper Body") },
+  { key: "core", label: "Core", match: (c) => c.includes("Core") },
+  { key: "hiit", label: "HIIT", match: (c) => c.includes("Cardio") },
+];
+
 export function ExerciseScorecard() {
   const { data: grouped, isLoading } = useExerciseScorecard();
+  const { data: activityEntries } = useActivityData();
   const { data: profile } = useProfile();
   const { hiddenExercises, hideExercise, unhideExercise } = useScorecardVisibility();
   const { toast } = useToast();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
@@ -163,20 +174,6 @@ export function ExerciseScorecard() {
       return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted, failCount };
     });
 
-  // Group by category
-  const groupedByCategory = new Map<string, typeof exercises>();
-  for (const ex of exercises) {
-    if (!groupedByCategory.has(ex.category)) groupedByCategory.set(ex.category, []);
-    groupedByCategory.get(ex.category)!.push(ex);
-  }
-  for (const [, exs] of groupedByCategory) {
-    exs.sort((a, b) => {
-      if (a.isAssisted && b.isAssisted) return a.bestWeight - b.bestWeight; // lower assist = better
-      return b.bestWeight - a.bestWeight;
-    });
-  }
-  const sortedCategories = CATEGORY_ORDER.filter((c) => groupedByCategory.has(c));
-
   // Detail view
   if (selectedExercise) {
     const ex = exercises.find((e) => e.name === selectedExercise);
@@ -186,6 +183,10 @@ export function ExerciseScorecard() {
           exercise={ex}
           bodyWeight={bw}
           onBack={() => setSelectedExercise(null)}
+          onRemove={(name) => {
+            handleRemoveExercise(name);
+            setSelectedExercise(null);
+          }}
         />
       );
     }
@@ -193,8 +194,19 @@ export function ExerciseScorecard() {
 
   const hasHiddenExercises = hiddenExercises.length > 0;
 
+  const activeFilter = CATEGORY_FILTERS.find((f) => f.key === categoryFilter) ?? CATEGORY_FILTERS[0];
+  const filteredExercises = exercises
+    .filter((ex) => activeFilter.match(ex.category))
+    .sort((a, b) => {
+      if (a.isAssisted && b.isAssisted) return a.bestWeight - b.bestWeight;
+      return b.bestWeight - a.bestWeight;
+    });
+
   return (
     <div className="space-y-4">
+      {/* Activity Overview (responsive — mobile + desktop) */}
+      <ActivityOverview entries={activityEntries ?? []} />
+
       {/* Strength Summary */}
       <StrengthSummary exercises={exercises} bodyWeight={bw} />
 
@@ -230,152 +242,51 @@ export function ExerciseScorecard() {
         </motion.div>
       </Collapsible>
 
-      {/* Grouped Exercise Cards */}
-      {sortedCategories.map((category, catIdx) => (
-        <div key={category} className="space-y-3">
-          <motion.h3
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: catIdx * 0.08 }}
-            className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground px-1 pt-2"
-          >
-            {category}
-          </motion.h3>
-
-          {groupedByCategory.get(category)!.map((ex, i) => {
-            const isPR = ex.isAssisted
-              ? (ex.currentWeight === ex.bestWeight && ex.entries.length > 1) // best = lowest for assisted
-              : (ex.currentWeight === ex.bestWeight && ex.entries.length > 1);
-            const progress = ex.isAssisted
-              ? getAssistedProgress(ex.name, ex.currentWeight)
-              : ex.useRatio
-                ? (bw ? getLevelProgress(ex.ratio) : 0)
-                : ex.hasThresholds
-                  ? getNonKgProgress(ex.name, ex.currentWeight)
-                  : 0;
-
-            return (
-              <motion.div
-                key={ex.name}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: catIdx * 0.08 + i * 0.04 }}
-                className="relative group"
-              >
+      {/* Exercise Progress card */}
+      <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+        <div className="p-4 lg:p-5 border-b border-border">
+          <h3 className="font-display text-xl text-foreground lg:text-2xl mb-3">Exercise Progress</h3>
+          <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
+            {CATEGORY_FILTERS.map((f) => {
+              const active = categoryFilter === f.key;
+              return (
                 <button
-                  onClick={() => setSelectedExercise(ex.name)}
-                  className="w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98]"
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-lg">{ex.level.icon}</span>
-                      <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
-                      {isPR && (
-                        <span className="shrink-0 text-base" title="Personal Record">⭐</span>
-                      )}
-                      {ex.failCount > 0 && (
-                        <span className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive" title={`${ex.failCount} failed attempt${ex.failCount > 1 ? 's' : ''}`}>
-                          {ex.failCount}F
-                        </span>
-                      )}
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                  </div>
-
-                  {/* Stats row */}
-                  <div className="flex items-baseline gap-4 mb-3">
-                    <div>
-                      <span className="text-xl font-display text-foreground">{ex.currentWeight}</span>
-                      <span className="text-xs font-bold text-muted-foreground ml-1">{ex.unit}</span>
-                    </div>
-                    {ex.isAssisted ? (
-                      ex.bestWeight < ex.currentWeight && (
-                        <div className="text-xs font-bold text-muted-foreground">
-                          Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
-                        </div>
-                      )
-                    ) : (
-                      ex.bestWeight > ex.currentWeight && (
-                        <div className="text-xs font-bold text-muted-foreground">
-                          Best: <span className="text-primary">{ex.bestWeight} {ex.unit}</span>
-                        </div>
-                      )
-                    )}
-                    {ex.useRatio && (
-                      <div className="text-xs font-bold text-muted-foreground ml-auto">
-                        {ex.ratio.toFixed(2)}x BW
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Progress bar */}
-                  {(ex.useRatio || ex.hasThresholds || ex.isAssisted) ? (
-                    <div className="space-y-1">
-                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(progress, 100)}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
-                          className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold text-muted-foreground">{ex.level.label}</p>
-                        {!ex.useRatio && (
-                          <p className="text-[10px] font-bold text-muted-foreground">{ex.currentWeight} {ex.unit}</p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[10px] font-bold text-muted-foreground italic">
-                      Tracked in {ex.unit}
-                    </p>
+                  key={f.key}
+                  onClick={() => setCategoryFilter(f.key)}
+                  className={cn(
+                    "shrink-0 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all",
+                    active
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
                   )}
-
-                  {/* Mini trend dots */}
-                  <div className="flex items-end gap-[3px] mt-3 h-5">
-                    {ex.entries.slice(0, 12).reverse().map((entry, j) => {
-                      if (entry.failed) {
-                        return (
-                          <div
-                            key={j}
-                            className="w-[5px] rounded-full bg-destructive/60"
-                            style={{ height: "20px" }}
-                            title="Failed"
-                          />
-                        );
-                      }
-                      const max = ex.bestWeight || 1;
-                      const h = Math.max(4, (entry.weight / max) * 20);
-                      return (
-                        <div
-                          key={j}
-                          className="w-[5px] rounded-full bg-primary/40"
-                          style={{ height: `${h}px` }}
-                        />
-                      );
-                    })}
-                  </div>
-                </button>
-
-                {/* Trash icon — bottom-right, on hover */}
-                <span
-                  role="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveExercise(ex.name);
-                  }}
-                  className="absolute bottom-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 active:scale-95 cursor-pointer"
-                  title="Remove from Scorecard"
                 >
-                  <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                </span>
-              </motion.div>
-            );
-          })}
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      ))}
+
+        {filteredExercises.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="text-sm text-muted-foreground font-semibold">
+              No exercises in this category yet.
+            </p>
+          </div>
+        ) : (
+          <div className="p-3 space-y-3 lg:p-0 lg:space-y-0 lg:divide-y lg:divide-border">
+            {filteredExercises.map((ex, i) => (
+              <ExerciseRow
+                key={ex.name}
+                ex={ex}
+                index={i}
+                bodyWeight={bw}
+                onSelect={setSelectedExercise}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Add Exercise Button */}
       <motion.div
@@ -409,3 +320,176 @@ export function ExerciseScorecard() {
     </div>
   );
 }
+
+type ExerciseRowData = {
+  name: string;
+  entries: ExerciseEntry[];
+  currentWeight: number;
+  bestWeight: number;
+  ratio: number;
+  level: { label: string; icon: string; index: number };
+  category: string;
+  unit: string;
+  useRatio: boolean;
+  hasThresholds: boolean;
+  isAssisted: boolean;
+  failCount: number;
+};
+
+function ExerciseRow({
+  ex,
+  index,
+  bodyWeight,
+  onSelect,
+}: {
+  ex: ExerciseRowData;
+  index: number;
+  bodyWeight: number | null;
+  onSelect: (name: string) => void;
+}) {
+  const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
+  const progress = ex.isAssisted
+    ? getAssistedProgress(ex.name, ex.currentWeight)
+    : ex.useRatio
+      ? (bodyWeight ? getLevelProgress(ex.ratio) : 0)
+      : ex.hasThresholds
+        ? getNonKgProgress(ex.name, ex.currentWeight)
+        : 0;
+  const hasProgress = ex.useRatio || ex.hasThresholds || ex.isAssisted;
+
+  return (
+    <motion.div
+      initial={{ x: -10, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ delay: index * 0.03 }}
+      className={cn(
+        "relative group transition-colors",
+        // Desktop alternating row backgrounds
+        index % 2 === 1 ? "lg:bg-muted/30" : "lg:bg-card",
+        "lg:hover:bg-muted/50"
+      )}
+    >
+      {/* Mobile layout — stacked card with progress bar at bottom */}
+      <button
+        onClick={() => onSelect(ex.name)}
+        className="lg:hidden w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all active:scale-[0.98]"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-lg">{ex.level.icon}</span>
+            <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
+            {isPR && (
+              <span className="shrink-0 text-base" title="Personal Record">⭐</span>
+            )}
+            {ex.failCount > 0 && (
+              <span
+                className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive"
+                title={`${ex.failCount} failed attempt${ex.failCount > 1 ? "s" : ""}`}
+              >
+                {ex.failCount}F
+              </span>
+            )}
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+        </div>
+
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+            {ex.category}
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {ex.entries.length} session{ex.entries.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div className="flex items-baseline gap-2 mb-2">
+          <span className="text-xl font-display text-foreground tabular-nums">{ex.currentWeight}</span>
+          <span className="text-xs font-bold text-muted-foreground">{ex.unit}</span>
+          {ex.useRatio && (
+            <span className="text-[10px] font-bold text-muted-foreground">{ex.ratio.toFixed(2)}x BW</span>
+          )}
+        </div>
+
+        {hasProgress ? (
+          <div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(progress, 100)}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
+              />
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground mt-1">{ex.level.label}</p>
+          </div>
+        ) : (
+          <p className="text-[10px] font-bold text-muted-foreground italic">Tracked in {ex.unit}</p>
+        )}
+      </button>
+
+      {/* Desktop layout — 90px tall single row */}
+      <button
+        onClick={() => onSelect(ex.name)}
+        className="hidden lg:flex w-full text-left h-[90px] px-5 items-center gap-4 cursor-pointer"
+      >
+        <span className="text-2xl shrink-0">{ex.level.icon}</span>
+
+        <div className="w-64 shrink-0 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-extrabold text-[18px] leading-tight text-foreground truncate">{ex.name}</h3>
+            {ex.failCount > 0 && (
+              <span className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">
+                {ex.failCount}F
+              </span>
+            )}
+          </div>
+          <div className="flex gap-1.5 mt-1.5">
+            <span className="text-[13px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+              {ex.category}
+            </span>
+            <span className="text-[13px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              {ex.entries.length} session{ex.entries.length === 1 ? "" : "s"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          {hasProgress ? (
+            <>
+              <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(progress, 100)}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
+                />
+              </div>
+              <p className="text-[11px] font-bold text-muted-foreground mt-1">{ex.level.label}</p>
+            </>
+          ) : (
+            <p className="text-[11px] font-bold text-muted-foreground italic">Tracked in {ex.unit}</p>
+          )}
+        </div>
+
+        <div className="text-right shrink-0 min-w-[88px]">
+          <span className="text-[22px] font-display text-foreground tabular-nums leading-none">{ex.currentWeight}</span>
+          <span className="text-[16px] font-bold text-muted-foreground ml-1">{ex.unit}</span>
+          {ex.useRatio && (
+            <p className="text-[11px] font-bold text-muted-foreground mt-0.5">{ex.ratio.toFixed(2)}x BW</p>
+          )}
+        </div>
+
+        <div className="w-[54px] shrink-0 flex justify-end">
+          {isPR && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-accent/15 text-accent">
+              ⭐ PR
+            </span>
+          )}
+        </div>
+
+        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+      </button>
+    </motion.div>
+  );
+}
+
