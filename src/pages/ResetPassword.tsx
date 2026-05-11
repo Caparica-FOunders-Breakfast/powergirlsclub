@@ -6,26 +6,56 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
+// Snapshot the URL synchronously at module load — before React mounts and
+// before Supabase's detectSessionInUrl clears the hash/query.
+const initialUrlSnapshot = (() => {
+  if (typeof window === "undefined") return { hasRecoveryParams: false, errorDescription: null as string | null };
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+  const hasRecoveryParams =
+    hash.get("type") === "recovery" ||
+    hash.has("access_token") ||
+    query.has("code");
+  const errorDescription =
+    hash.get("error_description") || query.get("error_description") || null;
+  return { hasRecoveryParams, errorDescription };
+})();
+
+type Status = "checking" | "ready" | "invalid";
+
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isRecovery, setIsRecovery] = useState(false);
+  const [status, setStatus] = useState<Status>("checking");
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    initialUrlSnapshot.errorDescription,
+  );
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    if (initialUrlSnapshot.errorDescription) {
+      setStatus("invalid");
+      return;
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
-        setIsRecovery(true);
+        setStatus("ready");
+        return;
+      }
+      if (event === "INITIAL_SESSION") {
+        if (session) {
+          setStatus("ready");
+        } else if (!initialUrlSnapshot.hasRecoveryParams) {
+          setStatus("invalid");
+        }
+      }
+      if (event === "SIGNED_IN" && session) {
+        setStatus("ready");
       }
     });
-
-    // Check hash for recovery token
-    const hash = window.location.hash;
-    if (hash && hash.includes("type=recovery")) {
-      setIsRecovery(true);
-    }
 
     return () => subscription.unsubscribe();
   }, []);
@@ -55,7 +85,15 @@ const ResetPassword = () => {
     }
   };
 
-  if (!isRecovery) {
+  if (status === "checking") {
+    return (
+      <div className="min-h-screen flex items-center justify-center gradient-primary">
+        <div className="w-10 h-10 border-4 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (status === "invalid") {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 gradient-primary">
         <motion.div
@@ -64,7 +102,9 @@ const ResetPassword = () => {
           className="w-full max-w-sm bg-card/95 backdrop-blur-sm rounded-2xl p-6 comic-border space-y-4 text-center"
         >
           <h2 className="text-2xl font-display text-foreground">Invalid Link</h2>
-          <p className="text-muted-foreground">This password reset link is invalid or has expired.</p>
+          <p className="text-muted-foreground">
+            {errorMessage ?? "This password reset link is invalid or has expired."}
+          </p>
           <Button onClick={() => navigate("/auth")} className="w-full gradient-primary text-primary-foreground comic-border border-primary-foreground/20">
             Back to Login
           </Button>
@@ -96,6 +136,7 @@ const ResetPassword = () => {
             placeholder="••••••••"
             required
             minLength={6}
+            autoComplete="new-password"
             className="mt-1 border-2 border-primary/30 focus:border-primary"
           />
         </div>
@@ -109,6 +150,7 @@ const ResetPassword = () => {
             placeholder="••••••••"
             required
             minLength={6}
+            autoComplete="new-password"
             className="mt-1 border-2 border-primary/30 focus:border-primary"
           />
         </div>

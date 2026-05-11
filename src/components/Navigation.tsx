@@ -2,6 +2,7 @@ import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal, Heart, User, UtensilsCro
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +17,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const allTabs = [
+type NavItem = { path: string; icon: typeof Trophy; label: string; emoji: string };
+
+const adminSidebarTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
@@ -25,7 +28,12 @@ const allTabs = [
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
-const mobileTabs = [
+const memberSidebarTabs: NavItem[] = [
+  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
+  { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
+];
+
+const adminMobileTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/meals", icon: UtensilsCrossed, label: "Meals", emoji: "🥗" },
@@ -33,10 +41,17 @@ const mobileTabs = [
   { path: "/more", icon: MoreHorizontal, label: "More", emoji: "⋯" },
 ];
 
+const memberMobileTabs: NavItem[] = [
+  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
+  { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { isAdmin } = useAuth();
+  const tabs = isAdmin ? adminSidebarTabs : memberSidebarTabs;
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r-2 border-primary/20">
@@ -52,7 +67,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {allTabs.map((item) => (
+              {tabs.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -77,11 +92,13 @@ export function AppSidebar() {
 
 export function BottomNav() {
   const location = useLocation();
+  const { isAdmin } = useAuth();
+  const tabs = isAdmin ? adminMobileTabs : memberMobileTabs;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">
-        {mobileTabs.map(({ path, icon: Icon, label }) => {
+        {tabs.map(({ path, icon: Icon, label }) => {
           const isActive = path === "/more"
             ? ["/more", "/teams", "/profile"].includes(location.pathname)
             : location.pathname === path;

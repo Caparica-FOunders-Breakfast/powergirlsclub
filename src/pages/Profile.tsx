@@ -1,16 +1,55 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { LogOut, Dumbbell, Flame, Trophy, Scale } from "lucide-react";
+import { LogOut, Dumbbell, Flame, Trophy, Scale, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
 import { useMyTeam } from "@/hooks/useTeams";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 const AVATAR_COLORS = ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF", "#FF6B35", "#A855F7"];
+
+type PasswordFieldProps = {
+  id: string;
+  label: string;
+  autoComplete: "current-password" | "new-password";
+  value: string;
+  onChange: (value: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+};
+
+const PasswordField = ({ id, label, autoComplete, value, onChange, show, onToggleShow }: PasswordFieldProps) => (
+  <div className="flex flex-col gap-1.5">
+    <Label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      {label}
+    </Label>
+    <div className="relative">
+      <Input
+        id={id}
+        type={show ? "text" : "password"}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="border-2 border-border pr-10"
+      />
+      <button
+        type="button"
+        onClick={onToggleShow}
+        aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+        aria-pressed={show}
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+      >
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  </div>
+);
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -23,6 +62,13 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const [bodyWeight, setBodyWeight] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
 
@@ -53,6 +99,51 @@ const Profile = () => {
     try {
       await updateProfile.mutateAsync({ avatar_color: color });
     } catch {}
+  };
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({ title: "Please fill in all password fields", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "New password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "New passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (newPassword === currentPassword) {
+      toast({ title: "New password must be different from current password", variant: "destructive" });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      if (signInError) {
+        toast({ title: "Current password is incorrect", variant: "destructive" });
+        return;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) {
+        toast({ title: "Couldn't update password", description: updateError.message, variant: "destructive" });
+        return;
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast({ title: "Password updated 🔑" });
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -244,6 +335,72 @@ const Profile = () => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+      </motion.div>
+
+      {/* Change Password */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.35 }}
+        className="bg-card rounded-2xl comic-border p-5 mb-6"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <KeyRound className="w-5 h-5 text-primary" />
+          <h2 className="text-2xl font-display text-foreground">Change Password</h2>
+        </div>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleChangePassword();
+          }}
+        >
+          {/* Hidden anchor so password managers know which account this form is for */}
+          <input
+            type="email"
+            name="username"
+            autoComplete="username"
+            value={user?.email ?? ""}
+            readOnly
+            hidden
+            tabIndex={-1}
+          />
+
+          <PasswordField
+            id="current-password"
+            label="Current Password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            show={showCurrent}
+            onToggleShow={() => setShowCurrent((v) => !v)}
+          />
+          <PasswordField
+            id="new-password"
+            label="New Password"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={setNewPassword}
+            show={showNew}
+            onToggleShow={() => setShowNew((v) => !v)}
+          />
+          <PasswordField
+            id="confirm-password"
+            label="Confirm New Password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            show={showConfirm}
+            onToggleShow={() => setShowConfirm((v) => !v)}
+          />
+          <Button
+            type="submit"
+            disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
+            className="h-11 mt-1 gradient-primary text-primary-foreground font-bold"
+          >
+            {changingPassword ? "Updating…" : "Update Password"}
+          </Button>
+        </form>
       </motion.div>
 
       <Button

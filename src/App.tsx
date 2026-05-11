@@ -18,8 +18,13 @@ import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AdminOnly = ({ children }: { children: JSX.Element }) => {
+  const { isAdmin } = useAuth();
+  return isAdmin ? children : <Navigate to="/week" replace />;
+};
+
 const ProtectedLayout = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -39,13 +44,13 @@ const ProtectedLayout = () => {
           <AppHeader />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<Leaderboard />} />
+              <Route path="/" element={isAdmin ? <Leaderboard /> : <Navigate to="/week" replace />} />
               <Route path="/week" element={<CurrentWeek />} />
-              <Route path="/learn" element={<LearnLanguage />} />
-              <Route path="/meals" element={<MealPlan />} />
-              <Route path="/teams" element={<TeamManagement />} />
+              <Route path="/learn" element={<AdminOnly><LearnLanguage /></AdminOnly>} />
+              <Route path="/meals" element={<AdminOnly><MealPlan /></AdminOnly>} />
+              <Route path="/teams" element={<AdminOnly><TeamManagement /></AdminOnly>} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/more" element={<More />} />
+              <Route path="/more" element={<AdminOnly><More /></AdminOnly>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
