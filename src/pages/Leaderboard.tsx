@@ -21,7 +21,7 @@ const Leaderboard = () => {
   const isTied = tiedUserIds.length > 1;
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-5xl lg:px-8 lg:pb-8">
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
