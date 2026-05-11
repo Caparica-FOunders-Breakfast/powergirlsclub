@@ -10,6 +10,8 @@ export interface Exercise {
   isAssisted?: boolean;
   /** Custom strength-level weight thresholds [Beginner, GettingStronger, Strong, VeryStrong, Elite] (5 values in kg) */
   levelThresholds?: number[];
+  /** YouTube URL for a tutorial video. Accepted formats: watch?v=, youtu.be/, or /embed/. */
+  videoUrl?: string;
 }
 
 export interface WorkoutDay {
@@ -90,7 +92,7 @@ export const weeklyPlan: WorkoutDay[] = [
     isRest: false,
     exercises: [
       { name: "Back Extension", sets: 3, reps: "10", suggestedWeight: "BW or 5 kg", progression: "+2 kg" },
-      { name: "Cable Row", sets: 3, reps: "10", suggestedWeight: "25–35 kg", progression: "+2 to 2.5 kg" },
+      { name: "Pull Up", sets: 3, reps: "10", suggestedWeight: "Bodyweight", progression: "Add reps", isBodyweight: true },
       { name: "Russian Twists", sets: 3, reps: "10", suggestedWeight: "6–10 kg", progression: "+2 kg" },
       { name: "Bird Dog", sets: 3, reps: "10", suggestedWeight: "Bodyweight", progression: "Slow controlled", isBodyweight: true },
       { name: "Farmer Carry", sets: 3, reps: "40 sec", suggestedWeight: "10–16 kg/hand", progression: "Increase weight" },

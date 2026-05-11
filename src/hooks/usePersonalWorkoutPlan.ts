@@ -2,11 +2,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDefaultWorkoutPlan } from "@/hooks/useDefaultWorkoutPlan";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
+
+const isStartDateActive = (startDate: string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(startDate + "T00:00:00");
+  return start.getTime() <= today.getTime();
+};
 
 export const usePersonalWorkoutPlan = () => {
   const { user } = useAuth();
   const { plan: defaultPlan, isLoading: defaultsLoading } = useDefaultWorkoutPlan();
+  const { data: preferences } = useUserPreferences();
 
   const { data: customPlans, isLoading: customLoading } = useQuery({
     queryKey: ["personal-workout-plan", user?.id],
@@ -22,8 +31,8 @@ export const usePersonalWorkoutPlan = () => {
     enabled: !!user,
   });
 
-  // Merge custom plans with DB defaults
-  const plan: WorkoutDay[] = defaultPlan.map((defaultDay, idx) => {
+  // Step 1: merge custom plans on top of DB defaults.
+  let plan: WorkoutDay[] = defaultPlan.map((defaultDay, idx) => {
     const custom = customPlans?.find((c: any) => c.day_index === idx);
     if (!custom) return defaultDay;
     return {
@@ -36,6 +45,25 @@ export const usePersonalWorkoutPlan = () => {
       exercises: (custom.exercises as Exercise[]) || defaultDay.exercises,
     };
   });
+
+  // Step 2: if the user has activated preferences (start date today or past),
+  // convert non-training-days to rest so the weekly view reflects their chosen frequency.
+  if (preferences && isStartDateActive(preferences.start_date)) {
+    const trainingDays = new Set(preferences.training_days);
+    plan = plan.map((day, idx) => {
+      if (trainingDays.has(idx)) return day;
+      // Preserve the day label but blank out exercises and mark as rest.
+      return {
+        ...day,
+        label: "Rest",
+        emoji: "🧘",
+        isRest: true,
+        isRecovery: false,
+        restNote: "Rest day. Light walk, mobility, or full rest.",
+        exercises: [],
+      };
+    });
+  }
 
   return {
     plan,

@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Save, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { MealPreferences } from "@/hooks/useMealPreferences";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 const dietaryOptions = ["omnivore", "pescatarian", "vegetarian", "vegan"];
 const cookingOptions = [
@@ -96,11 +97,31 @@ interface Props {
   preferences: MealPreferences;
   onSave: (prefs: MealPreferences) => void;
   onClose: () => void;
-  isSaving: boolean;
 }
 
-export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Props) {
+export function PreferencesForm({ preferences, onSave, onClose }: Props) {
   const [form, setForm] = useState<MealPreferences>({ ...preferences });
+
+  const hydrated = useRef(false);
+  const latestForm = useRef(form);
+  latestForm.current = form;
+
+  const autosave = useDebouncedCallback((next: MealPreferences) => {
+    onSave(next);
+  }, 600);
+
+  useEffect(() => {
+    if (!hydrated.current) {
+      hydrated.current = true;
+      return;
+    }
+    autosave(form);
+  }, [form, autosave]);
+
+  useEffect(
+    () => () => autosave.flush(latestForm.current),
+    [autosave],
+  );
 
   const addTag = (field: TagField, value: string) => {
     setForm((f) => ({ ...f, [field]: [...f[field], value] }));
@@ -244,15 +265,9 @@ export function PreferencesForm({ preferences, onSave, onClose, isSaving }: Prop
         placeholder="e.g. rice, olive oil..."
       />
 
-      {/* Save */}
-      <Button
-        onClick={() => onSave(form)}
-        disabled={isSaving}
-        className="w-full rounded-xl font-extrabold"
-      >
-        <Save className="w-4 h-4 mr-2" />
-        {isSaving ? "Saving..." : "Save Preferences"}
-      </Button>
+      <p className="text-[11px] font-bold text-muted-foreground text-center">
+        Preferences save automatically
+      </p>
     </motion.div>
   );
 }

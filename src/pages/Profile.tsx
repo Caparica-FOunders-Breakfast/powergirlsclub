@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { LogOut, Dumbbell, Flame, Trophy, Scale, KeyRound, Eye, EyeOff } from "lucide-react";
+import {
+  ChevronRight,
+  Dumbbell,
+  Eye,
+  EyeOff,
+  Flame,
+  KeyRound,
+  LogOut,
+  Pencil,
+  Scale,
+  Trophy,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
-import { useMyTeam } from "@/hooks/useTeams";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { useActivityData } from "@/hooks/useActivityData";
 import { supabase } from "@/integrations/supabase/client";
+import TrainingPreferences from "@/components/TrainingPreferences";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SavedIndicator } from "@/components/ui/SavedIndicator";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
-const AVATAR_COLORS = ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF", "#FF6B35", "#A855F7"];
+type MobileTab = "training" | "body" | "account";
 
 type PasswordFieldProps = {
   id: string;
@@ -24,7 +40,15 @@ type PasswordFieldProps = {
   onToggleShow: () => void;
 };
 
-const PasswordField = ({ id, label, autoComplete, value, onChange, show, onToggleShow }: PasswordFieldProps) => (
+const PasswordField = ({
+  id,
+  label,
+  autoComplete,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+}: PasswordFieldProps) => (
   <div className="flex flex-col gap-1.5">
     <Label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
       {label}
@@ -53,15 +77,29 @@ const PasswordField = ({ id, label, autoComplete, value, onChange, show, onToggl
 
 const Profile = () => {
   const { user, signOut } = useAuth();
-  const { data: profile, isLoading } = useProfile();
+  const { data: profile } = useProfile();
   const { data: role } = useUserRole();
-  const { data: team } = useMyTeam();
+  const { data: activity } = useActivityData();
+  // Prime the user_preferences cache in parallel with everything else on this page.
+  useUserPreferences();
 
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
-  const [editing, setEditing] = useState(false);
+
+  const [mobileTab, setMobileTab] = useState<MobileTab>("training");
+
+  // Inline name edit (triggered from Identity card icon OR Account card row).
+  const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState("");
+
+  // Body weight inline expander on Account card.
+  const [weightExpanded, setWeightExpanded] = useState(false);
   const [bodyWeight, setBodyWeight] = useState("");
+  const [weightSaved, setWeightSaved] = useState(false);
+  const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Password modal.
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -71,34 +109,85 @@ const Profile = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
+  const displayName = profile?.display_name ?? "";
+  const initials = (displayName[0] ?? "?").toUpperCase();
+  const isAdmin = role === "admin";
 
-  const handleSaveWeight = async () => {
-    const val = parseFloat(bodyWeight);
+  // Real stats from completed exercise logs. Weeks Won has no historical winner store, so "—".
+  const stats = useMemo(() => {
+    if (!activity || activity.length === 0) return { workouts: 0, bestStreak: 0 };
+    const days = new Set(activity.map((e) => e.date));
+    const sortedDays = Array.from(days).sort();
+    let longest = 0;
+    let run = 0;
+    let prev: Date | null = null;
+    for (const d of sortedDays) {
+      const cur = new Date(d + "T00:00:00");
+      if (prev && cur.getTime() - prev.getTime() === 86400000) run++;
+      else run = 1;
+      if (run > longest) longest = run;
+      prev = cur;
+    }
+    return { workouts: days.size, bestStreak: longest };
+  }, [activity]);
+
+  const handleStartEditName = () => {
+    setName(displayName);
+    setEditingName(true);
+  };
+
+  const handleNameBlur = async () => {
+    const trimmed = name.trim();
+    // Close without saving on empty or no-op.
+    if (!trimmed || trimmed === displayName) {
+      setEditingName(false);
+      return;
+    }
+    try {
+      await updateProfile.mutateAsync({ display_name: trimmed });
+      setEditingName(false);
+    } catch {
+      toast({ title: "Couldn't save name", variant: "destructive" });
+    }
+  };
+
+  const flashWeightSaved = () => {
+    setWeightSaved(true);
+    if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current);
+    weightSavedTimer.current = setTimeout(() => setWeightSaved(false), 2000);
+  };
+
+  const saveWeightDebounced = useDebouncedCallback(async (raw: string) => {
+    const val = parseFloat(raw);
     if (!val || val <= 0) return;
+    if (profile?.body_weight && Number(profile.body_weight) === val) return;
     try {
       await updateProfile.mutateAsync({ body_weight: val } as any);
-      setBodyWeight("");
-      toast({ title: "Body weight updated! ⚖️" });
+      flashWeightSaved();
     } catch {
-      toast({ title: "Error", variant: "destructive" });
+      toast({ title: "Couldn't save body weight", variant: "destructive" });
     }
+  }, 1000);
+
+  const handleWeightChange = (value: string) => {
+    setBodyWeight(value);
+    saveWeightDebounced(value);
   };
 
-  const handleSave = async () => {
-    if (!name.trim()) return;
-    try {
-      await updateProfile.mutateAsync({ display_name: name.trim() });
-      setEditing(false);
-      toast({ title: "Profile updated! ✨" });
-    } catch {
-      toast({ title: "Error", variant: "destructive" });
-    }
-  };
+  useEffect(
+    () => () => {
+      if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current);
+    },
+    [],
+  );
 
-  const handleColorChange = async (color: string) => {
-    try {
-      await updateProfile.mutateAsync({ avatar_color: color });
-    } catch {}
+  const resetPasswordFields = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowCurrent(false);
+    setShowNew(false);
+    setShowConfirm(false);
   };
 
   const handleChangePassword = async () => {
@@ -137,279 +226,321 @@ const Profile = () => {
         return;
       }
 
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      resetPasswordFields();
+      setPasswordOpen(false);
       toast({ title: "Password updated 🔑" });
     } finally {
       setChangingPassword(false);
     }
   };
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  // Sections are visible on desktop always; on mobile only when their tab is active.
+  const showIf = (tab: MobileTab) => (mobileTab === tab ? "" : "hidden lg:block");
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-3xl lg:px-8 lg:pb-8">
-      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-6">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-6xl lg:px-8 lg:pb-8">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="text-center mb-4 lg:text-left lg:mb-6"
+      >
         <h1 className="text-4xl font-display text-foreground">Profile</h1>
       </motion.div>
 
-      {/* Avatar Card */}
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-card rounded-2xl comic-border p-6 text-center mb-6"
-      >
-        <div
-          className="w-24 h-24 rounded-full mx-auto flex items-center justify-center text-4xl font-display text-primary-foreground comic-border mb-4"
-          style={{ backgroundColor: profile?.avatar_color || "#FF2D87" }}
-        >
-          {profile?.display_name?.[0]?.toUpperCase() || "?"}
-        </div>
-
-        {editing ? (
-          <div className="flex gap-2 mb-4">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="New name" className="border-2 border-primary/30" />
-            <Button onClick={handleSave} className="gradient-primary text-primary-foreground font-bold">Save</Button>
-          </div>
-        ) : (
-          <h2 className="text-3xl font-display text-foreground">
-            {profile?.display_name}
-          </h2>
-        )}
-
-        <p className="text-sm text-muted-foreground font-bold">{user?.email}</p>
-
-        {role === "admin" && (
-          <div className="flex items-center justify-center mt-2">
-            <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold uppercase">
-              Admin 👑
-            </span>
-          </div>
-        )}
-
-        <div className="flex justify-center gap-2 mt-4">
-          {AVATAR_COLORS.map((c) => (
-            <button
-              key={c}
-              onClick={() => handleColorChange(c)}
-              className={`w-8 h-8 rounded-full border-2 transition-transform ${profile?.avatar_color === c ? "border-foreground scale-110" : "border-transparent"}`}
-              style={{ backgroundColor: c }}
-            />
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Body Weight */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-2xl border-2 border-border bg-card p-4 mb-6"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Scale className="w-5 h-5 text-primary" />
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Body Weight</p>
-              {bw ? (
-                <p className="text-2xl font-display text-foreground">{bw} <span className="text-sm font-bold text-muted-foreground">kg</span></p>
-              ) : (
-                <p className="text-sm font-bold text-muted-foreground">Not set</p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              placeholder={bw ? String(bw) : "kg"}
-              value={bodyWeight}
-              onChange={(e) => setBodyWeight(e.target.value)}
-              className="w-20 h-9 text-center border-2 border-border"
-            />
-            <Button
-              size="sm"
-              onClick={handleSaveWeight}
-              disabled={!bodyWeight}
-              className="h-9 font-bold"
-            >
-              Save
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {[
-          { icon: Dumbbell, label: "Workouts", value: "—", color: "text-secondary" },
-          { icon: Flame, label: "Best Streak", value: "—", color: "text-accent" },
-          { icon: Trophy, label: "Weeks Won", value: "—", color: "text-primary" },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-card rounded-xl border-2 border-border p-3 text-center"
+      {/* Mobile tab bar */}
+      <div className="lg:hidden flex items-center gap-1 p-1 bg-muted rounded-xl mb-4">
+        {(
+          [
+            { key: "training", label: "Training" },
+            { key: "body", label: "Body" },
+            { key: "account", label: "Account" },
+          ] as { key: MobileTab; label: string }[]
+        ).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setMobileTab(t.key)}
+            className={cn(
+              "flex-1 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all",
+              mobileTab === t.key
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <stat.icon className={`w-6 h-6 mx-auto mb-1 ${stat.color}`} />
-            <p className="font-display text-2xl text-foreground">{stat.value}</p>
-            <p className="text-xs font-bold text-muted-foreground">{stat.label}</p>
-          </motion.div>
+            {t.label}
+          </button>
         ))}
       </div>
 
-      {/* Training Principles */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="bg-card rounded-2xl comic-border p-5 mb-6"
-      >
-        <h2 className="text-2xl font-display text-foreground mb-1">🌿 Training Principles</h2>
-        <p className="text-sm text-muted-foreground font-bold mb-4">Stacy Sims Style</p>
-
-        <Accordion type="multiple" className="space-y-1">
-          <AccordionItem value="lift-heavy" className="border-border/50">
-            <AccordionTrigger className="text-base font-bold hover:no-underline">💪 1. Lift Heavy</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">Train for strength, not fatigue.</p>
-              <p>✅ Do 2–3 strength sessions per week</p>
-              <p>✅ Focus on: Squats · Deadlifts · Push (push-ups / bench) · Pull (rows / pull-ups) · Lunges</p>
-              <p className="font-semibold text-foreground">How to train:</p>
-              <p>✅ 4–8 reps · Heavy weight · Full rest between sets</p>
-              <p className="font-semibold text-primary">👉 Aim to feel strong, not exhausted.</p>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="hiit" className="border-border/50">
-            <AccordionTrigger className="text-base font-bold hover:no-underline">⚡ 2. Add Short HIIT</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">Use intensity instead of long cardio.</p>
-              <p className="font-semibold text-foreground">Example session:</p>
-              <p>✅ 5 min warm-up · 30 sec all-out · 2 min easy · Repeat 6–8 times</p>
-              <p className="font-semibold text-primary">👉 Keep it short and powerful (20–25 min total)</p>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="no-long-cardio" className="border-border/50">
-            <AccordionTrigger className="text-base font-bold hover:no-underline">🌊 3. Avoid Long Slow Cardio</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">Don't rely on:</p>
-              <p>❌ Long runs · Daily spin classes · Moderate, steady workouts</p>
-              <p>These can increase cortisol, reduce muscle, and slow metabolism.</p>
-              <p className="font-semibold text-primary">👉 Choose short, purposeful training instead.</p>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="power" className="border-border/50">
-            <AccordionTrigger className="text-base font-bold hover:no-underline">🔥 4. Train Power</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">Include explosive work weekly.</p>
-              <p>✅ 1–2 sessions per week</p>
-              <p>✅ Box jumps · Kettlebell swings · Sprint intervals · Medicine ball throws</p>
-              <p className="font-semibold text-primary">👉 Power declines faster than strength, so train it.</p>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="core" className="border-border/50">
-            <AccordionTrigger className="text-base font-bold hover:no-underline">🧘‍♀️ 5. Build Core & Stability</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">Support performance and prevent injury.</p>
-              <p>✅ Focus on: Deep core · Anti-rotation · Single-leg stability</p>
-              <p>✅ Examples: Dead bugs · Pallof press · Side plank · Single-leg work</p>
-              <p className="font-semibold text-primary">👉 Strong core = better movement everywhere.</p>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="cycle" className="border-none">
-            <AccordionTrigger className="text-base font-bold hover:no-underline">🌙 6. Train with Your Cycle</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">Adjust intensity based on your phase.</p>
-              <p className="font-semibold text-foreground">Follicular phase (after period):</p>
-              <p>✅ Push intensity · Lift heavier · Do HIIT</p>
-              <p className="font-semibold text-foreground">Luteal phase (before period):</p>
-              <p>✅ Reduce intensity · Focus on technique · Add mobility</p>
-              <p className="font-semibold text-primary">👉 Your body is not inconsistent, it's cyclical.</p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </motion.div>
-
-      {/* Change Password */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.35 }}
-        className="bg-card rounded-2xl comic-border p-5 mb-6"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <KeyRound className="w-5 h-5 text-primary" />
-          <h2 className="text-2xl font-display text-foreground">Change Password</h2>
-        </div>
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleChangePassword();
-          }}
-        >
-          {/* Hidden anchor so password managers know which account this form is for */}
-          <input
-            type="email"
-            name="username"
-            autoComplete="username"
-            value={user?.email ?? ""}
-            readOnly
-            hidden
-            tabIndex={-1}
-          />
-
-          <PasswordField
-            id="current-password"
-            label="Current Password"
-            autoComplete="current-password"
-            value={currentPassword}
-            onChange={setCurrentPassword}
-            show={showCurrent}
-            onToggleShow={() => setShowCurrent((v) => !v)}
-          />
-          <PasswordField
-            id="new-password"
-            label="New Password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={setNewPassword}
-            show={showNew}
-            onToggleShow={() => setShowNew((v) => !v)}
-          />
-          <PasswordField
-            id="confirm-password"
-            label="Confirm New Password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            show={showConfirm}
-            onToggleShow={() => setShowConfirm((v) => !v)}
-          />
-          <Button
-            type="submit"
-            disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
-            className="h-11 mt-1 gradient-primary text-primary-foreground font-bold"
+      {/* Two-column grid on desktop, single column on mobile */}
+      <div className="lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 lg:items-start">
+        {/* Left column */}
+        <aside className="space-y-4">
+          {/* Identity card */}
+          <motion.section
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={cn(
+              "relative rounded-2xl border-2 border-border bg-card p-6 text-center",
+              showIf("account")
+            )}
           >
-            {changingPassword ? "Updating…" : "Update Password"}
-          </Button>
-        </form>
-      </motion.div>
+            {!editingName && (
+              <button
+                onClick={handleStartEditName}
+                aria-label="Edit name"
+                className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
 
-      <Button
-        onClick={signOut}
-        variant="outline"
-        className="w-full h-12 font-bold text-destructive border-destructive/30 hover:bg-destructive/10"
+            <div
+              className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-display text-primary-foreground"
+              style={{ backgroundColor: "#FF2D87" }}
+            >
+              {initials}
+            </div>
+
+            {editingName ? (
+              <div className="flex flex-col gap-1 mb-2">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={handleNameBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLInputElement).blur();
+                    } else if (e.key === "Escape") {
+                      setName(displayName);
+                      setEditingName(false);
+                    }
+                  }}
+                  placeholder="Your name"
+                  className="border-2 border-primary/30 text-center"
+                  autoFocus
+                />
+                <p className="text-[10px] font-bold text-muted-foreground">
+                  Press Enter or click away to save · Esc to cancel
+                </p>
+              </div>
+            ) : (
+              <h2 className="text-2xl font-display text-foreground lg:text-3xl">
+                {displayName || "—"}
+              </h2>
+            )}
+
+            <p className="text-sm text-muted-foreground font-bold break-all">{user?.email}</p>
+
+            {isAdmin && (
+              <div className="mt-2">
+                <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold uppercase">
+                  Admin 👑
+                </span>
+              </div>
+            )}
+          </motion.section>
+
+          {/* Stats card */}
+          <motion.section
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className={cn("grid grid-cols-3 gap-3", showIf("body"))}
+          >
+            {[
+              {
+                icon: Dumbbell,
+                label: "Workouts",
+                value: String(stats.workouts),
+                color: "text-secondary",
+              },
+              {
+                icon: Flame,
+                label: "Best Streak",
+                value: String(stats.bestStreak),
+                color: "text-accent",
+              },
+              {
+                icon: Trophy,
+                label: "Weeks Won",
+                value: "—",
+                color: "text-primary",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="bg-card rounded-xl border-2 border-border p-3 text-center"
+              >
+                <stat.icon className={cn("w-6 h-6 mx-auto mb-1", stat.color)} />
+                <p className="font-display text-2xl text-foreground tabular-nums">{stat.value}</p>
+                <p className="text-xs font-bold text-muted-foreground">{stat.label}</p>
+              </div>
+            ))}
+          </motion.section>
+
+          {/* Account rows card */}
+          <motion.section
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className={cn(
+              "rounded-2xl border-2 border-border bg-card overflow-hidden divide-y divide-border",
+              showIf("account")
+            )}
+          >
+            {/* Body weight (expandable) */}
+            <div>
+              <button
+                onClick={() => setWeightExpanded((v) => !v)}
+                className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
+              >
+                <Scale className="w-5 h-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                    Body weight
+                  </p>
+                  <p className="text-sm font-bold text-foreground">{bw ? `${bw} kg` : "Not set"}</p>
+                </div>
+                <ChevronRight
+                  className={cn(
+                    "w-4 h-4 text-muted-foreground shrink-0 transition-transform",
+                    weightExpanded && "rotate-90"
+                  )}
+                />
+              </button>
+              {weightExpanded && (
+                <div className="px-4 pb-4 space-y-1.5">
+                  <Input
+                    type="number"
+                    placeholder={bw ? String(bw) : "kg"}
+                    value={bodyWeight}
+                    onChange={(e) => handleWeightChange(e.target.value)}
+                    className="h-9 text-sm border-2 border-border"
+                  />
+                  <div className="flex items-center justify-between min-h-[16px]">
+                    <p className="text-[10px] font-bold text-muted-foreground">
+                      Saves automatically
+                    </p>
+                    <SavedIndicator show={weightSaved} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Change password — opens modal */}
+            <button
+              onClick={() => setPasswordOpen(true)}
+              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
+            >
+              <KeyRound className="w-5 h-5 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                  Security
+                </p>
+                <p className="text-sm font-bold text-foreground">Change password</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
+
+            {/* Edit profile name — triggers inline edit on Identity card */}
+            <button
+              onClick={handleStartEditName}
+              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
+            >
+              <Pencil className="w-5 h-5 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                  Profile
+                </p>
+                <p className="text-sm font-bold text-foreground">Edit profile name</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
+          </motion.section>
+
+          {/* Sign out */}
+          <Button
+            onClick={signOut}
+            variant="outline"
+            className={cn(
+              "w-full h-12 font-bold text-destructive border-destructive/30 hover:bg-destructive/10",
+              showIf("account")
+            )}
+          >
+            <LogOut className="w-4 h-4 mr-2" /> Sign Out
+          </Button>
+        </aside>
+
+        {/* Right column — Training preferences */}
+        <main className={cn(showIf("training"))}>
+          <TrainingPreferences />
+        </main>
+      </div>
+
+      {/* Password modal */}
+      <Dialog
+        open={passwordOpen}
+        onOpenChange={(open) => {
+          setPasswordOpen(open);
+          if (!open) resetPasswordFields();
+        }}
       >
-        <LogOut className="w-4 h-4 mr-2" /> Sign Out
-      </Button>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-foreground">Change Password</DialogTitle>
+          </DialogHeader>
+          <form
+            className="flex flex-col gap-3 mt-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleChangePassword();
+            }}
+          >
+            <input
+              type="email"
+              name="username"
+              autoComplete="username"
+              value={user?.email ?? ""}
+              readOnly
+              hidden
+              tabIndex={-1}
+            />
+            <PasswordField
+              id="current-password"
+              label="Current Password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={setCurrentPassword}
+              show={showCurrent}
+              onToggleShow={() => setShowCurrent((v) => !v)}
+            />
+            <PasswordField
+              id="new-password"
+              label="New Password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={setNewPassword}
+              show={showNew}
+              onToggleShow={() => setShowNew((v) => !v)}
+            />
+            <PasswordField
+              id="confirm-password"
+              label="Confirm New Password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              show={showConfirm}
+              onToggleShow={() => setShowConfirm((v) => !v)}
+            />
+            <Button
+              type="submit"
+              disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
+              className="h-11 mt-1 gradient-primary text-primary-foreground font-bold"
+            >
+              {changingPassword ? "Updating…" : "Update Password"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

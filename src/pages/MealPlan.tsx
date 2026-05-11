@@ -253,13 +253,11 @@ function PowerRoutine() {
             onSave={(prefs) => {
               upsert.mutate(prefs, {
                 onSuccess: () => {
-                  toast({ description: "✅ Preferences saved!" });
-                  setShowPrefs(false);
+                  toast({ description: "Preferences saved", duration: 1500 });
                 },
               });
             }}
             onClose={() => setShowPrefs(false)}
-            isSaving={upsert.isPending}
           />
         )}
       </AnimatePresence>

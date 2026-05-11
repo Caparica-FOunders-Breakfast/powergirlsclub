@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface ActivityLogEntry {
-  date: string; // YYYY-MM-DD (local day)
-  hour: number; // 0-23
+  /** YYYY-MM-DD in local time. */
+  date: string;
+  /** Local hour 0-23 when the log was completed. */
+  hour: number;
   exerciseName: string;
   weight: number | null;
   failed: boolean;
@@ -18,6 +20,11 @@ const toLocalDateKey = (iso: string): string => {
   return `${y}-${m}-${day}`;
 };
 
+/**
+ * Feed of completed exercise logs for the current user.
+ * Used by the Scorecard page (activity overview, heatmap, exercise progress)
+ * and the Profile page (workouts-completed, best-streak).
+ */
 export const useActivityData = () => {
   const { user } = useAuth();
 
