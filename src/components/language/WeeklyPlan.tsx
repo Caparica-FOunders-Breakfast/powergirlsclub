@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronLeft, ChevronRight, Check, Link2, X, Pencil, RotateCcw, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Link2, Pencil, RotateCcw, Plus, Trash2 } from "lucide-react";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -217,23 +218,27 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                       languageCode={language.code}
                       initial={plan}
                       onSave={(updated) => {
-                        upsertCustomPlan.mutate({
-                          languageCode: language.code,
-                          dayIndex: dayIdx,
-                          focus: updated.focus,
-                          emoji: updated.emoji,
-                          title: updated.title,
-                          description: updated.description,
-                          tasks: updated.tasks,
-                        });
-                        setEditingDay(null);
-                        toast({ description: "Day plan saved!" });
+                        upsertCustomPlan.mutate(
+                          {
+                            languageCode: language.code,
+                            dayIndex: dayIdx,
+                            focus: updated.focus,
+                            emoji: updated.emoji,
+                            title: updated.title,
+                            description: updated.description,
+                            tasks: updated.tasks,
+                          },
+                          {
+                            onSuccess: () =>
+                              toast({ description: "Day plan saved", duration: 1500 }),
+                          },
+                        );
                       }}
-                      onCancel={() => setEditingDay(null)}
+                      onClose={() => setEditingDay(null)}
                       onReset={() => {
                         resetCustomPlan.mutate({ languageCode: language.code, dayIndex: dayIdx });
                         setEditingDay(null);
-                        toast({ description: "Reset to default plan" });
+                        toast({ description: "Reset to default plan", duration: 1500 });
                       }}
                       isCustom={plan.isCustom}
                     />
@@ -277,25 +282,22 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                       {/* Day link */}
                       <div className="pt-1">
                         {editingLink === dayIdx ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              autoFocus
-                              value={linkInput}
-                              onChange={(e) => setLinkInput(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveLink(dayIdx);
-                                if (e.key === "Escape") { setEditingLink(null); setLinkInput(""); }
-                              }}
-                              placeholder="Paste a link…"
-                              className="h-8 text-xs rounded-xl"
-                            />
-                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleSaveLink(dayIdx)}>
-                              <Check className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => { setEditingLink(null); setLinkInput(""); }}>
-                              <X className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
+                          <Input
+                            autoFocus
+                            value={linkInput}
+                            onChange={(e) => setLinkInput(e.target.value)}
+                            onBlur={() => handleSaveLink(dayIdx)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                (e.currentTarget as HTMLInputElement).blur();
+                              } else if (e.key === "Escape") {
+                                setEditingLink(null);
+                                setLinkInput("");
+                              }
+                            }}
+                            placeholder="Paste a link… (Esc to cancel)"
+                            className="h-8 text-xs rounded-xl"
+                          />
                         ) : link ? (
                           <div className="flex items-center gap-2 group/link">
                             <Link2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -356,17 +358,45 @@ interface DayEditorProps {
   languageCode: string;
   initial: { focus: string; emoji: string; title: string; description: string; tasks: string[] };
   onSave: (plan: { focus: string; emoji: string; title: string; description: string; tasks: string[] }) => void;
-  onCancel: () => void;
+  onClose: () => void;
   onReset: () => void;
   isCustom: boolean;
 }
 
-function DayEditor({ initial, onSave, onCancel, onReset, isCustom }: DayEditorProps) {
+function DayEditor({ initial, onSave, onClose, onReset, isCustom }: DayEditorProps) {
   const [focus, setFocus] = useState(initial.focus);
   const [emoji, setEmoji] = useState(initial.emoji);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [tasks, setTasks] = useState<string[]>([...initial.tasks]);
+
+  const hydrated = useRef(false);
+  const autosave = useDebouncedCallback(
+    (next: { focus: string; emoji: string; title: string; description: string; tasks: string[] }) => {
+      onSave({ ...next, tasks: next.tasks.filter((t) => t.trim()) });
+    },
+    700,
+  );
+
+  const latest = useRef({ focus, emoji, title, description, tasks });
+  latest.current = { focus, emoji, title, description, tasks };
+
+  useEffect(() => {
+    if (!hydrated.current) {
+      hydrated.current = true;
+      return;
+    }
+    autosave({ focus, emoji, title, description, tasks });
+  }, [focus, emoji, title, description, tasks, autosave]);
+
+  useEffect(
+    () => () =>
+      autosave.flush({
+        ...latest.current,
+        tasks: latest.current.tasks.filter((t) => t.trim()),
+      }),
+    [autosave],
+  );
 
   const updateTask = (idx: number, value: string) => {
     const copy = [...tasks];
@@ -437,12 +467,12 @@ function DayEditor({ initial, onSave, onCancel, onReset, isCustom }: DayEditorPr
       </div>
 
       <div className="flex items-center gap-2 pt-1">
-        <Button size="sm" className="h-8 text-xs font-bold rounded-xl" onClick={() => onSave({ focus, emoji, title, description, tasks: tasks.filter((t) => t.trim()) })}>
-          Save
+        <Button size="sm" className="h-8 text-xs font-bold rounded-xl" onClick={onClose}>
+          Done
         </Button>
-        <Button variant="outline" size="sm" className="h-8 text-xs font-bold rounded-xl" onClick={onCancel}>
-          Cancel
-        </Button>
+        <p className="text-[10px] font-bold text-muted-foreground">
+          Saves automatically
+        </p>
         {isCustom && (
           <Button variant="ghost" size="sm" className="h-8 text-xs font-bold rounded-xl text-muted-foreground ml-auto" onClick={onReset}>
             <RotateCcw className="w-3 h-3 mr-1" />

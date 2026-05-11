@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, GripVertical, RotateCcw, Save, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, GripVertical, RotateCcw, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
 import { useProfile } from "@/hooks/useProfile";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 const DEFAULT_RATIOS = [0.35, 0.60, 0.85, 1.20, 1.60];
 const DEFAULT_TIME_THRESHOLDS = [15, 30, 60, 90, 120]; // seconds
@@ -43,6 +44,31 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
   const [levelsOpen, setLevelsOpen] = useState<Record<number, boolean>>({});
   const { data: profile } = useProfile();
   const bodyWeight = profile?.body_weight ?? null;
+
+  // Skip the first effect run — that's the initial mount with the day's exercises,
+  // not a user edit. After that, every change autosaves via the debounced callback.
+  const hydrated = useRef(false);
+  const latestExercises = useRef(exercises);
+  latestExercises.current = exercises;
+
+  const autosave = useDebouncedCallback((next: Exercise[]) => {
+    const valid = next.filter((ex) => ex.name.trim());
+    onSave(valid);
+  }, 800);
+
+  useEffect(() => {
+    if (!hydrated.current) {
+      hydrated.current = true;
+      return;
+    }
+    autosave(exercises);
+  }, [exercises, autosave]);
+
+  // If the user closes the editor before the debounce fires, flush the latest state.
+  useEffect(
+    () => () => autosave.flush(latestExercises.current),
+    [autosave],
+  );
 
   const getDefaultThresholds = (): number[] => {
     if (!bodyWeight) return DEFAULT_RATIOS.map((r) => Math.round(r * 70));
@@ -84,11 +110,6 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
       thresholds[levelIdx] = value;
       return { ...ex, levelThresholds: thresholds };
     }));
-  };
-
-  const handleSave = () => {
-    const validExercises = exercises.filter((ex) => ex.name.trim());
-    onSave(validExercises);
   };
 
   return (
@@ -330,13 +351,18 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
           <Plus className="w-4 h-4 mr-1" /> Add Exercise
         </Button>
 
-        <div className="flex gap-2">
-          <Button onClick={handleSave} className="flex-1 gradient-primary text-primary-foreground font-bold">
-            <Save className="w-4 h-4 mr-1" /> Save
-          </Button>
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-[10px] font-bold text-muted-foreground">
+            Changes save automatically
+          </p>
           {hasCustom && (
-            <Button variant="outline" onClick={onReset} className="text-muted-foreground font-bold">
-              <RotateCcw className="w-4 h-4 mr-1" /> Reset
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="h-7 text-xs text-muted-foreground font-bold"
+            >
+              <RotateCcw className="w-3 h-3 mr-1" /> Reset to default
             </Button>
           )}
         </div>

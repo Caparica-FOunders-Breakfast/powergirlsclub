@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronRight,
@@ -23,8 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SavedIndicator } from "@/components/ui/SavedIndicator";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 type MobileTab = "training" | "body" | "account";
 
@@ -93,6 +95,8 @@ const Profile = () => {
   // Body weight inline expander on Account card.
   const [weightExpanded, setWeightExpanded] = useState(false);
   const [bodyWeight, setBodyWeight] = useState("");
+  const [weightSaved, setWeightSaved] = useState(false);
+  const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Password modal.
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -132,29 +136,50 @@ const Profile = () => {
     setEditingName(true);
   };
 
-  const handleSaveName = async () => {
-    if (!name.trim()) return;
-    try {
-      await updateProfile.mutateAsync({ display_name: name.trim() });
+  const handleNameBlur = async () => {
+    const trimmed = name.trim();
+    // Close without saving on empty or no-op.
+    if (!trimmed || trimmed === displayName) {
       setEditingName(false);
-      toast({ title: "Profile updated ✨" });
+      return;
+    }
+    try {
+      await updateProfile.mutateAsync({ display_name: trimmed });
+      setEditingName(false);
     } catch {
-      toast({ title: "Error", variant: "destructive" });
+      toast({ title: "Couldn't save name", variant: "destructive" });
     }
   };
 
-  const handleSaveWeight = async () => {
-    const val = parseFloat(bodyWeight);
+  const flashWeightSaved = () => {
+    setWeightSaved(true);
+    if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current);
+    weightSavedTimer.current = setTimeout(() => setWeightSaved(false), 2000);
+  };
+
+  const saveWeightDebounced = useDebouncedCallback(async (raw: string) => {
+    const val = parseFloat(raw);
     if (!val || val <= 0) return;
+    if (profile?.body_weight && Number(profile.body_weight) === val) return;
     try {
       await updateProfile.mutateAsync({ body_weight: val } as any);
-      setBodyWeight("");
-      setWeightExpanded(false);
-      toast({ title: "Body weight updated ⚖️" });
+      flashWeightSaved();
     } catch {
-      toast({ title: "Error", variant: "destructive" });
+      toast({ title: "Couldn't save body weight", variant: "destructive" });
     }
+  }, 1000);
+
+  const handleWeightChange = (value: string) => {
+    setBodyWeight(value);
+    saveWeightDebounced(value);
   };
+
+  useEffect(
+    () => () => {
+      if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current);
+    },
+    [],
+  );
 
   const resetPasswordFields = () => {
     setCurrentPassword("");
@@ -277,26 +302,27 @@ const Profile = () => {
             </div>
 
             {editingName ? (
-              <div className="flex flex-col gap-2 mb-2">
+              <div className="flex flex-col gap-1 mb-2">
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onBlur={handleNameBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLInputElement).blur();
+                    } else if (e.key === "Escape") {
+                      setName(displayName);
+                      setEditingName(false);
+                    }
+                  }}
                   placeholder="Your name"
                   className="border-2 border-primary/30 text-center"
                   autoFocus
                 />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSaveName}
-                    disabled={!name.trim() || updateProfile.isPending}
-                    className="flex-1 gradient-primary text-primary-foreground font-bold"
-                  >
-                    Save
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditingName(false)} className="font-bold">
-                    Cancel
-                  </Button>
-                </div>
+                <p className="text-[10px] font-bold text-muted-foreground">
+                  Press Enter or click away to save · Esc to cancel
+                </p>
               </div>
             ) : (
               <h2 className="text-2xl font-display text-foreground lg:text-3xl">
@@ -382,22 +408,20 @@ const Profile = () => {
                 />
               </button>
               {weightExpanded && (
-                <div className="px-4 pb-4 flex items-center gap-2">
+                <div className="px-4 pb-4 space-y-1.5">
                   <Input
                     type="number"
                     placeholder={bw ? String(bw) : "kg"}
                     value={bodyWeight}
-                    onChange={(e) => setBodyWeight(e.target.value)}
+                    onChange={(e) => handleWeightChange(e.target.value)}
                     className="h-9 text-sm border-2 border-border"
                   />
-                  <Button
-                    size="sm"
-                    onClick={handleSaveWeight}
-                    disabled={!bodyWeight || updateProfile.isPending}
-                    className="h-9 font-bold"
-                  >
-                    Save
-                  </Button>
+                  <div className="flex items-center justify-between min-h-[16px]">
+                    <p className="text-[10px] font-bold text-muted-foreground">
+                      Saves automatically
+                    </p>
+                    <SavedIndicator show={weightSaved} />
+                  </div>
                 </div>
               )}
             </div>

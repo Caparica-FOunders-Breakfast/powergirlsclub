@@ -9,11 +9,11 @@ import {
   type ProgressGoal,
   type UserPreferences,
 } from "@/hooks/useUserPreferences";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -90,35 +90,28 @@ const TrainingPreferences = () => {
   const countdownDays = useMemo(() => daysUntil(startDate), [startDate]);
   const isActive = countdownDays <= 0;
 
-  const canSave =
-    trainingDays.length === frequency &&
-    !!startDate &&
-    (progressGoal === "healthy" || progressGoal === "aggressive");
-
-  const handleSave = async () => {
-    if (trainingDays.length !== frequency) {
-      toast({
-        title: `Pick exactly ${frequency} days`,
-        description: `You've selected ${trainingDays.length}.`,
-        variant: "destructive",
-      });
-      return;
+  const autosave = useDebouncedCallback(async (payload: UserPreferences) => {
+    if (payload.training_days.length !== payload.frequency) return;
+    if (!payload.start_date) return;
+    try {
+      await saveMutation.mutateAsync(payload);
+      toast({ description: "Preferences saved", duration: 1500 });
+    } catch (e: any) {
+      toast({ title: "Couldn't save preferences", description: e?.message, variant: "destructive" });
     }
-    const payload: UserPreferences = {
+  }, 500);
+
+  // Autosave whenever a preference changes. Skip until initial hydration is settled
+  // so we don't echo the just-loaded values back to the server.
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    autosave({
       frequency,
       training_days: [...trainingDays].sort((a, b) => a - b),
       start_date: startDate,
       progress_goal: progressGoal,
-    };
-    try {
-      await saveMutation.mutateAsync(payload);
-      toast({
-        title: isActive ? "Program activated! 🔥" : `Locked in — starts in ${countdownDays} day${countdownDays === 1 ? "" : "s"} ⏳`,
-      });
-    } catch (e: any) {
-      toast({ title: "Couldn't save preferences", description: e?.message, variant: "destructive" });
-    }
-  };
+    });
+  }, [frequency, trainingDays, startDate, progressGoal, autosave]);
 
   return (
     <div className="mb-6 space-y-4">
@@ -272,13 +265,26 @@ const TrainingPreferences = () => {
         </div>
       </motion.section>
 
-      <Button
-        onClick={handleSave}
-        disabled={!canSave || saveMutation.isPending}
-        className="w-full h-12 gradient-primary text-primary-foreground font-extrabold text-base lg:h-14 lg:text-lg"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.15 }}
+        className={cn(
+          "rounded-2xl border-2 p-4 text-center lg:p-5",
+          isActive
+            ? "border-primary/40 bg-primary/5"
+            : "border-border bg-card",
+        )}
       >
-        {saveMutation.isPending ? "Saving…" : "Start program"}
-      </Button>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Program status
+        </p>
+        <p className="font-display text-lg text-foreground mt-1 lg:text-xl">
+          {isActive
+            ? "Active 🔥"
+            : `Starts in ${countdownDays} day${countdownDays === 1 ? "" : "s"} ⏳`}
+        </p>
+      </motion.div>
     </div>
   );
 };

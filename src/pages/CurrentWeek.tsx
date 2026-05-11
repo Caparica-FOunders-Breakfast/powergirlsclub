@@ -451,13 +451,11 @@ const CurrentWeek = () => {
                                   isRecovery: day.isRecovery,
                                   restNote: day.restNote,
                                 });
-                                setEditingDay(null);
-                                toast({ title: "Exercises updated! 💪" });
                               }}
                               onReset={() => {
                                 resetPersonalDay.mutate(dayIdx);
                                 setEditingDay(null);
-                                toast({ title: "Reset to default exercises" });
+                                toast({ description: "Reset to default exercises", duration: 1500 });
                               }}
                               onClose={() => setEditingDay(null)}
                             />
