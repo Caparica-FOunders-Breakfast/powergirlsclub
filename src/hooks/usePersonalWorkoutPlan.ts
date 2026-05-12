@@ -32,7 +32,7 @@ export const usePersonalWorkoutPlan = () => {
   });
 
   // Step 1: merge custom plans on top of DB defaults.
-  let plan: WorkoutDay[] = defaultPlan.map((defaultDay, idx) => {
+  const mergedPlan: WorkoutDay[] = defaultPlan.map((defaultDay, idx) => {
     const custom = customPlans?.find((c: any) => c.day_index === idx);
     if (!custom) return defaultDay;
     return {
@@ -48,9 +48,10 @@ export const usePersonalWorkoutPlan = () => {
 
   // Step 2: if the user has activated preferences (start date today or past),
   // convert non-training-days to rest so the weekly view reflects their chosen frequency.
+  let plan: WorkoutDay[] = mergedPlan;
   if (preferences && isStartDateActive(preferences.start_date)) {
     const trainingDays = new Set(preferences.training_days);
-    plan = plan.map((day, idx) => {
+    plan = mergedPlan.map((day, idx) => {
       if (trainingDays.has(idx)) return day;
       // Preserve the day label but blank out exercises and mark as rest.
       return {
@@ -67,6 +68,7 @@ export const usePersonalWorkoutPlan = () => {
 
   return {
     plan,
+    mergedPlan,
     isLoading: defaultsLoading || customLoading,
     hasCustom: (dayIdx: number) => !!customPlans?.find((c: any) => c.day_index === dayIdx),
   };

@@ -8,7 +8,7 @@ export interface Exercise {
   isTimeBased?: boolean;
   isRoundsBased?: boolean;
   isAssisted?: boolean;
-  /** Custom strength-level weight thresholds [Beginner, GettingStronger, Strong, VeryStrong, Elite] (5 values in kg) */
+  /** Custom strength-level weight thresholds [Beginner, LevelingUp, Strong, VeryStrong, Elite] (5 values in kg) */
   levelThresholds?: number[];
   /** YouTube URL for a tutorial video. Accepted formats: watch?v=, youtu.be/, or /embed/. */
   videoUrl?: string;

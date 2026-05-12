@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Calendar, Target } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Calendar, ChevronDown, ListChecks, Pencil, Target } from "lucide-react";
 import {
   FREQUENCY_DEFAULT_DAYS,
   PROGRESS_GOAL_RATE,
@@ -9,11 +9,18 @@ import {
   type ProgressGoal,
   type UserPreferences,
 } from "@/hooks/useUserPreferences";
+import {
+  usePersonalWorkoutPlan,
+  useResetPersonalDay,
+  useSavePersonalDay,
+} from "@/hooks/usePersonalWorkoutPlan";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
+import ExerciseEditor from "@/components/ExerciseEditor";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -51,6 +58,22 @@ const TrainingPreferences = () => {
   const [trainingDays, setTrainingDays] = useState<number[]>(FREQUENCY_DEFAULT_DAYS[5]);
   const [startDate, setStartDate] = useState<string>(todayKey());
   const [progressGoal, setProgressGoal] = useState<ProgressGoal>("healthy");
+
+  // Workout plan expansion state.
+  const [planExpanded, setPlanExpanded] = useState(false);
+  const [expandedDay, setExpandedDay] = useState<number | null>(null);
+  const [editingDay, setEditingDay] = useState<number | null>(null);
+
+  const { mergedPlan, hasCustom } = usePersonalWorkoutPlan();
+  const savePersonalDay = useSavePersonalDay();
+  const resetPersonalDay = useResetPersonalDay();
+
+  const selectedPlanDays = useMemo(() => {
+    const sorted = [...trainingDays].sort((a, b) => a - b);
+    return sorted
+      .map((idx) => ({ idx, day: mergedPlan[idx] }))
+      .filter((entry): entry is { idx: number; day: NonNullable<typeof entry.day> } => !!entry.day);
+  }, [trainingDays, mergedPlan]);
 
   // Hydrate from saved preferences exactly once — after that, user edits and post-save
   // refetches don't clobber local state, so the update is silent and won't fight typing.
@@ -120,44 +143,58 @@ const TrainingPreferences = () => {
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.05 }}
-        className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5"
+        className="rounded-2xl border-2 border-border bg-card p-5 lg:p-6"
       >
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-6">
           <Calendar className="w-5 h-5 text-primary shrink-0" />
-          <div>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Training Schedule
-            </p>
-            <h3 className="font-display text-xl text-foreground lg:text-2xl">When do you train?</h3>
-          </div>
+          <h3 className="font-display text-xl text-foreground lg:text-2xl">When do you train?</h3>
         </div>
 
         {/* Frequency */}
-        <div className="mb-4">
+        <div className="mb-7">
           <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             Days per week
           </Label>
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {FREQUENCY_OPTIONS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => handleFrequencyChange(n)}
-                className={cn(
-                  "h-11 rounded-xl font-extrabold text-sm transition-all border-2 lg:h-12 lg:text-base",
-                  frequency === n
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-background text-muted-foreground border-border hover:border-primary/30",
-                )}
-              >
-                {n} days
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2.5 mt-3">
+            {FREQUENCY_OPTIONS.map((n) => {
+              const isSelected = frequency === n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => handleFrequencyChange(n)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-0.5 py-3 rounded-2xl border-2 transition-all",
+                    isSelected
+                      ? "bg-primary border-primary text-primary-foreground shadow-[0_4px_14px_-6px_rgba(255,45,135,0.55)]"
+                      : "bg-background border-border hover:border-primary/30",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "font-display text-2xl leading-none tabular-nums lg:text-3xl",
+                      isSelected ? "text-primary-foreground" : "text-foreground",
+                    )}
+                  >
+                    {n}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold uppercase tracking-wider",
+                      isSelected ? "text-primary-foreground/85" : "text-muted-foreground",
+                    )}
+                  >
+                    days/week
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Day picker */}
-        <div className="mb-4">
+        <div className="mb-7">
           <div className="flex items-center justify-between">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Training days
@@ -166,7 +203,7 @@ const TrainingPreferences = () => {
               {trainingDays.length} / {frequency}
             </span>
           </div>
-          <div className="grid grid-cols-7 gap-1.5 mt-2 lg:gap-2">
+          <div className="flex items-center justify-between gap-1.5 mt-3 lg:gap-2">
             {DAY_LETTERS.map((letter, idx) => {
               const isSelected = trainingDays.includes(idx);
               return (
@@ -178,10 +215,10 @@ const TrainingPreferences = () => {
                   aria-label={DAY_NAMES[idx]}
                   title={DAY_NAMES[idx]}
                   className={cn(
-                    "aspect-square rounded-full font-extrabold text-sm transition-all border-2 flex items-center justify-center lg:text-base",
+                    "w-10 h-10 shrink-0 rounded-full font-extrabold text-sm transition-all flex items-center justify-center",
                     isSelected
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-background text-muted-foreground border-border hover:border-primary/30",
+                      ? "bg-primary text-primary-foreground border border-primary shadow-[0_3px_10px_-3px_rgba(255,45,135,0.5)]"
+                      : "bg-background text-muted-foreground border border-border hover:border-primary/40 hover:text-foreground",
                   )}
                 >
                   {letter}
@@ -189,6 +226,158 @@ const TrainingPreferences = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* Workout plan (expandable) */}
+        <div className="mb-7">
+          <button
+            type="button"
+            onClick={() => setPlanExpanded((v) => !v)}
+            aria-expanded={planExpanded}
+            className="flex items-center gap-2 w-full text-left group"
+          >
+            <ListChecks className="w-4 h-4 text-primary shrink-0" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
+              Your workout plan
+            </span>
+            <span className="text-[10px] font-bold text-muted-foreground/70 tabular-nums">
+              ({selectedPlanDays.length} day{selectedPlanDays.length === 1 ? "" : "s"})
+            </span>
+            <ChevronDown
+              className={cn(
+                "ml-auto w-4 h-4 text-muted-foreground transition-transform",
+                planExpanded && "rotate-180",
+              )}
+            />
+          </button>
+
+          <AnimatePresence initial={false}>
+            {planExpanded && (
+              <motion.div
+                key="plan-content"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 space-y-2">
+                  {selectedPlanDays.map(({ idx, day }) => {
+                    const isOpen = expandedDay === idx;
+                    const isEditing = editingDay === idx;
+                    return (
+                      <div
+                        key={idx}
+                        className="rounded-xl border-2 border-border bg-background overflow-hidden"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = isOpen ? null : idx;
+                            setExpandedDay(next);
+                            if (next === null && editingDay === idx) setEditingDay(null);
+                          }}
+                          aria-expanded={isOpen}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-muted/40 transition-colors"
+                        >
+                          <span className="text-xl shrink-0">{day.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-extrabold text-foreground leading-tight">
+                              {day.day}
+                            </p>
+                            <p className="text-[11px] font-bold text-muted-foreground leading-tight">
+                              {day.label}
+                              {!day.isRest && day.exercises.length > 0 && (
+                                <> · {day.exercises.length} exercise{day.exercises.length === 1 ? "" : "s"}</>
+                              )}
+                            </p>
+                          </div>
+                          <ChevronDown
+                            className={cn(
+                              "w-4 h-4 text-muted-foreground shrink-0 transition-transform",
+                              isOpen && "rotate-180",
+                            )}
+                          />
+                        </button>
+
+                        <AnimatePresence initial={false}>
+                          {isOpen && (
+                            <motion.div
+                              key="day-content"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden border-t border-border"
+                            >
+                              {!isEditing ? (
+                                <div className="px-3 pt-3 pb-3 space-y-2">
+                                  {day.exercises.length === 0 ? (
+                                    <p className="text-xs italic text-muted-foreground">
+                                      No exercises for this day.
+                                    </p>
+                                  ) : (
+                                    <ul className="space-y-1.5">
+                                      {day.exercises.map((ex, exIdx) => (
+                                        <li
+                                          key={exIdx}
+                                          className="flex items-baseline justify-between gap-3 text-xs"
+                                        >
+                                          <span className="font-bold text-foreground truncate">
+                                            {ex.name}
+                                          </span>
+                                          <span className="text-muted-foreground tabular-nums shrink-0">
+                                            {ex.sets} × {ex.reps}
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                  <div className="flex justify-end pt-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setEditingDay(idx)}
+                                      className="h-7 text-xs font-bold text-muted-foreground hover:text-foreground"
+                                    >
+                                      <Pencil className="w-3 h-3 mr-1" /> Edit
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <ExerciseEditor
+                                  day={day}
+                                  dayIndex={idx}
+                                  hasCustom={hasCustom(idx)}
+                                  onSave={(exercises) => {
+                                    savePersonalDay.mutate({
+                                      dayIndex: idx,
+                                      exercises,
+                                      label: day.label,
+                                      emoji: day.emoji,
+                                      isRest: day.isRest,
+                                      isRecovery: day.isRecovery,
+                                      restNote: day.restNote,
+                                    });
+                                  }}
+                                  onReset={() => {
+                                    resetPersonalDay.mutate(idx);
+                                    setEditingDay(null);
+                                    toast({ description: "Reset to default exercises", duration: 1500 });
+                                  }}
+                                  onClose={() => setEditingDay(null)}
+                                />
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Start date */}
@@ -199,18 +388,36 @@ const TrainingPreferences = () => {
           >
             Program start date
           </Label>
-          <Input
-            id="program-start-date"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1.5 h-11 border-2 border-border lg:h-12"
-          />
-          <p className="text-[11px] font-bold text-muted-foreground mt-1.5">
-            {isActive
-              ? "Plan is active — your weekly schedule reflects your selected days."
-              : `Program starts in ${countdownDays} day${countdownDays === 1 ? "" : "s"}.`}
-          </p>
+          <div className="relative mt-3">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none z-10" />
+            <Input
+              id="program-start-date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className={cn(
+                "h-11 pl-11 pr-4 rounded-full border-2 border-border bg-background font-bold text-sm lg:h-12",
+                "[&::-webkit-calendar-picker-indicator]:absolute",
+                "[&::-webkit-calendar-picker-indicator]:inset-0",
+                "[&::-webkit-calendar-picker-indicator]:w-full",
+                "[&::-webkit-calendar-picker-indicator]:h-full",
+                "[&::-webkit-calendar-picker-indicator]:opacity-0",
+                "[&::-webkit-calendar-picker-indicator]:cursor-pointer",
+              )}
+            />
+          </div>
+          <div className="mt-4">
+            {isActive ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Plan is active
+              </span>
+            ) : (
+              <p className="text-[11px] font-bold text-muted-foreground">
+                Program starts in {countdownDays} day{countdownDays === 1 ? "" : "s"}.
+              </p>
+            )}
+          </div>
         </div>
       </motion.section>
 

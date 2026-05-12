@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type ExerciseLevel = "Beginner" | "Getting Stronger" | "Strong" | "Very Strong" | "Elite";
+export type ExerciseLevel = "Beginner" | "Leveling Up" | "Strong" | "Very Strong" | "Elite";
 
 export interface ExerciseEntry {
   date: string;
@@ -23,8 +23,8 @@ export interface ExerciseCard {
 
 const LEVELS: { max: number; label: ExerciseLevel; icon: string }[] = [
   { max: 0.35, label: "Beginner", icon: "🌱" },
-  { max: 0.6, label: "Getting Stronger", icon: "💪" },
-  { max: 0.85, label: "Strong", icon: "⚡" },
+  { max: 0.6, label: "Leveling Up", icon: "⚡" },
+  { max: 0.85, label: "Strong", icon: "💪" },
   { max: 1.2, label: "Very Strong", icon: "🔥" },
   { max: Infinity, label: "Elite", icon: "👑" },
 ];

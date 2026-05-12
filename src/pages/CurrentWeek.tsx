@@ -46,7 +46,7 @@ const DEFAULT_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6];
 const DEFAULT_TIME_THRESHOLDS = [15, 30, 60, 90, 120];
 const DEFAULT_REPS_THRESHOLDS = [5, 10, 20, 35, 50];
 const ASSISTED_FRACTIONS = [1, 0.75, 0.5, 0.25, 0];
-const LEVEL_EMOJIS = ["🌱", "💪", "⚡", "🔥", "👑"];
+const LEVEL_EMOJIS = ["🌱", "⚡", "💪", "🔥", "👑"];
 
 const CurrentWeek = () => {
   const { data: challenge } = useActiveChallenge();

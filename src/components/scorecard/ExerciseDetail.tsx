@@ -32,11 +32,15 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
 
   const failCount = entries.filter((e) => e.failed).length;
 
-  // Trend chart data (oldest first for chart)
+  // Trend chart data (oldest first for chart). Failed sessions are treated as 0
+  // so the line drops to the bottom instead of spiking off the data range.
   const chartEntries = [...entries].reverse().slice(-20);
-  const nonFailedChart = chartEntries.filter((e) => !e.failed);
-  const maxW = Math.max(...nonFailedChart.map((e) => e.weight), 1);
-  const minW = Math.min(...nonFailedChart.map((e) => e.weight));
+  const hasFailed = chartEntries.some((e) => e.failed);
+  const chartValues = chartEntries.map((e) => (e.failed ? 0 : e.weight));
+  const maxW = Math.max(...chartValues, 1);
+  // If any session failed, anchor the y-axis to 0 so the drop is visible.
+  // Otherwise keep the zoomed-in view across the actual lift range.
+  const minW = hasFailed ? 0 : Math.min(...chartValues);
   const range = maxW - minW || 1;
 
   const chartW = 280;
@@ -44,8 +48,9 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
   const pad = 8;
 
   const points = chartEntries.map((e, i) => {
+    const value = e.failed ? 0 : e.weight;
     const x = pad + (i / Math.max(chartEntries.length - 1, 1)) * (chartW - pad * 2);
-    const y = chartH - pad - ((e.weight - minW) / range) * (chartH - pad * 2);
+    const y = chartH - pad - ((value - minW) / range) * (chartH - pad * 2);
     return { x, y, entry: e };
   });
 
@@ -115,7 +120,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
               />
             </div>
             <div className="flex justify-between mt-1">
-              {["🌱", "💪", "⚡", "🔥", "👑"].map((icon, i) => (
+              {["🌱", "⚡", "💪", "🔥", "👑"].map((icon, i) => (
                 <span key={i} className={cn("text-xs", i <= level.index ? "opacity-100" : "opacity-30")}>{icon}</span>
               ))}
             </div>
@@ -135,9 +140,46 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
               </defs>
               <path d={areaPath} fill="url(#chart-grad)" />
               <path d={linePath} fill="none" stroke="hsl(var(--primary))" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-              {points.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r={i === points.length - 1 ? 3.5 : 2} fill={chartEntries[i]?.failed ? "hsl(var(--destructive))" : "hsl(var(--primary))"} opacity={i === points.length - 1 ? 1 : 0.5} />
-              ))}
+              {points.map((p, i) => {
+                const isFailed = !!chartEntries[i]?.failed;
+                const isLast = i === points.length - 1;
+                if (isFailed) {
+                  // Red X marker at the zero point so failed sessions are clearly visible.
+                  const r = isLast ? 4 : 3;
+                  return (
+                    <g key={i}>
+                      <line
+                        x1={p.x - r}
+                        y1={p.y - r}
+                        x2={p.x + r}
+                        y2={p.y + r}
+                        stroke="hsl(var(--destructive))"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      />
+                      <line
+                        x1={p.x - r}
+                        y1={p.y + r}
+                        x2={p.x + r}
+                        y2={p.y - r}
+                        stroke="hsl(var(--destructive))"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      />
+                    </g>
+                  );
+                }
+                return (
+                  <circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r={isLast ? 3.5 : 2}
+                    fill="hsl(var(--primary))"
+                    opacity={isLast ? 1 : 0.5}
+                  />
+                );
+              })}
             </svg>
           </div>
         )}

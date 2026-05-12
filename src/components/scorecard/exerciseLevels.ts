@@ -1,4 +1,4 @@
-// Thresholds for non-kg exercises: [Beginner→Getting Stronger, →Strong, →Very Strong, →Elite]
+// Thresholds for non-kg exercises: [Beginner→Leveling Up, →Strong, →Very Strong, →Elite]
 export const NON_KG_THRESHOLDS: Record<string, number[]> = {
   "Plank": [30, 60, 90, 120],
   "Side Plank": [15, 30, 45, 60],
@@ -50,8 +50,8 @@ export const ASSISTED_EXERCISES = new Set(Object.keys(ASSISTED_EXERCISE_THRESHOL
 
 export const LEVEL_DEFS = [
   { label: "Beginner" as const, icon: "🌱", index: 0 },
-  { label: "Getting Stronger" as const, icon: "💪", index: 1 },
-  { label: "Strong" as const, icon: "⚡", index: 2 },
+  { label: "Leveling Up" as const, icon: "⚡", index: 1 },
+  { label: "Strong" as const, icon: "💪", index: 2 },
   { label: "Very Strong" as const, icon: "🔥", index: 3 },
   { label: "Elite" as const, icon: "👑", index: 4 },
 ];

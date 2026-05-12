@@ -16,7 +16,7 @@ interface StrengthSummaryProps {
   bodyWeight: number | null;
 }
 
-const LEVEL_ORDER = ["Beginner", "Getting Stronger", "Strong", "Very Strong", "Elite"];
+const LEVEL_ORDER = ["Beginner", "Leveling Up", "Strong", "Very Strong", "Elite"];
 
 export function StrengthSummary({ exercises, bodyWeight }: StrengthSummaryProps) {
   const weightBased = exercises.filter((e) => e.useRatio && e.ratio > 0);
