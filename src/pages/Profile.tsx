@@ -30,6 +30,17 @@ import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 type MobileTab = "training" | "body" | "account";
 
+const STRENGTH_LEVELS = [
+  { icon: "🌱", label: "Beginner" },
+  { icon: "⚡", label: "Leveling Up" },
+  { icon: "💪", label: "Strong" },
+  { icon: "🔥", label: "Very Strong" },
+  { icon: "👑", label: "Elite" },
+] as const;
+// Boundaries are multiples of body weight. The first four define the upper bound
+// of the matching level; the fifth is the lower bound at which Elite starts.
+const STRENGTH_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6] as const;
+
 type PasswordFieldProps = {
   id: string;
   label: string;
@@ -378,6 +389,50 @@ const Profile = () => {
             ))}
           </motion.section>
 
+          {/* Strength Levels reference card */}
+          <motion.section
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className={cn(
+              "rounded-2xl border-2 border-border bg-card p-4",
+              showIf("body")
+            )}
+          >
+            <div className="mb-3">
+              <h3 className="font-display text-lg text-foreground">Your Strength Levels</h3>
+              <p className="text-[11px] font-bold text-muted-foreground">
+                {bw
+                  ? `Based on your body weight (${bw} kg)`
+                  : "Set your body weight to see your ranges"}
+              </p>
+            </div>
+            {bw && (
+              <div className="space-y-2">
+                {STRENGTH_LEVELS.map((level, idx) => {
+                  const val = Math.round(STRENGTH_RATIOS[idx] * bw);
+                  const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
+                  const range =
+                    idx === 0
+                      ? `< ${val} kg`
+                      : idx === STRENGTH_LEVELS.length - 1
+                      ? `≥ ${val} kg`
+                      : `${prevVal}–${val} kg`;
+                  return (
+                    <div key={level.label} className="flex items-center gap-3">
+                      <span className="text-xl w-6 text-center shrink-0">{level.icon}</span>
+                      <span className="text-sm font-bold text-foreground flex-1 truncate">
+                        {level.label}
+                      </span>
+                      <span className="text-sm font-bold text-muted-foreground tabular-nums shrink-0">
+                        {range}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.section>
+
           {/* Account rows card */}
           <motion.section
             initial={{ y: 10, opacity: 0 }}
@@ -461,12 +516,20 @@ const Profile = () => {
           <Button
             onClick={signOut}
             variant="outline"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              width: "100%",
+            }}
             className={cn(
-              "w-full h-12 font-bold text-destructive border-destructive/30 hover:bg-destructive/10",
+              "h-12 font-bold text-destructive border-destructive/30 hover:bg-destructive/10",
               showIf("account")
             )}
           >
-            <LogOut className="w-4 h-4 mr-2" /> Sign Out
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
           </Button>
         </aside>
 

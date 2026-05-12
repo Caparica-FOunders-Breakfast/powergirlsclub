@@ -226,8 +226,8 @@ export function ExerciseScorecard() {
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {[
                 { icon: "🌱", label: "Beginner", range: "< 0.35x" },
-                { icon: "💪", label: "Getting Stronger", range: "0.35–0.60x" },
-                { icon: "⚡", label: "Strong", range: "0.60–0.85x" },
+                { icon: "⚡", label: "Leveling Up", range: "0.35–0.60x" },
+                { icon: "💪", label: "Strong", range: "0.60–0.85x" },
                 { icon: "🔥", label: "Very Strong", range: "0.85–1.20x" },
                 { icon: "👑", label: "Elite", range: "> 1.20x" },
               ].map((l) => (
