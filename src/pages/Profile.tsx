@@ -13,7 +13,8 @@ import {
   Trophy,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile, useUpdateProfile, useUserRole } from "@/hooks/useProfile";
+import { useIsAdmin } from "@/contexts/AdminContext";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useActivityData } from "@/hooks/useActivityData";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,7 +91,7 @@ const PasswordField = ({
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
-  const { data: role } = useUserRole();
+  const isAdmin = useIsAdmin();
   const { data: activity } = useActivityData();
   // Prime the user_preferences cache in parallel with everything else on this page.
   useUserPreferences();
@@ -123,7 +124,6 @@ const Profile = () => {
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
   const displayName = profile?.display_name ?? "";
   const initials = (displayName[0] ?? "?").toUpperCase();
-  const isAdmin = role === "admin";
 
   // Real stats from completed exercise logs. Weeks Won has no historical winner store, so "—".
   const stats = useMemo(() => {

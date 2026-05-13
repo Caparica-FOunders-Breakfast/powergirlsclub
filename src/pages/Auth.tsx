@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useFeatureFlags } from "@/hooks/useAppSettings";
 import { motion } from "framer-motion";
 
 const Auth = () => {
@@ -15,6 +16,13 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
+  const { data: flags } = useFeatureFlags();
+  const signupsEnabled = flags?.signups_enabled ?? true;
+
+  // If signups are turned off mid-flow, snap the user back to login.
+  useEffect(() => {
+    if (!signupsEnabled && !isLogin) setIsLogin(true);
+  }, [signupsEnabled, isLogin]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,13 +188,21 @@ const Auth = () => {
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="w-full text-center text-sm font-bold text-primary hover:underline"
-            >
-              {isLogin ? "New here? Join the club!" : "Already a member? Log in!"}
-            </button>
+            {signupsEnabled ? (
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="w-full text-center text-sm font-bold text-primary hover:underline"
+              >
+                {isLogin ? "New here? Join the club!" : "Already a member? Log in!"}
+              </button>
+            ) : (
+              isLogin && (
+                <p className="w-full text-center text-xs font-bold text-muted-foreground">
+                  New signups are temporarily paused.
+                </p>
+              )
+            )}
           </>
         )}
       </motion.form>

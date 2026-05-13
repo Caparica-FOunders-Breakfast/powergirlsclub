@@ -4,7 +4,8 @@ import RewardJourney from "@/components/RewardJourney";
 import { Users, Plus, UserPlus, Copy, Check, Heart, CalendarIcon, ArrowRight, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useTeams, useCreateTeam, useJoinTeamByCode, useMyTeam, useTeamMembers, useAssignTeam } from "@/hooks/useTeams";
-import { useAllProfiles, useUserRole, useProfile } from "@/hooks/useProfile";
+import { useAllProfiles, useProfile } from "@/hooks/useProfile";
+import { useIsAdmin } from "@/contexts/AdminContext";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useActiveChallenge, useChallengeParticipants, useCreateChallenge, useJoinChallenge, useLeaveChallenge, useDeleteChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ const TeamManagement = () => {
   const { data: members } = useTeamMembers();
   const { data: profiles } = useAllProfiles();
   const { data: profile } = useProfile();
-  const { data: role } = useUserRole();
+  const isAdmin = useIsAdmin();
   const { data: scores } = useLeaderboard();
   const { data: challenge } = useActiveChallenge();
   const { data: challengeParticipants } = useChallengeParticipants(profile?.challenge_id ?? null);
@@ -48,8 +49,6 @@ const TeamManagement = () => {
   const [selectedStart, setSelectedStart] = useState<Date | undefined>();
   const [challengeCode, setChallengeCode] = useState("");
   const [challengeCopied, setChallengeCopied] = useState(false);
-
-  const isAdmin = role === "admin";
 
   const handleCreateTeam = async () => {
     if (!newTeamName.trim()) return;

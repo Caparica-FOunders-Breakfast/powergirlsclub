@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AdminProvider, useIsAdmin } from "@/contexts/AdminContext";
 import { AppSidebar, BottomNav, AppHeader, SidebarProvider } from "@/components/Navigation";
+import FeatureGate from "@/components/FeatureGate";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import Leaderboard from "@/pages/Leaderboard";
@@ -14,17 +16,20 @@ import TeamManagement from "@/pages/TeamManagement";
 import Profile from "@/pages/Profile";
 import MealPlan from "@/pages/MealPlan";
 import More from "@/pages/More";
+import Dashboard from "@/pages/Dashboard";
+import Users from "@/pages/Users";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AdminOnly = ({ children }: { children: JSX.Element }) => {
-  const { isAdmin } = useAuth();
+  const isAdmin = useIsAdmin();
   return isAdmin ? children : <Navigate to="/week" replace />;
 };
 
 const ProtectedLayout = () => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading } = useAuth();
+  const isAdmin = useIsAdmin();
 
   if (loading) {
     return (
@@ -46,11 +51,31 @@ const ProtectedLayout = () => {
             <Routes>
               <Route path="/" element={isAdmin ? <Leaderboard /> : <Navigate to="/week" replace />} />
               <Route path="/week" element={<CurrentWeek />} />
-              <Route path="/learn" element={<AdminOnly><LearnLanguage /></AdminOnly>} />
-              <Route path="/meals" element={<AdminOnly><MealPlan /></AdminOnly>} />
+              <Route
+                path="/learn"
+                element={
+                  <AdminOnly>
+                    <FeatureGate flag="language_enabled" title="Language coaching">
+                      <LearnLanguage />
+                    </FeatureGate>
+                  </AdminOnly>
+                }
+              />
+              <Route
+                path="/meals"
+                element={
+                  <AdminOnly>
+                    <FeatureGate flag="meals_enabled" title="Meals & nutrition">
+                      <MealPlan />
+                    </FeatureGate>
+                  </AdminOnly>
+                }
+              />
               <Route path="/teams" element={<AdminOnly><TeamManagement /></AdminOnly>} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/more" element={<AdminOnly><More /></AdminOnly>} />
+              <Route path="/dashboard" element={<AdminOnly><Dashboard /></AdminOnly>} />
+              <Route path="/users" element={<AdminOnly><Users /></AdminOnly>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
@@ -84,13 +109,15 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
+      <AdminProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

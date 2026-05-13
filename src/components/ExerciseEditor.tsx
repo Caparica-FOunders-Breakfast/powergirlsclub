@@ -22,6 +22,10 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
   // Skip the first effect run — that's the initial mount with the day's exercises,
   // not a user edit. After that, every change autosaves via the debounced callback.
   const hydrated = useRef(false);
+  // Only flag dirty when the user actually edits — otherwise opening + closing
+  // the editor (a read-only interaction) would write the day's defaults back
+  // into user_workout_plans and incorrectly mark the user as Custom.
+  const dirty = useRef(false);
   const latestExercises = useRef(exercises);
   latestExercises.current = exercises;
 
@@ -35,12 +39,16 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
       hydrated.current = true;
       return;
     }
+    dirty.current = true;
     autosave(exercises);
   }, [exercises, autosave]);
 
-  // If the user closes the editor before the debounce fires, flush the latest state.
+  // If the user closes the editor with a pending edit, flush it. If they
+  // didn't touch anything, skip — nothing to save.
   useEffect(
-    () => () => autosave.flush(latestExercises.current),
+    () => () => {
+      if (dirty.current) autosave.flush(latestExercises.current);
+    },
     [autosave],
   );
 
