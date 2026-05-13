@@ -103,10 +103,25 @@ export const useSavePersonalDay = () => {
         .select()
         .single();
       if (error) throw error;
+
+      // Once the user has saved a custom day, mark their preferences row as
+      // 'custom' so the admin dashboard can report it without inferring from
+      // table joins. Don't fail the save if this update fails — it's metadata.
+      const { error: prefError } = await supabase
+        .from("user_preferences" as never)
+        .upsert(
+          { user_id: user!.id, plan_type: "custom" } as never,
+          { onConflict: "user_id" },
+        );
+      if (prefError) {
+        console.warn("[useSavePersonalDay] couldn't update plan_type", prefError);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["personal-workout-plan"] });
+      queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
     },
   });
 };
@@ -123,9 +138,33 @@ export const useResetPersonalDay = () => {
         .eq("user_id", user!.id)
         .eq("day_index", dayIndex);
       if (error) throw error;
+
+      // If no custom days remain, flip plan_type back to 'default' so the
+      // dashboard reflects the reset.
+      const { data: remaining, error: countError } = await supabase
+        .from("user_workout_plans" as never)
+        .select("id")
+        .eq("user_id", user!.id)
+        .limit(1);
+      if (countError) {
+        console.warn("[useResetPersonalDay] couldn't check remaining custom days", countError);
+        return;
+      }
+      if (!remaining || (remaining as unknown[]).length === 0) {
+        const { error: prefError } = await supabase
+          .from("user_preferences" as never)
+          .upsert(
+            { user_id: user!.id, plan_type: "default" } as never,
+            { onConflict: "user_id" },
+          );
+        if (prefError) {
+          console.warn("[useResetPersonalDay] couldn't update plan_type", prefError);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["personal-workout-plan"] });
+      queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
     },
   });
 };

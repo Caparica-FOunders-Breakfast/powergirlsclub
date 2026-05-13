@@ -1,9 +1,21 @@
-import { Trophy, Dumbbell, Menu, Globe, MoreHorizontal, Heart, User, UtensilsCrossed } from "lucide-react";
+import {
+  Dumbbell,
+  Globe,
+  Heart,
+  LayoutDashboard,
+  MoreHorizontal,
+  Trophy,
+  User,
+  Users,
+  UtensilsCrossed,
+} from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile } from "@/hooks/useProfile";
+import ViewModeToggle from "@/components/ViewModeToggle";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +41,11 @@ const adminSidebarTabs: NavItem[] = [
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
+const adminOnlySidebarTabs: NavItem[] = [
+  { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard", emoji: "📊" },
+  { path: "/users", icon: Users, label: "Users", emoji: "👥" },
+];
+
 const memberSidebarTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
@@ -37,7 +54,7 @@ const memberSidebarTabs: NavItem[] = [
 const adminMobileTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
-  { path: "/meals", icon: UtensilsCrossed, label: "Meals", emoji: "🥗" },
+  { path: "/dashboard", icon: LayoutDashboard, label: "Admin", emoji: "📊" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
   { path: "/more", icon: MoreHorizontal, label: "More", emoji: "⋯" },
 ];
@@ -48,7 +65,8 @@ const memberMobileTabs: NavItem[] = [
 ];
 
 export function AppSidebar() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const { data: profile } = useProfile();
   const tabs = isAdmin ? adminSidebarTabs : memberSidebarTabs;
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "Power Girl";
@@ -90,6 +108,33 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {isAdmin && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                  Admin only
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {adminOnlySidebarTabs.map((item) => (
+                      <SidebarMenuItem key={item.path}>
+                        <SidebarMenuButton asChild>
+                          <NavLink
+                            to={item.path}
+                            end
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-foreground hover:bg-primary/10 transition-colors"
+                            activeClassName="bg-primary/10 text-primary"
+                          >
+                            <item.icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
           </SidebarContent>
         </Sidebar>
       </div>
@@ -120,6 +165,28 @@ export function AppSidebar() {
               </NavLink>
             ))}
           </nav>
+
+          {isAdmin && (
+            <>
+              <p className="px-3 mt-7 mb-3 font-bold text-[11px] uppercase tracking-widest text-white/40">
+                Admin only
+              </p>
+              <nav className="flex flex-col gap-2">
+                {adminOnlySidebarTabs.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end
+                    className="flex items-center gap-3.5 px-5 py-3.5 rounded-xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                    activeClassName="bg-[#FF2D87]/15 text-[#FF2D87]"
+                  >
+                    <item.icon className="h-5 w-5 shrink-0" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </nav>
+            </>
+          )}
         </div>
         <div className="px-4 py-4 border-t border-white/10">
           <NavLink
@@ -149,7 +216,7 @@ export function AppSidebar() {
 
 export function BottomNav() {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const isAdmin = useIsAdmin();
   const tabs = isAdmin ? adminMobileTabs : memberMobileTabs;
 
   return (
@@ -183,10 +250,20 @@ export function BottomNav() {
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20 lg:hidden">
-      <SidebarTrigger className="text-foreground hover:text-primary" />
-      <h1 className="text-xl font-display text-primary tracking-wider">Power Club</h1>
-    </header>
+    <>
+      {/* Mobile/tablet header */}
+      <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20 lg:hidden">
+        <SidebarTrigger className="text-foreground hover:text-primary" />
+        <h1 className="text-xl font-display text-primary tracking-wider">Power Club</h1>
+        <div className="ml-auto">
+          <ViewModeToggle />
+        </div>
+      </header>
+      {/* Desktop header — only renders the toggle, no logo (the sidebar carries the branding). */}
+      <div className="hidden lg:flex sticky top-0 z-40 h-12 items-center justify-end px-6 bg-transparent">
+        <ViewModeToggle />
+      </div>
+    </>
   );
 }
 

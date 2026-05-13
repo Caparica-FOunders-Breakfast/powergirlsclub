@@ -58,7 +58,7 @@ const daysUntil = (key: string): number => {
 const TrainingPreferences = () => {
   // Render the form with defaults immediately; React Query fills `saved` in the background.
   // This intentionally does not check `isLoading` — the UI is visible from the first paint.
-  const { data: saved } = useUserPreferences();
+  const { data: saved, isSuccess: prefsLoaded } = useUserPreferences();
   const saveMutation = useSaveUserPreferences();
   const { toast } = useToast();
 
@@ -87,15 +87,21 @@ const TrainingPreferences = () => {
 
   // Hydrate from saved preferences exactly once — after that, user edits and post-save
   // refetches don't clobber local state, so the update is silent and won't fight typing.
+  // Important: even when `saved` is null (brand-new user with no row yet) we still
+  // mark hydration complete so the autosave effect below can fire the first time
+  // the user picks an option — otherwise their choice is never persisted.
   const hydratedRef = useRef(false);
   useEffect(() => {
-    if (!saved || hydratedRef.current) return;
-    setFrequency(saved.frequency);
-    setTrainingDays([...saved.training_days].sort((a, b) => a - b));
-    setStartDate(saved.start_date);
-    setProgressGoal(saved.progress_goal);
+    if (hydratedRef.current) return;
+    if (!prefsLoaded) return;
+    if (saved) {
+      setFrequency(saved.frequency);
+      setTrainingDays([...saved.training_days].sort((a, b) => a - b));
+      setStartDate(saved.start_date);
+      setProgressGoal(saved.progress_goal);
+    }
     hydratedRef.current = true;
-  }, [saved]);
+  }, [saved, prefsLoaded]);
 
   const handleFrequencyChange = (newFreq: number) => {
     setFrequency(newFreq);
