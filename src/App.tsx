@@ -29,7 +29,6 @@ const AdminOnly = ({ children }: { children: JSX.Element }) => {
 
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
-  const isAdmin = useIsAdmin();
 
   if (loading) {
     return (
@@ -49,7 +48,7 @@ const ProtectedLayout = () => {
           <AppHeader />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={isAdmin ? <Leaderboard /> : <Navigate to="/week" replace />} />
+              <Route path="/" element={<Leaderboard />} />
               <Route path="/week" element={<CurrentWeek />} />
               <Route
                 path="/learn"
