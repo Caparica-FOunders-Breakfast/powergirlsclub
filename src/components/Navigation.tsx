@@ -48,6 +48,7 @@ const adminOnlySidebarTabs: NavItem[] = [
 
 const memberSidebarTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
+  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
@@ -61,6 +62,7 @@ const adminMobileTabs: NavItem[] = [
 
 const memberMobileTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
+  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
