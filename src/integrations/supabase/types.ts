@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_usage_logs: {
+        Row: {
+          cost_estimate: number
+          created_at: string
+          feature: string
+          id: string
+          tokens_used: number
+          user_id: string
+        }
+        Insert: {
+          cost_estimate?: number
+          created_at?: string
+          feature: string
+          id?: string
+          tokens_used?: number
+          user_id: string
+        }
+        Update: {
+          cost_estimate?: number
+          created_at?: string
+          feature?: string
+          id?: string
+          tokens_used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       challenge_rewards: {
         Row: {
           challenge_id: string
