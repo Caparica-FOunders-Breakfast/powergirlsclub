@@ -18,6 +18,7 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useActivityData } from "@/hooks/useActivityData";
 import { supabase } from "@/integrations/supabase/client";
 import TrainingPreferences from "@/components/TrainingPreferences";
+import AdminApiUsage from "@/components/AdminApiUsage";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -533,9 +534,10 @@ const Profile = () => {
           </Button>
         </aside>
 
-        {/* Right column — Training preferences */}
-        <main className={cn(showIf("training"))}>
+        {/* Right column — Training preferences (+ admin tools) */}
+        <main className={cn(showIf("training"), "space-y-4")}>
           <TrainingPreferences />
+          {isAdmin && <AdminApiUsage />}
         </main>
       </div>
 

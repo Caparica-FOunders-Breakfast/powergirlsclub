@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, ChevronDown, ListChecks, Pencil, Target } from "lucide-react";
+import { Calendar, ChevronDown, ListChecks, Pencil, Sparkles, Target } from "lucide-react";
 import {
   FREQUENCY_DEFAULT_DAYS,
   PROGRESS_GOAL_RATE,
@@ -14,13 +14,21 @@ import {
   useResetPersonalDay,
   useSavePersonalDay,
 } from "@/hooks/usePersonalWorkoutPlan";
+import { useAiImportEnabled } from "@/hooks/useAppSettings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
 import ExerciseEditor from "@/components/ExerciseEditor";
+import ImportWorkoutPlanModal from "@/components/ImportWorkoutPlanModal";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -67,6 +75,8 @@ const TrainingPreferences = () => {
   const { mergedPlan, hasCustom } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
+  const { data: aiImportEnabled } = useAiImportEnabled();
+  const [importOpen, setImportOpen] = useState(false);
 
   const selectedPlanDays = useMemo(() => {
     const sorted = [...trainingDays].sort((a, b) => a - b);
@@ -250,6 +260,31 @@ const TrainingPreferences = () => {
               )}
             />
           </button>
+
+          <div className="mt-3">
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {/* span keeps the tooltip working while the button is disabled */}
+                  <span className="inline-block w-full">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setImportOpen(true)}
+                      disabled={aiImportEnabled === false}
+                      className="w-full h-10 border-dashed border-2 border-primary/40 text-primary font-bold text-sm"
+                    >
+                      <Sparkles className="w-4 h-4 mr-1.5" />
+                      Import workout plan
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {aiImportEnabled === false && (
+                  <TooltipContent>AI import is temporarily unavailable</TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
           <AnimatePresence initial={false}>
             {planExpanded && (
@@ -492,6 +527,25 @@ const TrainingPreferences = () => {
             : `Starts in ${countdownDays} day${countdownDays === 1 ? "" : "s"} ⏳`}
         </p>
       </motion.div>
+
+      <ImportWorkoutPlanModal
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        selectedDayIndices={trainingDays}
+        days={selectedPlanDays}
+        onImport={async (dayIndex, exercises) => {
+          const target = mergedPlan[dayIndex];
+          await savePersonalDay.mutateAsync({
+            dayIndex,
+            exercises,
+            label: target?.label,
+            emoji: target?.emoji,
+            isRest: false,
+            isRecovery: target?.isRecovery,
+            restNote: target?.restNote,
+          });
+        }}
+      />
     </div>
   );
 };
