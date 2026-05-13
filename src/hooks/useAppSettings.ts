@@ -21,6 +21,20 @@ export const useAppSetting = <T = unknown>(key: string, fallback: T) => {
   });
 };
 
+// Supabase's PostgrestError isn't an Error instance — log its fields explicitly
+// and re-throw a real Error so React Query's onError + the UI toast can show
+// something useful instead of the opaque "Couldn't update setting" message.
+const supabaseErrorMessage = (err: unknown): string => {
+  if (!err) return "unknown error";
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object") {
+    const e = err as { message?: string; details?: string; hint?: string; code?: string };
+    const parts = [e.message, e.details, e.hint, e.code ? `(code ${e.code})` : null].filter(Boolean);
+    if (parts.length > 0) return parts.join(" — ");
+  }
+  return String(err);
+};
+
 export const useSetAppSetting = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -30,11 +44,24 @@ export const useSetAppSetting = () => {
         .upsert({ key, value }, { onConflict: "key" })
         .select()
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error("[useSetAppSetting] upsert failed:", { key, value, error });
+        // PGRST116 = "no rows returned" — happens when RLS silently filters
+        // the upsert result. 42501 = postgres permission_denied. In both
+        // cases the most likely cause is a missing admin role on user_roles.
+        const code = (error as { code?: string }).code;
+        if (code === "PGRST116" || code === "42501" || /permission/i.test(error.message ?? "")) {
+          throw new Error(
+            "RLS blocked the write — your admin role row is missing. Apply the latest migrations and sign back in.",
+          );
+        }
+        throw new Error(supabaseErrorMessage(error));
+      }
       return data;
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["app-setting", vars.key] });
+      queryClient.invalidateQueries({ queryKey: ["feature-flags"] });
     },
   });
 };
