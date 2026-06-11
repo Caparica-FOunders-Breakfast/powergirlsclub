@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, Play, TrendingUp, Undo2 } from "lucide-react";
-import { useExerciseLogs, useSaveExerciseLog } from "@/hooks/useExerciseLogs";
+import { useExerciseLogs, useSaveExerciseLog, usePriorExerciseWeights } from "@/hooks/useExerciseLogs";
 import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { useProfile } from "@/hooks/useProfile";
 import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
@@ -64,13 +64,13 @@ const CurrentWeek = () => {
 
   const selectedWeekDate = addWeeks(currentWeekDate, weekOffset);
   const weekStart = getWeekStart(selectedWeekDate);
-  const prevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -1));
-  const prevPrevWeekStart = getWeekStart(addWeeks(selectedWeekDate, -2));
   const isCurrentWeek = weekOffset === 0;
 
   const { data: logs, isLoading: logsLoading } = useExerciseLogs(weekStart);
-  const { data: prevLogs } = useExerciseLogs(prevWeekStart);
-  const { data: prevPrevLogs } = useExerciseLogs(prevPrevWeekStart);
+  // The two most recent weeks each exercise was actually logged before this one,
+  // skipping over any weeks with no training. priorWeights[key] is ordered
+  // most-recent-first.
+  const { data: priorWeights } = usePriorExerciseWeights(weekStart);
   const saveLog = useSaveExerciseLog(weekStart);
 
   const today = now.getDay();
@@ -109,27 +109,27 @@ const CurrentWeek = () => {
     }
   }, [logs, initialized]);
 
-  // Build previous week weight map (includes -1 for failures)
+  // Most recent logged weight per exercise (includes -1 for failures).
   const prevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
-    if (prevLogs) {
-      Object.entries(prevLogs).forEach(([key, log]) => {
-        if (log.weight_used != null) map[key] = Number(log.weight_used);
+    if (priorWeights) {
+      Object.entries(priorWeights).forEach(([key, weights]) => {
+        if (weights.length > 0) map[key] = weights[0];
       });
     }
     return map;
-  }, [prevLogs]);
+  }, [priorWeights]);
 
-  // Build prev-prev week weight map (for looking back past failures)
+  // Second-most-recent logged weight per exercise (for looking back past failures).
   const prevPrevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
-    if (prevPrevLogs) {
-      Object.entries(prevPrevLogs).forEach(([key, log]) => {
-        if (log.weight_used != null) map[key] = Number(log.weight_used);
+    if (priorWeights) {
+      Object.entries(priorWeights).forEach(([key, weights]) => {
+        if (weights.length > 1) map[key] = weights[1];
       });
     }
     return map;
-  }, [prevPrevLogs]);
+  }, [priorWeights]);
 
   const getExKey = (dayIdx: number, exIdx: number) => `${dayIdx}-${exIdx}`;
 
