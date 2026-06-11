@@ -240,7 +240,7 @@ export function BottomNav() {
               activeClassName="text-primary scale-110"
             >
               <Icon className={cn("w-6 h-6", isActive && "drop-shadow-[0_0_8px_hsl(var(--neon-pink)/0.6)]")} strokeWidth={isActive ? 2.5 : 2} />
-              <span className={cn("text-[10px] font-bold uppercase tracking-wider", isActive && "font-extrabold")}>{label}</span>
+              <span className={cn("text-[11px] font-bold uppercase tracking-wider", isActive && "font-extrabold")}>{label}</span>
               {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5" />}
             </NavLink>
           );
