@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, ChevronDown, ListChecks, Pencil, Sparkles, Target } from "lucide-react";
+import { Calendar, ChevronDown, ListChecks, Pencil, Sparkles } from "lucide-react";
 import {
   FREQUENCY_DEFAULT_DAYS,
-  PROGRESS_GOAL_RATE,
+  PROGRESSION_DEFAULT,
   useSaveUserPreferences,
   useUserPreferences,
-  type ProgressGoal,
   type UserPreferences,
 } from "@/hooks/useUserPreferences";
 import {
@@ -65,7 +64,6 @@ const TrainingPreferences = () => {
   const [frequency, setFrequency] = useState<number>(5);
   const [trainingDays, setTrainingDays] = useState<number[]>(FREQUENCY_DEFAULT_DAYS[5]);
   const [startDate, setStartDate] = useState<string>(todayKey());
-  const [progressGoal, setProgressGoal] = useState<ProgressGoal>("healthy");
 
   // Workout plan expansion state.
   const [planExpanded, setPlanExpanded] = useState(false);
@@ -98,7 +96,6 @@ const TrainingPreferences = () => {
       setFrequency(saved.frequency);
       setTrainingDays([...saved.training_days].sort((a, b) => a - b));
       setStartDate(saved.start_date);
-      setProgressGoal(saved.progress_goal);
     }
     hydratedRef.current = true;
   }, [saved, prefsLoaded]);
@@ -148,9 +145,12 @@ const TrainingPreferences = () => {
       frequency,
       training_days: [...trainingDays].sort((a, b) => a - b),
       start_date: startDate,
-      progress_goal: progressGoal,
+      // Progression lives in the setup wizard / More settings now — preserve
+      // the saved values here so a schedule autosave doesn't clobber them.
+      progress_goal: saved?.progress_goal ?? "healthy",
+      progression_kg_per_week: saved?.progression_kg_per_week ?? PROGRESSION_DEFAULT,
     });
-  }, [frequency, trainingDays, startDate, progressGoal, autosave]);
+  }, [frequency, trainingDays, startDate, saved, autosave]);
 
   return (
     <div className="mb-6 space-y-4">
@@ -459,57 +459,6 @@ const TrainingPreferences = () => {
               </p>
             )}
           </div>
-        </div>
-      </motion.section>
-
-      {/* Progress Goal */}
-      <motion.section
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <Target className="w-5 h-5 text-primary shrink-0" />
-          <div>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Progress Goal
-            </p>
-            <h3 className="font-display text-xl text-foreground lg:text-2xl">
-              How hard do you want to push?
-            </h3>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {(["healthy", "aggressive"] as const).map((goal) => {
-            const isSelected = progressGoal === goal;
-            return (
-              <button
-                key={goal}
-                type="button"
-                onClick={() => setProgressGoal(goal)}
-                className={cn(
-                  "p-4 rounded-2xl border-2 text-left transition-all lg:p-5",
-                  isSelected
-                    ? "border-primary bg-primary/5 shadow-sm"
-                    : "border-border bg-background hover:border-primary/30",
-                )}
-              >
-                <p className="font-extrabold text-base text-foreground lg:text-lg">
-                  {goal === "healthy" ? "Healthy" : "Aggressive"}
-                </p>
-                <p className="text-sm font-bold text-primary mt-0.5 lg:text-base">
-                  +{PROGRESS_GOAL_RATE[goal]} kg/week
-                </p>
-                <p className="text-[11px] font-semibold text-muted-foreground mt-1">
-                  {goal === "healthy"
-                    ? "Sustainable strength gains, low burnout risk."
-                    : "Faster progression, higher recovery demand."}
-                </p>
-              </button>
-            );
-          })}
         </div>
       </motion.section>
 
