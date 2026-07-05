@@ -11,7 +11,6 @@ import {
   LogOut,
   Pencil,
   Plane,
-  RefreshCw,
   Scale,
   TrendingUp,
   Trophy,
@@ -721,15 +720,6 @@ const Profile = () => {
             />
           ) : (
             <>
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={setup.restartWizard}
-                  className="gap-2 font-bold border-2 border-primary/30 text-primary hover:bg-primary/10"
-                >
-                  <RefreshCw className="w-4 h-4" /> Set up again
-                </Button>
-              </div>
               <section
                 className={cn(
                   "flex items-center gap-4 rounded-2xl border-2 p-4 transition-colors",
@@ -764,6 +754,7 @@ const Profile = () => {
                 plan={plan}
                 onReorder={travelMode ? undefined : handleReorderDays}
                 travelMode={travelMode}
+                onSetUpAgain={setup.restartWizard}
               />
               {isAdmin && <AdminApiUsage />}
             </>
