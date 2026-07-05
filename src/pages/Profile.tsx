@@ -10,6 +10,7 @@ import {
   KeyRound,
   LogOut,
   Pencil,
+  RefreshCw,
   Scale,
   TrendingUp,
   Trophy,
@@ -642,6 +643,15 @@ const Profile = () => {
             />
           ) : (
             <>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={setup.restartWizard}
+                  className="gap-2 font-bold border-2 border-primary/30 text-primary hover:bg-primary/10"
+                >
+                  <RefreshCw className="w-4 h-4" /> Set up again
+                </Button>
+              </div>
               <TrainingPreferences />
               {isAdmin && <AdminApiUsage />}
             </>

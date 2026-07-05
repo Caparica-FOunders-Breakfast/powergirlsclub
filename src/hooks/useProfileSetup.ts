@@ -57,7 +57,8 @@ type Action =
   | { type: "SET_PLAN_SOURCE"; source: PlanSource }
   | { type: "SET_KG"; kg: number }
   | { type: "ENTER_PROGRESSION_EDIT" }
-  | { type: "FINISH" };
+  | { type: "FINISH" }
+  | { type: "RESTART" };
 
 const initialState: ProfileSetupState = {
   step: 1,
@@ -96,6 +97,9 @@ function reducer(state: ProfileSetupState, action: Action): ProfileSetupState {
       return { ...state, step: 3, editMode: true };
     case "FINISH":
       return { ...state, wizardActive: false };
+    case "RESTART":
+      // Re-open the wizard from the top, keeping hydrated values prefilled.
+      return { ...state, wizardActive: true, step: 1, editMode: false };
     default:
       return state;
   }
@@ -122,6 +126,7 @@ export interface UseProfileSetup {
   goToStep: (step: WizardStep) => void;
   startWeightEdit: () => void;
   startProgressionEdit: () => void;
+  restartWizard: () => void;
   // Persisted transitions
   saveWeightAndContinue: (kg: number) => Promise<void>;
   savePlanAndContinue: () => Promise<void>;
@@ -210,6 +215,7 @@ export function useProfileSetup(): UseProfileSetup {
     dispatch({ type: "SET_STEP", step: 1 });
   }, []);
   const startProgressionEdit = useCallback(() => dispatch({ type: "ENTER_PROGRESSION_EDIT" }), []);
+  const restartWizard = useCallback(() => dispatch({ type: "RESTART" }), []);
 
   // Persist body weight, then advance to the plan step.
   const saveWeightAndContinue = useCallback(
@@ -279,6 +285,7 @@ export function useProfileSetup(): UseProfileSetup {
     goToStep,
     startWeightEdit,
     startProgressionEdit,
+    restartWizard,
     saveWeightAndContinue,
     savePlanAndContinue,
     saveProgression,
