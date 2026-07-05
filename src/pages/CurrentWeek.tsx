@@ -883,47 +883,59 @@ function ExerciseCard({
             {displaySuggestedWeight && <span className="text-xs font-semibold text-muted-foreground">{displaySuggestedWeight}</span>}
           </div>
 
-          {/* Last week value + recommendation */}
-          {lastWeekFailed && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              <span className="text-[11px] font-bold text-destructive">
-                ❌ Failed last week — try again!
-              </span>
-              {retryWeight != null && (
-                <span className="text-[11px] font-bold text-neon-teal">
-                  → {retryWeight} {unit} {isTime ? "⏱️" : isRounds ? "🔁" : "💪"}
-                </span>
+          {/* Bodyweight moves have no weight to track — just the progression cue. */}
+          {isBodyweight ? (
+            exercise.progression && (
+              <div className="flex items-center gap-1 mt-1">
+                <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
+                <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
+              </div>
+            )
+          ) : (
+            <>
+              {/* Last week value + recommendation */}
+              {lastWeekFailed && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                  <span className="text-[11px] font-bold text-destructive">
+                    ❌ Failed last week — try again!
+                  </span>
+                  {retryWeight != null && (
+                    <span className="text-[11px] font-bold text-neon-teal">
+                      → {retryWeight} {unit} {isTime ? "⏱️" : isRounds ? "🔁" : "💪"}
+                    </span>
+                  )}
+                </div>
               )}
-            </div>
-          )}
-          {!lastWeekFailed && lastWeekWeight != null && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              <span className="text-[11px] font-semibold text-muted-foreground">
-                Last week: {lastWeekWeight} {unit}
-              </span>
-              {recommendedWeight != null && (
-                <span className="text-[11px] font-bold text-neon-teal">
-                  {isAssisted
-                    ? `→ Decrease to ${Math.max(0, recommendedWeight)} kg assist 🎯`
-                    : `→ Try ${recommendedWeight} ${unit} ${isTime ? "⏱️" : isRounds ? "🔁" : "💪"}`}
-                </span>
+              {!lastWeekFailed && lastWeekWeight != null && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                  <span className="text-[11px] font-semibold text-muted-foreground">
+                    Last week: {lastWeekWeight} {unit}
+                  </span>
+                  {recommendedWeight != null && (
+                    <span className="text-[11px] font-bold text-neon-teal">
+                      {isAssisted
+                        ? `→ Decrease to ${Math.max(0, recommendedWeight)} kg assist 🎯`
+                        : `→ Try ${recommendedWeight} ${unit} ${isTime ? "⏱️" : isRounds ? "🔁" : "💪"}`}
+                    </span>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {!lastWeekWeight && !lastWeekFailed && (
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-[11px] font-semibold text-neon-teal">
-                {isAssisted ? "🎯 Decrease weight assistance" : isTime ? "⏱️ Add time" : isRounds ? "🔁 Add reps" : "💪 Add weight"}
-              </span>
-            </div>
-          )}
+              {!lastWeekWeight && !lastWeekFailed && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-[11px] font-semibold text-neon-teal">
+                    {isAssisted ? "🎯 Decrease weight assistance" : isTime ? "⏱️ Add time" : isRounds ? "🔁 Add reps" : "💪 Add weight"}
+                  </span>
+                </div>
+              )}
 
-          {!lastWeekFailed && lastWeekWeight != null && exercise.progression && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
-              <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
-            </div>
+              {!lastWeekFailed && lastWeekWeight != null && exercise.progression && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
+                  <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -931,7 +943,7 @@ function ExerciseCard({
           <Input
             type="text"
             inputMode="text"
-            placeholder={lastWeekFailed && retryWeight != null ? `${retryWeight}` : recommendedWeight != null ? `${recommendedWeight}` : unit}
+            placeholder={isBodyweight ? `${exercise.reps}` : lastWeekFailed && retryWeight != null ? `${retryWeight}` : recommendedWeight != null ? `${recommendedWeight}` : unit}
             value={weight}
             onChange={(e) => {
               const v = e.target.value;
