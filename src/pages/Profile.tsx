@@ -21,15 +21,20 @@ import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { PROGRESSION_DEFAULT, useUserPreferences } from "@/hooks/useUserPreferences";
 import { useProfileSetup } from "@/hooks/useProfileSetup";
 import { useActivityData } from "@/hooks/useActivityData";
+import {
+  usePersonalWorkoutPlan,
+  useSavePersonalDay,
+} from "@/hooks/usePersonalWorkoutPlan";
 import { supabase } from "@/integrations/supabase/client";
-import TrainingPreferences from "@/components/TrainingPreferences";
 import AdminApiUsage from "@/components/AdminApiUsage";
+import ImportWorkoutPlanModal from "@/components/ImportWorkoutPlanModal";
 import {
   LockedStrengthLevelsNote,
   ProfileSetupWizard,
   StepProgression,
 } from "@/components/profile-setup/ProfileSetupWizard";
 import { PlanGeneratorModal } from "@/components/profile-setup/PlanGeneratorModal";
+import { WeekPlanCard } from "@/components/profile-setup/WeekPlanCard";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,6 +111,8 @@ const Profile = () => {
   const { data: prefs } = useUserPreferences();
   const isAdmin = useIsAdmin();
   const { data: activity } = useActivityData();
+  const { mergedPlan } = usePersonalWorkoutPlan();
+  const savePersonalDay = useSavePersonalDay();
   const navigate = useNavigate();
 
   const setup = useProfileSetup();
@@ -129,9 +136,10 @@ const Profile = () => {
   const [weightSaved, setWeightSaved] = useState(false);
   const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Standalone progression edit + plan generator.
+  // Standalone progression edit + plan generator + import.
   const [progressionEditOpen, setProgressionEditOpen] = useState(false);
   const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Password modal.
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -165,6 +173,19 @@ const Profile = () => {
     }
     return { workouts: days.size, bestStreak: longest };
   }, [activity]);
+
+  // The user's saved plan, for the "Your week" card + import target.
+  const trainingDays = useMemo(() => prefs?.training_days ?? [], [prefs]);
+  const selectedPlanDays = useMemo(
+    () =>
+      [...trainingDays]
+        .sort((a, b) => a - b)
+        .map((idx) => ({ idx, day: mergedPlan[idx] }))
+        .filter(
+          (e): e is { idx: number; day: NonNullable<typeof e.day> } => !!e.day,
+        ),
+    [trainingDays, mergedPlan],
+  );
 
   const handleStartEditName = () => {
     setName(displayName);
@@ -633,12 +654,7 @@ const Profile = () => {
             <ProfileSetupWizard
               setup={setup}
               onGoToWeek={() => navigate("/week")}
-              onImport={() =>
-                toast({
-                  title: "Plan saved 💪",
-                  description: "Tap “Import workout plan” below to add your program.",
-                })
-              }
+              onImport={() => setImportOpen(true)}
               onGenerate={() => setGeneratorOpen(true)}
             />
           ) : (
@@ -652,7 +668,13 @@ const Profile = () => {
                   <RefreshCw className="w-4 h-4" /> Set up again
                 </Button>
               </div>
-              <TrainingPreferences />
+              <WeekPlanCard
+                trainingDays={trainingDays}
+                dayInfo={(idx) => {
+                  const d = mergedPlan[idx];
+                  return d ? { emoji: d.emoji, label: d.label } : undefined;
+                }}
+              />
               {isAdmin && <AdminApiUsage />}
             </>
           )}
@@ -679,6 +701,27 @@ const Profile = () => {
         days={setup.state.daysPerWeek ?? 5}
         kgPerWeek={setup.state.kgPerWeek}
         onGenerated={() => navigate("/week")}
+      />
+
+      {/* Import a plan (own + import) — reachable through the setup wizard */}
+      <ImportWorkoutPlanModal
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        selectedDayIndices={trainingDays}
+        days={selectedPlanDays}
+        onImport={async (dayIndex, exercises) => {
+          const target = mergedPlan[dayIndex];
+          await savePersonalDay.mutateAsync({
+            dayIndex,
+            exercises,
+            label: target?.label,
+            emoji: target?.emoji,
+            isRest: false,
+            isRecovery: target?.isRecovery,
+            restNote: target?.restNote,
+          });
+          navigate("/week");
+        }}
       />
 
       {/* Password modal */}
