@@ -10,6 +10,7 @@ import {
   KeyRound,
   LogOut,
   Pencil,
+  Plane,
   RefreshCw,
   Scale,
   TrendingUp,
@@ -22,6 +23,7 @@ import {
   PROGRESSION_DEFAULT,
   useUserPreferences,
   useSaveUserPreferences,
+  useSetTravelMode,
 } from "@/hooks/useUserPreferences";
 import { useProfileSetup } from "@/hooks/useProfileSetup";
 import { useActivityData } from "@/hooks/useActivityData";
@@ -44,6 +46,7 @@ import { WeekPlanCard } from "@/components/profile-setup/WeekPlanCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SavedIndicator } from "@/components/ui/SavedIndicator";
 import { cn } from "@/lib/utils";
@@ -116,9 +119,10 @@ const Profile = () => {
   const { data: prefs } = useUserPreferences();
   const isAdmin = useIsAdmin();
   const { data: activity } = useActivityData();
-  const { plan, mergedPlan } = usePersonalWorkoutPlan();
+  const { plan, mergedPlan, travelMode } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const savePrefs = useSaveUserPreferences();
+  const setTravelMode = useSetTravelMode();
   const navigate = useNavigate();
 
   const setup = useProfileSetup();
@@ -225,6 +229,23 @@ const Profile = () => {
         variant: "destructive",
       });
       throw e;
+    }
+  };
+
+  const handleToggleTravel = async (on: boolean) => {
+    try {
+      await setTravelMode.mutateAsync(on);
+      toast(
+        on
+          ? { title: "Travel mode on ✈️", description: "Bodyweight workouts — your plan is saved." }
+          : { title: "Welcome back 💪", description: "Your normal plan is restored." },
+      );
+    } catch (e) {
+      toast({
+        title: "Couldn't switch travel mode",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "destructive",
+      });
     }
   };
 
@@ -709,7 +730,41 @@ const Profile = () => {
                   <RefreshCw className="w-4 h-4" /> Set up again
                 </Button>
               </div>
-              <WeekPlanCard plan={plan} onReorder={handleReorderDays} />
+              <section
+                className={cn(
+                  "flex items-center gap-4 rounded-2xl border-2 p-4 transition-colors",
+                  travelMode
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card",
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+                    travelMode ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  <Plane className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-lg text-foreground">Travel mode</p>
+                  <p className="text-xs text-muted-foreground">
+                    No gym? Train with bodyweight &amp; calisthenics. Your plan is saved and
+                    comes right back when you switch off.
+                  </p>
+                </div>
+                <Switch
+                  checked={travelMode}
+                  onCheckedChange={handleToggleTravel}
+                  disabled={setTravelMode.isPending}
+                  aria-label="Toggle travel mode"
+                />
+              </section>
+              <WeekPlanCard
+                plan={plan}
+                onReorder={handleReorderDays}
+                travelMode={travelMode}
+              />
               {isAdmin && <AdminApiUsage />}
             </>
           )}

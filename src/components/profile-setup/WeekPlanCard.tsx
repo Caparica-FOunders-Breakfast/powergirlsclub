@@ -41,9 +41,11 @@ const planSig = (plan: WorkoutDay[]) =>
 export function WeekPlanCard({
   plan,
   onReorder,
+  travelMode = false,
 }: {
   plan: WorkoutDay[];
   onReorder?: (next: WorkoutDay[], changed: number[]) => Promise<void>;
+  travelMode?: boolean;
 }) {
   const draggable = !!onReorder;
 
@@ -89,6 +91,11 @@ export function WeekPlanCard({
         <h3 className="font-display text-xl text-foreground lg:text-2xl">
           Your training week
         </h3>
+        {travelMode && (
+          <span className="ml-auto rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-primary">
+            ✈️ Travel
+          </span>
+        )}
       </div>
 
       <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
@@ -170,9 +177,11 @@ export function WeekPlanCard({
       </ul>
 
       <p className="mt-3 text-[11px] font-semibold text-muted-foreground">
-        {draggable
-          ? "Drag a workout onto another day to rearrange your week. Bigger changes? Tap “Set up again”."
-          : "You can move training days anytime — tap “Set up again” to change your plan."}
+        {travelMode
+          ? "Travel mode is on — these days show bodyweight workouts. Switch it off to get your normal plan back."
+          : draggable
+            ? "Drag a workout onto another day to rearrange your week. Bigger changes? Tap “Set up again”."
+            : "You can move training days anytime — tap “Set up again” to change your plan."}
       </p>
     </section>
   );
