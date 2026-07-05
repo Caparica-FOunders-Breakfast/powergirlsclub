@@ -111,7 +111,7 @@ const Profile = () => {
   const { data: prefs } = useUserPreferences();
   const isAdmin = useIsAdmin();
   const { data: activity } = useActivityData();
-  const { mergedPlan } = usePersonalWorkoutPlan();
+  const { plan, mergedPlan } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const navigate = useNavigate();
 
@@ -668,13 +668,7 @@ const Profile = () => {
                   <RefreshCw className="w-4 h-4" /> Set up again
                 </Button>
               </div>
-              <WeekPlanCard
-                trainingDays={trainingDays}
-                dayInfo={(idx) => {
-                  const d = mergedPlan[idx];
-                  return d ? { emoji: d.emoji, label: d.label } : undefined;
-                }}
-              />
+              <WeekPlanCard plan={plan} />
               {isAdmin && <AdminApiUsage />}
             </>
           )}

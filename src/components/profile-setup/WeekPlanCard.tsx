@@ -1,37 +1,22 @@
 import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { WorkoutDay } from "@/data/workoutPlan";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
-const DAY_NAMES = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-export interface DayInfo {
-  emoji: string;
-  label: string;
-}
 
 /**
  * Read-only "Your week" plan display for the completed Profile — mirrors the
- * Klarita split preview from the setup wizard, but populated with the user's
- * *saved* plan (their training days + each day's label/emoji from the merged
- * plan, so it works for Klarita's plan or a custom/imported one). Changes are
- * made via the "Set up again" wizard.
+ * Klarita split preview from the setup wizard. It is driven by the *same*
+ * `plan` array the weekly view uses (defaults + custom overrides, masked to
+ * the user's chosen training days), so the two screens can never disagree. A
+ * day is "training" when it isn't a rest day. Changes are made via the
+ * "Set up again" wizard.
  */
-export function WeekPlanCard({
-  trainingDays,
-  dayInfo,
-}: {
-  trainingDays: number[];
-  dayInfo: (idx: number) => DayInfo | undefined;
-}) {
-  const sorted = [...trainingDays].sort((a, b) => a - b);
+export function WeekPlanCard({ plan }: { plan: WorkoutDay[] }) {
+  const week = plan.slice(0, 7);
+  const training = week
+    .map((day, idx) => ({ day, idx }))
+    .filter(({ day }) => !day.isRest);
 
   return (
     <section className="rounded-2xl border-2 border-border bg-card p-5 lg:p-6">
@@ -43,25 +28,26 @@ export function WeekPlanCard({
       </div>
 
       <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
-        Your {sorted.length}-day week
+        Your {training.length}-day week
       </p>
       <div className="mt-3 grid grid-cols-7 gap-1.5">
-        {DAY_LETTERS.map((letter, idx) => {
-          const training = sorted.includes(idx);
-          const info = dayInfo(idx);
+        {week.map((day, idx) => {
+          const isTraining = !day.isRest;
           return (
             <div
               key={idx}
               className={cn(
                 "flex flex-col items-center gap-1 rounded-xl border-2 py-2",
-                training
+                isTraining
                   ? "border-primary/40 bg-primary/5"
                   : "border-border bg-background opacity-60",
               )}
             >
-              <span className="text-[10px] font-bold text-muted-foreground">{letter}</span>
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {DAY_LETTERS[idx]}
+              </span>
               <span className="text-lg leading-none">
-                {training ? info?.emoji ?? "💪" : "🧘"}
+                {isTraining ? day.emoji : "🧘"}
               </span>
             </div>
           );
@@ -69,17 +55,13 @@ export function WeekPlanCard({
       </div>
 
       <ul className="mt-4 space-y-1.5">
-        {sorted.map((idx) => {
-          const info = dayInfo(idx);
-          if (!info) return null;
-          return (
-            <li key={idx} className="flex items-center gap-2 text-sm">
-              <span className="shrink-0">{info.emoji}</span>
-              <span className="font-bold text-foreground">{DAY_NAMES[idx]}</span>
-              <span className="truncate text-muted-foreground">· {info.label}</span>
-            </li>
-          );
-        })}
+        {training.map(({ day, idx }) => (
+          <li key={idx} className="flex items-center gap-2 text-sm">
+            <span className="shrink-0">{day.emoji}</span>
+            <span className="font-bold text-foreground">{day.day}</span>
+            <span className="truncate text-muted-foreground">· {day.label}</span>
+          </li>
+        ))}
       </ul>
 
       <p className="mt-3 text-[11px] font-semibold text-muted-foreground">
