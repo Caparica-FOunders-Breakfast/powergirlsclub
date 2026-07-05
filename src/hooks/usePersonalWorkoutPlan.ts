@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDefaultWorkoutPlan } from "@/hooks/useDefaultWorkoutPlan";
 import { useUserPreferences, useTravelMode } from "@/hooks/useUserPreferences";
-import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
+import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { travelExercisesFor } from "@/data/travelPlan";
 
 const isStartDateActive = (startDate: string): boolean => {
@@ -54,7 +54,18 @@ export const usePersonalWorkoutPlan = () => {
   if (preferences && isStartDateActive(preferences.start_date)) {
     const trainingDays = new Set(preferences.training_days);
     plan = mergedPlan.map((day, idx) => {
-      if (trainingDays.has(idx)) return day;
+      if (trainingDays.has(idx)) {
+        // A day the user chose to train should always be a workout. If the
+        // effective content for this weekday is a plain rest day (e.g. the
+        // stored default differs from the canonical split, or a stale custom
+        // rest sits here), fall back to the canonical workout — so picking
+        // "N days" reliably yields N workouts, matching the setup preview.
+        if (day.isRest && !day.isRecovery) {
+          const canonical = weeklyPlan[idx];
+          if (canonical && !canonical.isRest) return canonical;
+        }
+        return day;
+      }
       // Preserve the day label but blank out exercises and mark as rest.
       return {
         ...day,
