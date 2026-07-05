@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ChevronRight,
@@ -10,16 +11,24 @@ import {
   LogOut,
   Pencil,
   Scale,
+  TrendingUp,
   Trophy,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
-import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { PROGRESSION_DEFAULT, useUserPreferences } from "@/hooks/useUserPreferences";
+import { useProfileSetup } from "@/hooks/useProfileSetup";
 import { useActivityData } from "@/hooks/useActivityData";
 import { supabase } from "@/integrations/supabase/client";
 import TrainingPreferences from "@/components/TrainingPreferences";
 import AdminApiUsage from "@/components/AdminApiUsage";
+import {
+  LockedStrengthLevelsNote,
+  ProfileSetupWizard,
+  StepProgression,
+} from "@/components/profile-setup/ProfileSetupWizard";
+import { PlanGeneratorModal } from "@/components/profile-setup/PlanGeneratorModal";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +51,8 @@ const STRENGTH_LEVELS = [
 // Boundaries are multiples of body weight. The first four define the upper bound
 // of the matching level; the fifth is the lower bound at which Elite starts.
 const STRENGTH_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6] as const;
+
+const PROJECTION_WEEKS = 12;
 
 type PasswordFieldProps = {
   id: string;
@@ -91,10 +102,16 @@ const PasswordField = ({
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
+  const { data: prefs } = useUserPreferences();
   const isAdmin = useIsAdmin();
   const { data: activity } = useActivityData();
-  // Prime the user_preferences cache in parallel with everything else on this page.
-  useUserPreferences();
+  const navigate = useNavigate();
+
+  const setup = useProfileSetup();
+  // The wizard takes over the page for users still missing a required field.
+  const wizardActive = setup.ready && setup.state.wizardActive;
+  // Steps 1–3 dim "More settings"; step 4 / returning users show it fully.
+  const dimSettings = wizardActive && setup.state.step < 4;
 
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
@@ -111,6 +128,10 @@ const Profile = () => {
   const [weightSaved, setWeightSaved] = useState(false);
   const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Standalone progression edit + plan generator.
+  const [progressionEditOpen, setProgressionEditOpen] = useState(false);
+  const [generatorOpen, setGeneratorOpen] = useState(false);
+
   // Password modal.
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -122,6 +143,7 @@ const Profile = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
+  const progressionKg = prefs?.progression_kg_per_week ?? PROGRESSION_DEFAULT;
   const displayName = profile?.display_name ?? "";
   const initials = (displayName[0] ?? "?").toUpperCase();
 
@@ -174,7 +196,7 @@ const Profile = () => {
     if (!val || val <= 0) return;
     if (profile?.body_weight && Number(profile.body_weight) === val) return;
     try {
-      await updateProfile.mutateAsync({ body_weight: val } as any);
+      await updateProfile.mutateAsync({ body_weight: val });
       flashWeightSaved();
     } catch {
       toast({ title: "Couldn't save body weight", variant: "destructive" });
@@ -184,6 +206,23 @@ const Profile = () => {
   const handleWeightChange = (value: string) => {
     setBodyWeight(value);
     saveWeightDebounced(value);
+  };
+
+  // Levels-card "Update weight": during setup, jump back to step 1; for a
+  // returning user, just open the inline body-weight editor (levels recalc
+  // automatically from profile.body_weight).
+  const handleUpdateWeight = () => {
+    if (wizardActive) {
+      setup.startWeightEdit();
+    } else {
+      setWeightExpanded(true);
+      setMobileTab("account");
+    }
+  };
+
+  const openProgressionEdit = () => {
+    setup.startProgressionEdit();
+    setProgressionEditOpen(true);
   };
 
   useEffect(
@@ -248,6 +287,7 @@ const Profile = () => {
 
   // Sections are visible on desktop always; on mobile only when their tab is active.
   const showIf = (tab: MobileTab) => (mobileTab === tab ? "" : "hidden lg:block");
+  const showProgressionSummary = !wizardActive || setup.state.step === 4;
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-6xl lg:px-8 lg:pb-8">
@@ -404,42 +444,77 @@ const Profile = () => {
               <p className="text-[11px] font-bold text-muted-foreground">
                 {bw
                   ? `Based on your body weight (${bw} kg)`
-                  : "Set your body weight to see your ranges"}
+                  : "Locked until you set your body weight"}
               </p>
             </div>
-            {bw && (
-              <div className="space-y-2">
-                {STRENGTH_LEVELS.map((level, idx) => {
-                  const val = Math.round(STRENGTH_RATIOS[idx] * bw);
-                  const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
-                  const range =
-                    idx === 0
-                      ? `< ${val} kg`
-                      : idx === STRENGTH_LEVELS.length - 1
-                      ? `≥ ${val} kg`
-                      : `${prevVal}–${val} kg`;
-                  return (
-                    <div key={level.label} className="flex items-center gap-3">
-                      <span className="text-xl w-6 text-center shrink-0">{level.icon}</span>
-                      <span className="text-sm font-bold text-foreground flex-1 truncate">
-                        {level.label}
-                      </span>
-                      <span className="text-sm font-bold text-muted-foreground tabular-nums shrink-0">
-                        {range}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+            {bw ? (
+              <>
+                <div className="space-y-2">
+                  {STRENGTH_LEVELS.map((level, idx) => {
+                    const val = Math.round(STRENGTH_RATIOS[idx] * bw);
+                    const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
+                    const range =
+                      idx === 0
+                        ? `< ${val} kg`
+                        : idx === STRENGTH_LEVELS.length - 1
+                        ? `≥ ${val} kg`
+                        : `${prevVal}–${val} kg`;
+                    return (
+                      <div key={level.label} className="flex items-center gap-3">
+                        <span className="text-xl w-6 text-center shrink-0">{level.icon}</span>
+                        <span className="text-sm font-bold text-foreground flex-1 truncate">
+                          {level.label}
+                        </span>
+                        <span className="text-sm font-bold text-muted-foreground tabular-nums shrink-0">
+                          {range}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleUpdateWeight}
+                  className="mt-3 flex items-center gap-1.5 text-xs font-extrabold text-primary hover:underline"
+                >
+                  <Scale className="w-3.5 h-3.5" /> Update weight
+                </button>
+              </>
+            ) : (
+              <LockedStrengthLevelsNote />
             )}
           </motion.section>
 
-          {/* Account rows card */}
+          {/* Weekly progression summary */}
+          {showProgressionSummary && (
+            <motion.section
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className={cn(
+                "rounded-2xl border-2 border-border bg-card p-4",
+                showIf("body")
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary shrink-0" />
+                <h3 className="font-display text-lg text-foreground">Weekly progression</h3>
+              </div>
+              <p className="mt-1.5 text-sm font-bold text-foreground">
+                +{progressionKg} kg added per week
+              </p>
+              <p className="text-[11px] font-semibold text-muted-foreground">
+                In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.
+              </p>
+            </motion.section>
+          )}
+
+          {/* Account rows card ("More settings") */}
           <motion.section
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className={cn(
-              "rounded-2xl border-2 border-border bg-card overflow-hidden divide-y divide-border",
+              "rounded-2xl border-2 border-border bg-card overflow-hidden divide-y divide-border transition-opacity",
+              dimSettings && "opacity-55",
               showIf("account")
             )}
           >
@@ -481,6 +556,23 @@ const Profile = () => {
                 </div>
               )}
             </div>
+
+            {/* Progression — opens step 3 standalone */}
+            <button
+              onClick={openProgressionEdit}
+              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
+            >
+              <TrendingUp className="w-5 h-5 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                  Progression
+                </p>
+                <p className="text-sm font-bold text-foreground">
+                  +{progressionKg} kg/week · change anytime
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
 
             {/* Change password — opens modal */}
             <button
@@ -534,12 +626,50 @@ const Profile = () => {
           </Button>
         </aside>
 
-        {/* Right column — Training preferences (+ admin tools) */}
+        {/* Right column — setup wizard (incomplete) or training preferences */}
         <main className={cn(showIf("training"), "space-y-4")}>
-          <TrainingPreferences />
-          {isAdmin && <AdminApiUsage />}
+          {!setup.ready ? null : wizardActive ? (
+            <ProfileSetupWizard
+              setup={setup}
+              onGoToWeek={() => navigate("/week")}
+              onImport={() =>
+                toast({
+                  title: "Plan saved 💪",
+                  description: "Tap “Import workout plan” below to add your program.",
+                })
+              }
+              onGenerate={() => setGeneratorOpen(true)}
+            />
+          ) : (
+            <>
+              <TrainingPreferences />
+              {isAdmin && <AdminApiUsage />}
+            </>
+          )}
         </main>
       </div>
+
+      {/* Standalone progression edit (from "More settings") */}
+      <Dialog
+        open={progressionEditOpen}
+        onOpenChange={(open) => setProgressionEditOpen(open)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-foreground">Progression</DialogTitle>
+          </DialogHeader>
+          <StepProgression setup={setup} onSaved={() => setProgressionEditOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan generator (own + generate) */}
+      <PlanGeneratorModal
+        open={generatorOpen}
+        onOpenChange={setGeneratorOpen}
+        days={setup.state.daysPerWeek ?? 5}
+        kgPerWeek={setup.state.kgPerWeek}
+        onGenerated={() => navigate("/week")}
+      />
 
       {/* Password modal */}
       <Dialog
