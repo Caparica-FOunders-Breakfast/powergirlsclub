@@ -18,13 +18,18 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
-import { PROGRESSION_DEFAULT, useUserPreferences } from "@/hooks/useUserPreferences";
+import {
+  PROGRESSION_DEFAULT,
+  useUserPreferences,
+  useSaveUserPreferences,
+} from "@/hooks/useUserPreferences";
 import { useProfileSetup } from "@/hooks/useProfileSetup";
 import { useActivityData } from "@/hooks/useActivityData";
 import {
   usePersonalWorkoutPlan,
   useSavePersonalDay,
 } from "@/hooks/usePersonalWorkoutPlan";
+import type { WorkoutDay } from "@/data/workoutPlan";
 import { supabase } from "@/integrations/supabase/client";
 import AdminApiUsage from "@/components/AdminApiUsage";
 import ImportWorkoutPlanModal from "@/components/ImportWorkoutPlanModal";
@@ -113,6 +118,7 @@ const Profile = () => {
   const { data: activity } = useActivityData();
   const { plan, mergedPlan } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
+  const savePrefs = useSaveUserPreferences();
   const navigate = useNavigate();
 
   const setup = useProfileSetup();
@@ -186,6 +192,53 @@ const Profile = () => {
         ),
     [trainingDays, mergedPlan],
   );
+
+  // Drag-and-drop day swaps on the "Your week" card. We show an optimistic
+  // arrangement while the two day writes + preferences update land, keyed on
+  // the server plan's content so the optimistic copy is dropped only once the
+  // refetch actually reflects it (no flicker back to the old order).
+  const [optimisticWeek, setOptimisticWeek] = useState<WorkoutDay[] | null>(null);
+  const planSig = useMemo(
+    () => plan.map((d) => `${d.label}|${d.emoji}|${d.isRest ? "r" : "t"}`).join(","),
+    [plan],
+  );
+  useEffect(() => {
+    setOptimisticWeek(null);
+  }, [planSig]);
+  const weekPlan = optimisticWeek ?? plan;
+
+  const dayPayload = (d: WorkoutDay, dayIndex: number) => ({
+    dayIndex,
+    exercises: d.exercises,
+    label: d.label,
+    emoji: d.emoji,
+    isRest: d.isRest,
+    isRecovery: d.isRecovery,
+    restNote: d.restNote,
+  });
+
+  const handleSwapDays = async (from: number, to: number) => {
+    if (!prefs || from === to) return;
+    const next = [...weekPlan];
+    [next[from], next[to]] = [next[to], next[from]];
+    setOptimisticWeek(next);
+    try {
+      await savePersonalDay.mutateAsync(dayPayload(next[from], from));
+      await savePersonalDay.mutateAsync(dayPayload(next[to], to));
+      const training = next
+        .map((d, i) => ({ d, i }))
+        .filter(({ d }) => !d.isRest)
+        .map(({ i }) => i);
+      await savePrefs.mutateAsync({ ...prefs, training_days: training });
+    } catch (e) {
+      setOptimisticWeek(null);
+      toast({
+        title: "Couldn't swap those days",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleStartEditName = () => {
     setName(displayName);
@@ -668,7 +721,7 @@ const Profile = () => {
                   <RefreshCw className="w-4 h-4" /> Set up again
                 </Button>
               </div>
-              <WeekPlanCard plan={plan} />
+              <WeekPlanCard plan={weekPlan} onSwap={handleSwapDays} />
               {isAdmin && <AdminApiUsage />}
             </>
           )}
