@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Calendar } from "lucide-react";
-import { motion, type PanInfo } from "framer-motion";
+import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { WorkoutDay } from "@/data/workoutPlan";
 
@@ -12,6 +12,9 @@ function clientPoint(e: MouseEvent | TouchEvent | PointerEvent): { x: number; y:
   const t = e.changedTouches?.[0] ?? e.touches?.[0];
   return t ? { x: t.clientX, y: t.clientY } : null;
 }
+
+// Snappy but soft spring shared by the lift, snap-back, and emoji pop.
+const SPRING = { type: "spring", stiffness: 550, damping: 32, mass: 0.7 } as const;
 
 /**
  * Read-only "Your week" plan display for the completed Profile — mirrors the
@@ -35,30 +38,35 @@ export function WeekPlanCard({
     .filter(({ day }) => !day.isRest);
 
   const cellRefs = useRef<Array<HTMLDivElement | null>>([]);
+  // Cell rects captured at drag start so hit-testing each frame doesn't force a
+  // layout reflow (the static cells don't move while one pill is dragged).
+  const rectsRef = useRef<Array<DOMRect | null>>([]);
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
   const draggable = !!onSwap;
 
-  // Which fixed weekday cell is the pointer currently over?
-  const targetAt = (e: MouseEvent | TouchEvent | PointerEvent): number | null => {
-    const p = clientPoint(e);
+  const targetAt = (p: { x: number; y: number } | null): number | null => {
     if (!p) return null;
-    for (let i = 0; i < cellRefs.current.length; i++) {
-      const el = cellRefs.current[i];
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      if (p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom) return i;
+    const rects = rectsRef.current;
+    for (let i = 0; i < rects.length; i++) {
+      const r = rects[i];
+      if (r && p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom) return i;
     }
     return null;
   };
 
+  const handleDragStart = (from: number) => () => {
+    rectsRef.current = cellRefs.current.map((el) => el?.getBoundingClientRect() ?? null);
+    setDragging(from);
+  };
+
   const handleDrag = (e: MouseEvent | TouchEvent | PointerEvent, _info: PanInfo) => {
-    setOver(targetAt(e));
+    setOver(targetAt(clientPoint(e)));
   };
 
   const handleDragEnd =
     (from: number) => (e: MouseEvent | TouchEvent | PointerEvent, _info: PanInfo) => {
-      const to = targetAt(e);
+      const to = targetAt(clientPoint(e));
       setDragging(null);
       setOver(null);
       if (onSwap && to != null && to !== from) onSwap(from, to);
@@ -81,36 +89,51 @@ export function WeekPlanCard({
           const isTraining = !day.isRest;
           const isOver = over === idx && dragging !== idx;
           const isDragged = dragging === idx;
+          const canDrag = draggable && isTraining;
           return (
             <div
               key={idx}
               ref={(el) => (cellRefs.current[idx] = el)}
-              className="relative"
+              className={cn("relative", isDragged && "z-50")}
             >
               <motion.div
-                drag={draggable && isTraining}
+                drag={canDrag}
                 dragSnapToOrigin
-                dragElastic={0.15}
-                onDragStart={() => setDragging(idx)}
+                dragMomentum={false}
+                dragTransition={{ bounceStiffness: 600, bounceDamping: 40 }}
+                onDragStart={handleDragStart(idx)}
                 onDrag={handleDrag}
                 onDragEnd={handleDragEnd(idx)}
-                whileDrag={{ scale: 1.08, zIndex: 50 }}
+                whileHover={canDrag ? { y: -2 } : undefined}
+                whileTap={canDrag ? { scale: 0.96 } : undefined}
+                whileDrag={{ scale: 1.12, zIndex: 50, cursor: "grabbing" }}
+                transition={SPRING}
+                animate={{ scale: isOver ? 1.06 : 1 }}
+                style={{ willChange: "transform" }}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-xl border-2 py-2 transition-colors",
+                  "flex flex-col items-center gap-1 rounded-xl border-2 py-2 transition-colors duration-150",
                   isTraining
                     ? "border-primary/40 bg-primary/5"
                     : "border-border bg-background opacity-60",
-                  draggable && isTraining && "cursor-grab active:cursor-grabbing touch-none",
-                  isOver && "border-primary ring-2 ring-primary/40 bg-primary/10 opacity-100",
-                  isDragged && "relative shadow-lg",
+                  canDrag && "cursor-grab touch-none",
+                  isOver && "border-primary bg-primary/10 opacity-100 shadow-md shadow-primary/20",
+                  isDragged && "shadow-xl shadow-primary/25",
                 )}
               >
                 <span className="text-[10px] font-bold text-muted-foreground">
                   {DAY_LETTERS[idx]}
                 </span>
-                <span className="text-lg leading-none">
-                  {isTraining ? day.emoji : "🧘"}
-                </span>
+                <div className="relative flex h-6 w-full items-center justify-center">
+                  <motion.span
+                    key={isTraining ? `w:${day.label}:${day.emoji}` : "rest"}
+                    initial={{ scale: 0.3, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={SPRING}
+                    className="absolute text-lg leading-none"
+                  >
+                    {isTraining ? day.emoji : "🧘"}
+                  </motion.span>
+                </div>
               </motion.div>
             </div>
           );
@@ -118,13 +141,23 @@ export function WeekPlanCard({
       </div>
 
       <ul className="mt-4 space-y-1.5">
-        {training.map(({ day, idx }) => (
-          <li key={idx} className="flex items-center gap-2 text-sm">
-            <span className="shrink-0">{day.emoji}</span>
-            <span className="font-bold text-foreground">{day.day}</span>
-            <span className="truncate text-muted-foreground">· {day.label}</span>
-          </li>
-        ))}
+        <AnimatePresence initial={false} mode="popLayout">
+          {training.map(({ day, idx }) => (
+            <motion.li
+              key={idx}
+              layout
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 8 }}
+              transition={SPRING}
+              className="flex items-center gap-2 text-sm"
+            >
+              <span className="shrink-0">{day.emoji}</span>
+              <span className="font-bold text-foreground">{day.day}</span>
+              <span className="truncate text-muted-foreground">· {day.label}</span>
+            </motion.li>
+          ))}
+        </AnimatePresence>
       </ul>
 
       <p className="mt-3 text-[11px] font-semibold text-muted-foreground">
