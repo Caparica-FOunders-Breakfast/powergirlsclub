@@ -193,11 +193,10 @@ const Profile = () => {
     [trainingDays, mergedPlan],
   );
 
-  // Drag-and-drop day swaps on the "Your week" card. The card owns the visual
-  // arrangement + swap animation and hands us the resulting week to persist:
-  // we write the two changed weekday slots and update training_days. Since a
-  // swap only relocates workouts, the training-day count (frequency) is stable.
-  // Rethrow on failure so the card can animate its optimistic order back.
+  // Drag-and-drop reordering on the "Your week" card. The card owns the visual
+  // arrangement (tiles make room as you drag) and hands us the resulting week
+  // plus the weekday columns whose workout changed. We write those columns and
+  // recompute training_days. Rethrow on failure so the card can animate back.
   const dayPayload = (d: WorkoutDay, dayIndex: number) => ({
     dayIndex,
     exercises: d.exercises,
@@ -208,11 +207,12 @@ const Profile = () => {
     restNote: d.restNote,
   });
 
-  const handleSwapDays = async (from: number, to: number, next: WorkoutDay[]) => {
-    if (!prefs || from === to) return;
+  const handleReorderDays = async (next: WorkoutDay[], changed: number[]) => {
+    if (!prefs || changed.length === 0) return;
     try {
-      await savePersonalDay.mutateAsync(dayPayload(next[from], from));
-      await savePersonalDay.mutateAsync(dayPayload(next[to], to));
+      for (const col of changed) {
+        await savePersonalDay.mutateAsync(dayPayload(next[col], col));
+      }
       const training = next
         .map((d, i) => ({ d, i }))
         .filter(({ d }) => !d.isRest)
@@ -220,7 +220,7 @@ const Profile = () => {
       await savePrefs.mutateAsync({ ...prefs, training_days: training });
     } catch (e) {
       toast({
-        title: "Couldn't swap those days",
+        title: "Couldn't move that day",
         description: e instanceof Error ? e.message : undefined,
         variant: "destructive",
       });
@@ -709,7 +709,7 @@ const Profile = () => {
                   <RefreshCw className="w-4 h-4" /> Set up again
                 </Button>
               </div>
-              <WeekPlanCard plan={plan} onSwap={handleSwapDays} />
+              <WeekPlanCard plan={plan} onReorder={handleReorderDays} />
               {isAdmin && <AdminApiUsage />}
             </>
           )}
