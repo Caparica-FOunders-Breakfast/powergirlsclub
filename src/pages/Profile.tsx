@@ -513,84 +513,6 @@ const Profile = () => {
             ))}
           </motion.section>
 
-          {/* Strength Levels reference card */}
-          <motion.section
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className={cn(
-              "rounded-2xl border-2 border-border bg-card p-4",
-              showIf("body")
-            )}
-          >
-            <div className="mb-3">
-              <h3 className="font-display text-lg text-foreground">Your Strength Levels</h3>
-              <p className="text-[11px] font-bold text-muted-foreground">
-                {bw
-                  ? `Based on your body weight (${bw} kg)`
-                  : "Locked until you set your body weight"}
-              </p>
-            </div>
-            {bw ? (
-              <>
-                <div className="space-y-2">
-                  {STRENGTH_LEVELS.map((level, idx) => {
-                    const val = Math.round(STRENGTH_RATIOS[idx] * bw);
-                    const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
-                    const range =
-                      idx === 0
-                        ? `< ${val} kg`
-                        : idx === STRENGTH_LEVELS.length - 1
-                        ? `≥ ${val} kg`
-                        : `${prevVal}–${val} kg`;
-                    return (
-                      <div key={level.label} className="flex items-center gap-3">
-                        <span className="text-xl w-6 text-center shrink-0">{level.icon}</span>
-                        <span className="text-sm font-bold text-foreground flex-1 truncate">
-                          {level.label}
-                        </span>
-                        <span className="text-sm font-bold text-muted-foreground tabular-nums shrink-0">
-                          {range}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleUpdateWeight}
-                  className="mt-3 flex items-center gap-1.5 text-xs font-extrabold text-primary hover:underline"
-                >
-                  <Scale className="w-3.5 h-3.5" /> Update weight
-                </button>
-              </>
-            ) : (
-              <LockedStrengthLevelsNote />
-            )}
-          </motion.section>
-
-          {/* Weekly progression summary */}
-          {showProgressionSummary && (
-            <motion.section
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className={cn(
-                "rounded-2xl border-2 border-border bg-card p-4",
-                showIf("body")
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary shrink-0" />
-                <h3 className="font-display text-lg text-foreground">Weekly progression</h3>
-              </div>
-              <p className="mt-1.5 text-sm font-bold text-foreground">
-                +{progressionKg} kg added per week
-              </p>
-              <p className="text-[11px] font-semibold text-muted-foreground">
-                In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.
-              </p>
-            </motion.section>
-          )}
-
           {/* Account rows card ("More settings") */}
           <motion.section
             initial={{ y: 10, opacity: 0 }}
@@ -709,15 +631,17 @@ const Profile = () => {
           </Button>
         </aside>
 
-        {/* Right column — setup wizard (incomplete) or training preferences */}
-        <main className={cn(showIf("training"), "space-y-4")}>
+        {/* Right column — setup wizard (incomplete) or training + body cards */}
+        <main className="space-y-4">
           {!setup.ready ? null : wizardActive ? (
-            <ProfileSetupWizard
-              setup={setup}
-              onGoToWeek={() => navigate("/week")}
-              onImport={() => setImportOpen(true)}
-              onGenerate={() => setGeneratorOpen(true)}
-            />
+            <div className={showIf("training")}>
+              <ProfileSetupWizard
+                setup={setup}
+                onGoToWeek={() => navigate("/week")}
+                onImport={() => setImportOpen(true)}
+                onGenerate={() => setGeneratorOpen(true)}
+              />
+            </div>
           ) : (
             <>
               <section
@@ -726,6 +650,7 @@ const Profile = () => {
                   travelMode
                     ? "border-primary bg-primary/5"
                     : "border-border bg-card",
+                  showIf("training"),
                 )}
               >
                 <div
@@ -750,13 +675,97 @@ const Profile = () => {
                   aria-label="Toggle travel mode"
                 />
               </section>
-              <WeekPlanCard
-                plan={plan}
-                onReorder={travelMode ? undefined : handleReorderDays}
-                travelMode={travelMode}
-                onSetUpAgain={setup.restartWizard}
-              />
-              {isAdmin && <AdminApiUsage />}
+              <div className={showIf("training")}>
+                <WeekPlanCard
+                  plan={plan}
+                  onReorder={travelMode ? undefined : handleReorderDays}
+                  travelMode={travelMode}
+                  onSetUpAgain={setup.restartWizard}
+                />
+              </div>
+
+              {/* Body cards — moved here to balance the wide right column. */}
+              <div className={showIf("body")}>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {/* Strength Levels reference card */}
+                  <motion.section
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="rounded-2xl border-2 border-border bg-card p-4"
+                  >
+                    <div className="mb-3">
+                      <h3 className="font-display text-lg text-foreground">Your Strength Levels</h3>
+                      <p className="text-[11px] font-bold text-muted-foreground">
+                        {bw
+                          ? `Based on your body weight (${bw} kg)`
+                          : "Locked until you set your body weight"}
+                      </p>
+                    </div>
+                    {bw ? (
+                      <>
+                        <div className="space-y-2">
+                          {STRENGTH_LEVELS.map((level, idx) => {
+                            const val = Math.round(STRENGTH_RATIOS[idx] * bw);
+                            const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
+                            const range =
+                              idx === 0
+                                ? `< ${val} kg`
+                                : idx === STRENGTH_LEVELS.length - 1
+                                ? `≥ ${val} kg`
+                                : `${prevVal}–${val} kg`;
+                            return (
+                              <div key={level.label} className="flex items-center gap-3">
+                                <span className="text-xl w-6 text-center shrink-0">{level.icon}</span>
+                                <span className="text-sm font-bold text-foreground flex-1 truncate">
+                                  {level.label}
+                                </span>
+                                <span className="text-sm font-bold text-muted-foreground tabular-nums shrink-0">
+                                  {range}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleUpdateWeight}
+                          className="mt-3 flex items-center gap-1.5 text-xs font-extrabold text-primary hover:underline"
+                        >
+                          <Scale className="w-3.5 h-3.5" /> Update weight
+                        </button>
+                      </>
+                    ) : (
+                      <LockedStrengthLevelsNote />
+                    )}
+                  </motion.section>
+
+                  {/* Weekly progression summary */}
+                  {showProgressionSummary && (
+                    <motion.section
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      className="rounded-2xl border-2 border-border bg-card p-4"
+                    >
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-primary shrink-0" />
+                        <h3 className="font-display text-lg text-foreground">Weekly progression</h3>
+                      </div>
+                      <p className="mt-1.5 text-sm font-bold text-foreground">
+                        +{progressionKg} kg added per week
+                      </p>
+                      <p className="text-[11px] font-semibold text-muted-foreground">
+                        In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.
+                      </p>
+                    </motion.section>
+                  )}
+                </div>
+              </div>
+
+              {isAdmin && (
+                <div className={showIf("training")}>
+                  <AdminApiUsage />
+                </div>
+              )}
             </>
           )}
         </main>
