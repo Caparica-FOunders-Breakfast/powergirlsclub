@@ -5,64 +5,63 @@ import { type Exercise } from "@/data/workoutPlan";
  * the user's normal plan while they're away from a gym. Nothing here is stored
  * — `usePersonalWorkoutPlan` swaps these in at read time when travel mode is on,
  * matching each training day's theme (from its label) to a fitting routine.
+ *
+ * Every move is a simple bodyweight 3 × 10 so there's no weight to track.
  */
 
-const bw = (
-  name: string,
-  reps: string,
-  opts: Partial<Exercise> = {},
-): Exercise => ({
+const bw = (name: string): Exercise => ({
   name,
   sets: 3,
-  reps,
+  reps: "10",
   suggestedWeight: "Bodyweight",
-  progression: opts.isTimeBased ? "Increase time" : "Add reps or slow the tempo",
+  progression: "Add reps or slow the tempo",
   isBodyweight: true,
-  ...opts,
 });
 
 const LOWER: Exercise[] = [
-  bw("Bodyweight Squats", "15–20"),
-  bw("Reverse Lunges", "12 each leg"),
-  bw("Glute Bridges", "20"),
-  bw("Bulgarian Split Squats", "10 each leg"),
-  bw("Calf Raises", "20"),
-  bw("Wall Sit", "45 sec", { isTimeBased: true }),
-];
+  "Bodyweight Squats",
+  "Reverse Lunges",
+  "Glute Bridges",
+  "Bulgarian Split Squats",
+  "Calf Raises",
+  "Squat Pulses",
+].map(bw);
 
 const UPPER: Exercise[] = [
-  bw("Push Ups", "10–15"),
-  bw("Pike Push Ups", "8–12"),
-  bw("Bench / Park Dips", "10–12"),
-  bw("Pull Ups (park bar)", "5–8"),
-  bw("Inverted Rows (low bar)", "10"),
-  bw("Superman Hold", "30 sec", { isTimeBased: true }),
-];
+  "Push Ups",
+  "Pike Push Ups",
+  "Bench / Park Dips",
+  "Pull Ups (park bar)",
+  "Inverted Rows (low bar)",
+  "Superman",
+].map(bw);
 
 const CORE: Exercise[] = [
-  bw("Plank", "45 sec", { isTimeBased: true }),
-  bw("Hanging or Lying Leg Raises", "12"),
-  bw("Dead Bug", "10 each side"),
-  bw("Side Plank", "30 sec each side", { isTimeBased: true }),
-  bw("Mountain Climbers", "30 sec", { isTimeBased: true }),
-];
+  "Crunches",
+  "Leg Raises",
+  "Dead Bug",
+  "Bicycle Crunches",
+  "Russian Twists",
+  "Sit Ups",
+].map(bw);
 
 const CONDITIONING: Exercise[] = [
-  bw("Burpees", "10", { isRoundsBased: true }),
-  bw("Jump Squats", "15"),
-  bw("High Knees", "40 sec", { isTimeBased: true }),
-  bw("Mountain Climbers", "40 sec", { isTimeBased: true }),
-  bw("Plank to Push Up", "10"),
-];
+  "Burpees",
+  "Jump Squats",
+  "Mountain Climbers",
+  "High Knees",
+  "Plank to Push Up",
+  "Squat Thrusts",
+].map(bw);
 
 const FULL_BODY: Exercise[] = [
-  bw("Push Ups", "12"),
-  bw("Bodyweight Squats", "20"),
-  bw("Reverse Lunges", "10 each leg"),
-  bw("Park Dips", "10"),
-  bw("Plank", "45 sec", { isTimeBased: true }),
-  bw("Burpees", "10", { isRoundsBased: true }),
-];
+  "Push Ups",
+  "Bodyweight Squats",
+  "Reverse Lunges",
+  "Park Dips",
+  "Sit Ups",
+  "Burpees",
+].map(bw);
 
 /** Pick a bodyweight routine for a training day based on its label/theme. */
 export function travelExercisesFor(label: string): Exercise[] {
