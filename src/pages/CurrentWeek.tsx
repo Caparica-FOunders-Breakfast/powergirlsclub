@@ -4,7 +4,13 @@ import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, Play, 
 import { useExerciseLogs, useSaveExerciseLog, usePriorExerciseWeights } from "@/hooks/useExerciseLogs";
 import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { useProfile } from "@/hooks/useProfile";
-import { usePersonalWorkoutPlan, useSavePersonalDay, useResetPersonalDay } from "@/hooks/usePersonalWorkoutPlan";
+import {
+  usePersonalWorkoutPlan,
+  useSavePersonalDay,
+  useResetPersonalDay,
+  useSaveTravelDay,
+  useResetTravelDay,
+} from "@/hooks/usePersonalWorkoutPlan";
 import ExerciseEditor from "@/components/ExerciseEditor";
 
 import { Button } from "@/components/ui/button";
@@ -53,9 +59,12 @@ const CurrentWeek = () => {
   const progress = useChallengeProgress(challenge?.start_date ?? null);
   const { data: profile } = useProfile();
   const bodyWeight = profile?.body_weight ?? 70;
-  const { plan: weeklyPlan, hasCustom } = usePersonalWorkoutPlan();
+  const { plan: weeklyPlan, hasCustom, hasTravelCustom, travelMode } =
+    usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
+  const saveTravelDay = useSaveTravelDay();
+  const resetTravelDay = useResetTravelDay();
   const { toast } = useToast();
 
   const now = new Date();
@@ -440,22 +449,41 @@ const CurrentWeek = () => {
                             <ExerciseEditor
                               day={day}
                               dayIndex={dayIdx}
-                              hasCustom={hasCustom(dayIdx)}
+                              hasCustom={travelMode ? hasTravelCustom(dayIdx) : hasCustom(dayIdx)}
                               onSave={(exercises) => {
-                                savePersonalDay.mutate({
-                                  dayIndex: dayIdx,
-                                  exercises,
-                                  label: day.label,
-                                  emoji: day.emoji,
-                                  isRest: day.isRest,
-                                  isRecovery: day.isRecovery,
-                                  restNote: day.restNote,
-                                });
+                                if (travelMode) {
+                                  // Persist travel edits separately — never touch the normal plan.
+                                  saveTravelDay.mutate({
+                                    dayIndex: dayIdx,
+                                    exercises,
+                                    label: day.label,
+                                    emoji: day.emoji,
+                                  });
+                                } else {
+                                  savePersonalDay.mutate({
+                                    dayIndex: dayIdx,
+                                    exercises,
+                                    label: day.label,
+                                    emoji: day.emoji,
+                                    isRest: day.isRest,
+                                    isRecovery: day.isRecovery,
+                                    restNote: day.restNote,
+                                  });
+                                }
                               }}
                               onReset={() => {
-                                resetPersonalDay.mutate(dayIdx);
+                                if (travelMode) {
+                                  resetTravelDay.mutate(dayIdx);
+                                } else {
+                                  resetPersonalDay.mutate(dayIdx);
+                                }
                                 setEditingDay(null);
-                                toast({ description: "Reset to default exercises", duration: 1500 });
+                                toast({
+                                  description: travelMode
+                                    ? "Reset to the default travel workout"
+                                    : "Reset to default exercises",
+                                  duration: 1500,
+                                });
                               }}
                               onClose={() => setEditingDay(null)}
                             />

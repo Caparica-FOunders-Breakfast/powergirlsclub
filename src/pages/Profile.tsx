@@ -762,7 +762,7 @@ const Profile = () => {
               </section>
               <WeekPlanCard
                 plan={plan}
-                onReorder={handleReorderDays}
+                onReorder={travelMode ? undefined : handleReorderDays}
                 travelMode={travelMode}
               />
               {isAdmin && <AdminApiUsage />}

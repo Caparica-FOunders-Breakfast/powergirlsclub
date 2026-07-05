@@ -6,6 +6,11 @@ import { useUserPreferences, useTravelMode } from "@/hooks/useUserPreferences";
 import { weeklyPlan, type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { travelExercisesFor } from "@/data/travelPlan";
 
+// Travel-day plans are stored in the same table at an offset index (Monday
+// travel = 100, …) so a user's temporary bodyweight edits live completely
+// apart from their normal plan (indices 0–6) and never overwrite it.
+export const TRAVEL_DAY_OFFSET = 100;
+
 const isStartDateActive = (startDate: string): boolean => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -85,11 +90,18 @@ export const usePersonalWorkoutPlan = () => {
   // as travel mode is switched off. Rest days stay rest.
   const travelMode = !!travelModeData;
   if (travelMode) {
-    plan = plan.map((day) =>
-      day.isRest
-        ? day
-        : { ...day, exercises: travelExercisesFor(day.label) },
-    );
+    plan = plan.map((day, idx) => {
+      if (day.isRest) return day;
+      // Use the user's saved travel edits for this day if any, else the
+      // curated bodyweight routine for the day's theme.
+      const travelRow = customPlans?.find(
+        (c: any) => c.day_index === idx + TRAVEL_DAY_OFFSET,
+      );
+      const exercises = travelRow?.exercises
+        ? (travelRow.exercises as Exercise[])
+        : travelExercisesFor(day.label);
+      return { ...day, exercises };
+    });
   }
 
   return {
@@ -98,6 +110,9 @@ export const usePersonalWorkoutPlan = () => {
     travelMode,
     isLoading: defaultsLoading || customLoading,
     hasCustom: (dayIdx: number) => !!customPlans?.find((c: any) => c.day_index === dayIdx),
+    /** Whether the user has saved edits for this day's travel workout. */
+    hasTravelCustom: (dayIdx: number) =>
+      !!customPlans?.find((c: any) => c.day_index === dayIdx + TRAVEL_DAY_OFFSET),
   };
 };
 
@@ -153,6 +168,71 @@ export const useSavePersonalDay = () => {
   });
 };
 
+/** Save edits to a travel-day workout. Stored at the offset index so it never
+ *  touches the normal plan, and it doesn't flip plan_type (travel is temporary).
+ *  `dayIndex` is the real weekday (0–6). */
+export const useSaveTravelDay = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      dayIndex,
+      exercises,
+      label,
+      emoji,
+    }: {
+      dayIndex: number;
+      exercises: Exercise[];
+      label?: string;
+      emoji?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("user_workout_plans" as any)
+        .upsert(
+          {
+            user_id: user!.id,
+            day_index: dayIndex + TRAVEL_DAY_OFFSET,
+            exercises: exercises as any,
+            label: label || null,
+            emoji: emoji || null,
+            is_rest: false,
+            is_recovery: false,
+            rest_note: null,
+          } as any,
+          { onConflict: "user_id,day_index" },
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["personal-workout-plan"] });
+    },
+  });
+};
+
+/** Drop travel-day edits so the day falls back to the curated routine. */
+export const useResetTravelDay = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (dayIndex: number) => {
+      const { error } = await supabase
+        .from("user_workout_plans" as any)
+        .delete()
+        .eq("user_id", user!.id)
+        .eq("day_index", dayIndex + TRAVEL_DAY_OFFSET);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["personal-workout-plan"] });
+    },
+  });
+};
+
 export const useResetPersonalDay = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -172,6 +252,7 @@ export const useResetPersonalDay = () => {
         .from("user_workout_plans" as never)
         .select("id")
         .eq("user_id", user!.id)
+        .lt("day_index", TRAVEL_DAY_OFFSET) // ignore travel-day rows
         .limit(1);
       if (countError) {
         console.warn("[useResetPersonalDay] couldn't check remaining custom days", countError);
