@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDefaultWorkoutPlan } from "@/hooks/useDefaultWorkoutPlan";
-import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { useUserPreferences, useTravelMode } from "@/hooks/useUserPreferences";
 import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
+import { travelExercisesFor } from "@/data/travelPlan";
 
 const isStartDateActive = (startDate: string): boolean => {
   const today = new Date();
@@ -16,6 +17,7 @@ export const usePersonalWorkoutPlan = () => {
   const { user } = useAuth();
   const { plan: defaultPlan, isLoading: defaultsLoading } = useDefaultWorkoutPlan();
   const { data: preferences } = useUserPreferences();
+  const { data: travelModeData } = useTravelMode();
 
   const { data: customPlans, isLoading: customLoading } = useQuery({
     queryKey: ["personal-workout-plan", user?.id],
@@ -66,9 +68,23 @@ export const usePersonalWorkoutPlan = () => {
     });
   }
 
+  // Step 3: travel mode — swap each training day's exercises for a bodyweight /
+  // calisthenics routine matching that day's theme. Non-destructive: this only
+  // overlays the derived `plan`; the saved plan is untouched and returns as soon
+  // as travel mode is switched off. Rest days stay rest.
+  const travelMode = !!travelModeData;
+  if (travelMode) {
+    plan = plan.map((day) =>
+      day.isRest
+        ? day
+        : { ...day, exercises: travelExercisesFor(day.label) },
+    );
+  }
+
   return {
     plan,
     mergedPlan,
+    travelMode,
     isLoading: defaultsLoading || customLoading,
     hasCustom: (dayIdx: number) => !!customPlans?.find((c: any) => c.day_index === dayIdx),
   };

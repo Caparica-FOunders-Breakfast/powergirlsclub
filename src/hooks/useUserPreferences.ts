@@ -150,3 +150,46 @@ export const useSetPlanType = () => {
     },
   });
 };
+
+/** Reads just the travel_mode flag, isolated from the main prefs query so a
+ *  missing column (before the migration runs) can't break preference loading —
+ *  it just resolves to `false`. */
+export const useTravelMode = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["travel-mode", user?.id],
+    queryFn: async (): Promise<boolean> => {
+      const { data, error } = await supabase
+        .from("user_preferences" as any)
+        .select("travel_mode")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) return false; // column not present yet → treat as off
+      return !!(data as any)?.travel_mode;
+    },
+    enabled: !!user,
+  });
+};
+
+/** Toggle travel mode. Kept as its own upsert (like plan_type) so the regular
+ *  prefs write path never touches it, and vice-versa. */
+export const useSetTravelMode = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (travelMode: boolean) => {
+      const { error } = await supabase
+        .from("user_preferences" as any)
+        .upsert(
+          { user_id: user!.id, travel_mode: travelMode } as any,
+          { onConflict: "user_id" },
+        );
+      if (error) throw error;
+      return travelMode;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["travel-mode"] });
+      queryClient.invalidateQueries({ queryKey: ["personal-workout-plan"] });
+    },
+  });
+};
