@@ -193,20 +193,11 @@ const Profile = () => {
     [trainingDays, mergedPlan],
   );
 
-  // Drag-and-drop day swaps on the "Your week" card. We show an optimistic
-  // arrangement while the two day writes + preferences update land, keyed on
-  // the server plan's content so the optimistic copy is dropped only once the
-  // refetch actually reflects it (no flicker back to the old order).
-  const [optimisticWeek, setOptimisticWeek] = useState<WorkoutDay[] | null>(null);
-  const planSig = useMemo(
-    () => plan.map((d) => `${d.label}|${d.emoji}|${d.isRest ? "r" : "t"}`).join(","),
-    [plan],
-  );
-  useEffect(() => {
-    setOptimisticWeek(null);
-  }, [planSig]);
-  const weekPlan = optimisticWeek ?? plan;
-
+  // Drag-and-drop day swaps on the "Your week" card. The card owns the visual
+  // arrangement + swap animation and hands us the resulting week to persist:
+  // we write the two changed weekday slots and update training_days. Since a
+  // swap only relocates workouts, the training-day count (frequency) is stable.
+  // Rethrow on failure so the card can animate its optimistic order back.
   const dayPayload = (d: WorkoutDay, dayIndex: number) => ({
     dayIndex,
     exercises: d.exercises,
@@ -217,11 +208,8 @@ const Profile = () => {
     restNote: d.restNote,
   });
 
-  const handleSwapDays = async (from: number, to: number) => {
+  const handleSwapDays = async (from: number, to: number, next: WorkoutDay[]) => {
     if (!prefs || from === to) return;
-    const next = [...weekPlan];
-    [next[from], next[to]] = [next[to], next[from]];
-    setOptimisticWeek(next);
     try {
       await savePersonalDay.mutateAsync(dayPayload(next[from], from));
       await savePersonalDay.mutateAsync(dayPayload(next[to], to));
@@ -231,12 +219,12 @@ const Profile = () => {
         .map(({ i }) => i);
       await savePrefs.mutateAsync({ ...prefs, training_days: training });
     } catch (e) {
-      setOptimisticWeek(null);
       toast({
         title: "Couldn't swap those days",
         description: e instanceof Error ? e.message : undefined,
         variant: "destructive",
       });
+      throw e;
     }
   };
 
@@ -721,7 +709,7 @@ const Profile = () => {
                   <RefreshCw className="w-4 h-4" /> Set up again
                 </Button>
               </div>
-              <WeekPlanCard plan={weekPlan} onSwap={handleSwapDays} />
+              <WeekPlanCard plan={plan} onSwap={handleSwapDays} />
               {isAdmin && <AdminApiUsage />}
             </>
           )}
