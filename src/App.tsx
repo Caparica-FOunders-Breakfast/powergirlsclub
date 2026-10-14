@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { AdminProvider, useIsAdmin } from "@/contexts/AdminContext";
+import { AdminProvider, useAdminView } from "@/contexts/AdminContext";
 import { AppSidebar, BottomNav, AppHeader, SidebarProvider } from "@/components/Navigation";
 import FeatureGate from "@/components/FeatureGate";
 import Auth from "@/pages/Auth";
@@ -38,9 +38,12 @@ const PROTECTED_PATHS = [
   "/users",
 ];
 
+// Gate admin-only pages on the *real* admin role, not the view toggle, so a
+// real admin can always open /dashboard, /learn, /meals, etc. directly by URL
+// — even while previewing the app in "user" view. Non-admins are still bounced.
 const AdminOnly = ({ children }: { children: JSX.Element }) => {
-  const isAdmin = useIsAdmin();
-  return isAdmin ? children : <Navigate to="/week" replace />;
+  const { isRealAdmin } = useAdminView();
+  return isRealAdmin ? children : <Navigate to="/week" replace />;
 };
 
 const ProtectedLayout = () => {
@@ -86,7 +89,8 @@ const ProtectedLayout = () => {
                   </AdminOnly>
                 }
               />
-              <Route path="/teams" element={<AdminOnly><TeamManagement /></AdminOnly>} />
+              {/* Teams & Challenges are open to all members, not admin-only. */}
+              <Route path="/teams" element={<TeamManagement />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/more" element={<AdminOnly><More /></AdminOnly>} />
               <Route path="/dashboard" element={<AdminOnly><Dashboard /></AdminOnly>} />

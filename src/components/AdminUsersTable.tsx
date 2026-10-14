@@ -31,7 +31,7 @@ interface AdminUserRow {
   avatar_color: string;
   joined_at: string | null;
   last_active_at: string | null;
-  workouts_this_month: number;
+  workout_days: number;
   training_days_per_week: number | null;
   plan_type: "default" | "custom";
   body_weight: number | null;
@@ -100,16 +100,12 @@ const AdminUsersTable = () => {
     queryKey: ["admin-users-direct", user?.id ?? null],
     queryFn: async () => {
       const warnings: string[] = [];
-      const monthStart = new Date();
-      monthStart.setUTCDate(1);
-      monthStart.setUTCHours(0, 0, 0, 0);
 
       // Step 1: profiles is the only query we *must* succeed. RLS on it is
       // `USING (true)` for all authenticated users, so this should always work.
       const profilesRes = await supabase
         .from("profiles")
         .select("user_id, display_name, avatar_color, body_weight, team_id, created_at");
-      console.log("[AdminUsersTable] profiles result:", profilesRes);
 
       if (profilesRes.error || !profilesRes.data) {
         console.error("[AdminUsersTable] profiles query failed:", profilesRes.error);
@@ -122,7 +118,6 @@ const AdminUsersTable = () => {
             .select("user_id, display_name, avatar_color, body_weight, team_id, created_at")
             .eq("user_id", user.id)
             .maybeSingle();
-          console.log("[AdminUsersTable] self-only fallback result:", selfRes);
           if (!selfRes.error && selfRes.data) {
             const p = selfRes.data;
             return {
@@ -134,7 +129,7 @@ const AdminUsersTable = () => {
                   avatar_color: p.avatar_color ?? "#FF2D87",
                   joined_at: p.created_at ?? null,
                   last_active_at: null,
-                  workouts_this_month: 0,
+                  workout_days: 0,
                   training_days_per_week: null,
                   plan_type: "default" as const,
                   body_weight: (p as { body_weight: number | null }).body_weight ?? null,
@@ -166,8 +161,6 @@ const AdminUsersTable = () => {
           .select("user_id, completed_at")
           .eq("completed", true),
       ]);
-      console.log("[AdminUsersTable] prefs result:", prefsRes);
-      console.log("[AdminUsersTable] logs result:", logsRes);
 
       if (prefsRes.error) {
         console.warn("[AdminUsersTable] user_preferences read failed:", prefsRes.error);
@@ -191,17 +184,16 @@ const AdminUsersTable = () => {
         prefsByUser.set(p.user_id as string, p as never);
       }
 
-      // workouts_this_month = distinct (user, day) pairs with completed_at
-      // in the current month. last_active_at = latest completed_at overall.
+      // workout_days = distinct calendar days the user has ever completed an
+      // exercise (all-time), so this matches the Scorecard's "Workouts" count
+      // instead of only the current month. last_active_at = latest overall.
       const workoutDays = new Map<string, Set<string>>();
       const lastActive = new Map<string, string>();
       for (const log of (logsRes.data ?? []) as Array<{ user_id: string; completed_at: string | null }>) {
         if (!log.completed_at) continue;
         const day = log.completed_at.slice(0, 10);
-        if (log.completed_at >= monthStart.toISOString()) {
-          if (!workoutDays.has(log.user_id)) workoutDays.set(log.user_id, new Set());
-          workoutDays.get(log.user_id)!.add(day);
-        }
+        if (!workoutDays.has(log.user_id)) workoutDays.set(log.user_id, new Set());
+        workoutDays.get(log.user_id)!.add(day);
         const prev = lastActive.get(log.user_id);
         if (!prev || log.completed_at > prev) {
           lastActive.set(log.user_id, log.completed_at);
@@ -220,7 +212,7 @@ const AdminUsersTable = () => {
           avatar_color: p.avatar_color ?? "#FF2D87",
           joined_at: p.created_at ?? null,
           last_active_at: lastActive.get(p.user_id) ?? null,
-          workouts_this_month: workoutDays.get(p.user_id)?.size ?? 0,
+          workout_days: workoutDays.get(p.user_id)?.size ?? 0,
           training_days_per_week: prefs?.frequency ?? null,
           // Null/empty plan_type = the user hasn't customized → Default.
           plan_type: prefs?.plan_type === "custom" ? "custom" : "default",
@@ -239,7 +231,6 @@ const AdminUsersTable = () => {
         return a.display_name.localeCompare(b.display_name);
       });
 
-      console.log(`[AdminUsersTable] loaded ${users.length} users (${warnings.length} warnings)`);
       return { users, warnings };
     },
     staleTime: 60_000,
@@ -351,7 +342,7 @@ const AdminUsersTable = () => {
                         {formatRelative(u.last_active_at)}
                       </TableCell>
                       <TableCell className="py-2 text-right font-bold tabular-nums">
-                        {u.workouts_this_month}
+                        {u.workout_days}
                       </TableCell>
                       <TableCell className="py-2 text-right hidden sm:table-cell text-muted-foreground tabular-nums">
                         {u.training_days_per_week ?? "—"}

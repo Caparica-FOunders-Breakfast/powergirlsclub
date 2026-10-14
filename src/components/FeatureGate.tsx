@@ -12,13 +12,20 @@ interface FeatureGateProps {
  * Render `children` only when the named flag is enabled.
  * When disabled, show a friendly "coming soon" placeholder.
  *
- * While the flag query is still in flight we render the children — the
- * defaults in useFeatureFlags() are all-on, so this matches the optimistic
- * behavior the rest of the app expects.
+ * While the flag query is still in flight we show a neutral loader rather
+ * than the children. Rendering the children optimistically meant a disabled
+ * feature briefly flashed its real UI (e.g. the meal "7-DAY PLAN BUILDER")
+ * before the "coming soon" placeholder replaced it.
  */
 const FeatureGate = ({ flag, title, children }: FeatureGateProps) => {
   const { data: flags, isLoading } = useFeatureFlags();
-  if (isLoading) return <>{children}</>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
   if (flags?.[flag]) return <>{children}</>;
 
   return (

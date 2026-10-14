@@ -7,7 +7,6 @@ import {
   Trophy,
   User,
   Users,
-  UtensilsCrossed,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -32,11 +31,13 @@ import {
 
 type NavItem = { path: string; icon: typeof Trophy; label: string; emoji: string };
 
+// Meals is intentionally omitted until the feature is ready — it can be
+// re-added here once meals_enabled is flipped on for real. Admins can still
+// reach /meals directly by URL.
 const adminSidebarTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
-  { path: "/meals", icon: UtensilsCrossed, label: "Meals", emoji: "🥗" },
   { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
@@ -49,6 +50,7 @@ const adminOnlySidebarTabs: NavItem[] = [
 const memberSidebarTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
@@ -63,6 +65,7 @@ const adminMobileTabs: NavItem[] = [
 const memberMobileTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
   { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
@@ -141,8 +144,12 @@ export function AppSidebar() {
         </Sidebar>
       </div>
 
-      {/* Desktop (lg+): permanent dark sidebar with pink uppercase logo + avatar footer */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 lg:sticky lg:top-0 lg:h-screen bg-[#1a0a2e] text-white border-r border-white/10">
+      {/* Desktop (lg+): permanent dark sidebar with pink uppercase logo + avatar footer.
+          The <aside> stretches to the full document height (flex align-stretch) so the
+          dark background always runs to the bottom of the page; an inner sticky,
+          viewport-tall column keeps the nav pinned while you scroll. */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 bg-[#1a0a2e] text-white border-r border-white/10">
+       <div className="lg:sticky lg:top-0 lg:h-screen flex flex-col">
         <div className="px-6 py-7 border-b border-white/10">
           <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF2D87] leading-none">
             Power Club
@@ -211,6 +218,7 @@ export function AppSidebar() {
             </div>
           </NavLink>
         </div>
+       </div>
       </aside>
     </>
   );

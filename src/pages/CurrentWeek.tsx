@@ -285,7 +285,7 @@ const CurrentWeek = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <span className="text-sm font-bold text-muted-foreground">
-            {format(selectedWeekDate, "MMM d")} – {format(addWeeks(selectedWeekDate, 1), "MMM d")}
+            {format(selectedWeekDate, "MMM d")} – {format(addDays(selectedWeekDate, 6), "MMM d")}
           </span>
           <Button
             variant="ghost"
@@ -825,7 +825,10 @@ function ExerciseCard({
     const prevValue = index > 0 ? thresholds[index - 1] : 0;
     return isAssisted
       ? (index === 0 ? `≥ ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `${value} ${unit}` : `${value}–${thresholds[index - 1]} ${unit}`)
-      : (index === 0 ? `< ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `≥ ${value} ${unit}` : `${prevValue}–${value} ${unit}`);
+      // Top level starts where the previous band ends, so there's no gap
+      // between "Very Strong" and "Elite" (was `≥ thresholds[4]`, which left
+      // the thresholds[3]–thresholds[4] range unlabelled).
+      : (index === 0 ? `< ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `≥ ${prevValue} ${unit}` : `${prevValue}–${value} ${unit}`);
   };
   const matchedLevelIndex = exercise.suggestedWeight ? LEVEL_EMOJIS.findIndex((_, index) => buildRangeLabel(index) === exercise.suggestedWeight) : -1;
   const displaySuggestedWeight = exercise.suggestedWeight
@@ -878,7 +881,11 @@ function ExerciseCard({
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
             <span className="text-xs font-bold text-primary">
-              {isRounds ? `${exercise.sets} rounds` : `${exercise.sets} × ${exercise.reps}`}
+              {isRounds
+                ? `${exercise.sets} rounds`
+                : exercise.reps
+                  ? `${exercise.sets} × ${exercise.reps}`
+                  : `${exercise.sets} sets`}
             </span>
             {displaySuggestedWeight && <span className="text-xs font-semibold text-muted-foreground">{displaySuggestedWeight}</span>}
           </div>

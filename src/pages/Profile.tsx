@@ -48,6 +48,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SavedIndicator } from "@/components/ui/SavedIndicator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
@@ -488,28 +489,35 @@ const Profile = () => {
                 label: "Workouts",
                 value: String(stats.workouts),
                 color: "text-secondary",
+                hint: "Total days you've completed at least one exercise.",
               },
               {
                 icon: Flame,
                 label: "Best Streak",
                 value: String(stats.bestStreak),
                 color: "text-accent",
+                hint: "Your longest run of consecutive active days.",
               },
               {
                 icon: Trophy,
                 label: "Weeks Won",
                 value: "—",
                 color: "text-primary",
+                hint: "Weeks you topped your challenge leaderboard. Shows “—” until you finish a week in a challenge.",
               },
             ].map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-card rounded-xl border-2 border-border p-3 text-center"
-              >
-                <stat.icon className={cn("w-6 h-6 mx-auto mb-1", stat.color)} />
-                <p className="font-display text-2xl text-foreground tabular-nums">{stat.value}</p>
-                <p className="text-xs font-bold text-muted-foreground">{stat.label}</p>
-              </div>
+              <Tooltip key={stat.label}>
+                <TooltipTrigger asChild>
+                  <div className="bg-card rounded-xl border-2 border-border p-3 text-center cursor-help">
+                    <stat.icon className={cn("w-6 h-6 mx-auto mb-1", stat.color)} />
+                    <p className="font-display text-2xl text-foreground tabular-nums">{stat.value}</p>
+                    <p className="text-xs font-bold text-muted-foreground">{stat.label}</p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[200px] text-center">
+                  {stat.hint}
+                </TooltipContent>
+              </Tooltip>
             ))}
           </motion.section>
 

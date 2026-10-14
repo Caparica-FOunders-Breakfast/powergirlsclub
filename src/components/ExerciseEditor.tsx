@@ -87,6 +87,14 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
         {exercises.map((ex, idx) => {
           const isAssisted = !!ex.isAssisted;
+          // A plain weighted lift (not bodyweight / time / rounds / assisted)
+          // is the only kind that gets an explicit kg weight field.
+          const canWeight = !ex.isBodyweight && !ex.isTimeBased && !ex.isRoundsBased && !isAssisted;
+          // Pull the numeric part out of suggestedWeight ("20 kg" → "20").
+          const weightValue = ex.suggestedWeight
+            ? ex.suggestedWeight.replace(/[^0-9.]/g, "")
+            : "";
+          const repsLabel = ex.isTimeBased ? "Seconds" : ex.isRoundsBased ? "Reps/round" : "Reps";
 
           return (
             <motion.div
@@ -126,24 +134,56 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-muted-foreground uppercase">Sets</label>
                   <Input
                     type="number"
+                    inputMode="numeric"
                     value={ex.sets}
                     onChange={(e) => updateExercise(idx, "sets", parseInt(e.target.value) || 0)}
                     className="h-7 text-xs text-center border-primary/20"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Reps</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">{repsLabel}</label>
                   <Input
+                    type="number"
+                    inputMode="numeric"
                     value={ex.reps}
                     onChange={(e) => updateExercise(idx, "reps", e.target.value)}
                     placeholder="10"
                     className="h-7 text-xs text-center border-primary/20"
                   />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Weight</label>
+                  {canWeight ? (
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.5"
+                        value={weightValue}
+                        onChange={(e) =>
+                          updateExercise(
+                            idx,
+                            "suggestedWeight",
+                            e.target.value ? `${e.target.value} kg` : "",
+                          )
+                        }
+                        placeholder="20"
+                        className="h-7 text-xs text-center border-primary/20 pr-6"
+                      />
+                      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground pointer-events-none">
+                        kg
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="h-7 flex items-center justify-center text-[10px] font-bold text-muted-foreground rounded-md border border-dashed border-border">
+                      {ex.isBodyweight ? "Bodyweight" : ex.isTimeBased ? "Timed" : ex.isAssisted ? "Assisted" : "—"}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -174,9 +214,9 @@ const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: 
 
               <div className="flex flex-wrap gap-1.5">
                 {([
-                  { key: "isBodyweight", label: "Weight" },
+                  { key: "isBodyweight", label: "Bodyweight" },
                   { key: "isTimeBased", label: "Time-based" },
-                  { key: "isRoundsBased", label: "Reps" },
+                  { key: "isRoundsBased", label: "Rep-based" },
                   { key: "isAssisted", label: "Assisted" },
                 ] as const).map(({ key, label }) => (
                   <button
