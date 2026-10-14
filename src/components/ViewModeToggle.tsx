@@ -1,6 +1,11 @@
 import { Eye, ShieldCheck } from "lucide-react";
 import { useAdminView } from "@/contexts/AdminContext";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const BRAND_PINK = "#FF4D9E";
 
@@ -20,10 +25,22 @@ const ViewModeToggle = () => {
   const userActive = viewMode === "user";
 
   return (
-    <div
-      className="inline-flex items-center gap-1 p-0.5 rounded-full border-2 bg-card shadow-sm"
-      style={{ borderColor: `${BRAND_PINK}33` }}
-    >
+    <div className="inline-flex items-center gap-2">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="hidden sm:inline text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground cursor-help">
+            Viewing as
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-[220px] text-center">
+          Switch between the full <strong>Admin</strong> app and the <strong>User</strong> view
+          your members see. It only changes what you see — your admin access stays.
+        </TooltipContent>
+      </Tooltip>
+      <div
+        className="inline-flex items-center gap-1 p-0.5 rounded-full border-2 bg-card shadow-sm"
+        style={{ borderColor: `${BRAND_PINK}33` }}
+      >
       <button
         type="button"
         onClick={() => setViewMode("admin")}
@@ -62,6 +79,7 @@ const ViewModeToggle = () => {
         <Eye className="w-3.5 h-3.5" />
         User
       </button>
+      </div>
     </div>
   );
 };

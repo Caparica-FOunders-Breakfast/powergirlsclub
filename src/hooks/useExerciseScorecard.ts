@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { canonicalExerciseName } from "@/lib/exerciseNormalize";
 
 export type ExerciseLevel = "Beginner" | "Leveling Up" | "Strong" | "Very Strong" | "Elite";
 
@@ -69,7 +70,9 @@ export const useExerciseScorecard = () => {
       const grouped = new Map<string, ExerciseEntry[]>();
       data?.forEach((log) => {
         if (log.weight_used == null) return;
-        const name = log.exercise_name;
+        // Canonicalise so "Goblet Squat"/"Goblet Squats", "Pull Up"/"Pull Ups",
+        // "deadlift"/"Romanian Deadlift" etc. merge into a single card.
+        const name = canonicalExerciseName(log.exercise_name);
         const w = Number(log.weight_used);
         const failed = w === -1;
         if (!grouped.has(name)) grouped.set(name, []);

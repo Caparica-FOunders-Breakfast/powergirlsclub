@@ -17,6 +17,26 @@ import { StrengthSummary } from "./StrengthSummary";
 import { AddExerciseModal } from "./AddExerciseModal";
 import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress, ASSISTED_EXERCISES, getAssistedLevel, getAssistedProgress } from "./exerciseLevels";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+/**
+ * The "NF" badge next to an exercise = N failed attempts: weeks you logged an
+ * "F" because you couldn't complete the set at that weight. Tooltip explains it
+ * (native `title` alone didn't render on the desktop row and isn't discoverable).
+ */
+const FailBadge = ({ count }: { count: number }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <span className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive cursor-help">
+        {count}F
+      </span>
+    </TooltipTrigger>
+    <TooltipContent side="top" className="max-w-[220px] text-center">
+      {count} failed attempt{count > 1 ? "s" : ""} — week{count > 1 ? "s" : ""} you logged
+      an “F” because you couldn’t finish the set at that weight.
+    </TooltipContent>
+  </Tooltip>
+);
 
 // Unit mapping: exercises not measured in kg
 const EXERCISE_UNITS: Record<string, string> = {
@@ -34,7 +54,8 @@ const EXERCISE_UNITS: Record<string, string> = {
   "Recovery Day": "—",
   "Rest Day": "—",
   "Pull Ups": "kg assist",
-  "jkk": "reps",
+  // Bodyweight move — tracked in reps, never rated on the kg strength scale.
+  "Glute Bridges": "reps",
 };
 
 const getUnit = (name: string) => EXERCISE_UNITS[name] || "kg";
@@ -46,9 +67,12 @@ const EXERCISE_CATEGORIES: Record<string, string> = {
   "Smith Machine Lunges": "🦵 Legs",
   "Step Ups": "🦵 Legs",
   "Box Jumps": "🦵 Legs",
+  "Leg Extension": "🦵 Legs",
+  "Reverse Lunges": "🦵 Legs",
   "Hip Thrust": "🍑 Glutes",
   "Cable Kickbacks": "🍑 Glutes",
   "Romanian Deadlift": "🍑 Glutes",
+  "Glute Bridges": "🍑 Glutes",
   "Lat Pulldown": "💪 Upper Body",
   "Dumbbell Shoulder Press": "💪 Upper Body",
   "Seated Row": "💪 Upper Body",
@@ -76,7 +100,7 @@ const CATEGORY_FILTERS: { key: string; label: string; match: (cat: string) => bo
   { key: "lower", label: "Lower Body", match: (c) => c.includes("Legs") || c.includes("Glutes") },
   { key: "upper", label: "Upper Body", match: (c) => c.includes("Upper Body") },
   { key: "core", label: "Core", match: (c) => c.includes("Core") },
-  { key: "hiit", label: "HIIT", match: (c) => c.includes("Cardio") },
+  { key: "hiit", label: "Cardio & Power", match: (c) => c.includes("Cardio") },
 ];
 
 export function ExerciseScorecard() {
@@ -381,14 +405,7 @@ function ExerciseRow({
             {isPR && (
               <span className="shrink-0 text-base" title="Personal Record">⭐</span>
             )}
-            {ex.failCount > 0 && (
-              <span
-                className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive"
-                title={`${ex.failCount} failed attempt${ex.failCount > 1 ? "s" : ""}`}
-              >
-                {ex.failCount}F
-              </span>
-            )}
+            {ex.failCount > 0 && <FailBadge count={ex.failCount} />}
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
         </div>
@@ -437,11 +454,7 @@ function ExerciseRow({
         <div className="w-64 shrink-0 min-w-0">
           <div className="flex items-center gap-1.5">
             <h3 className="font-extrabold text-[18px] leading-tight text-foreground truncate">{ex.name}</h3>
-            {ex.failCount > 0 && (
-              <span className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">
-                {ex.failCount}F
-              </span>
-            )}
+            {ex.failCount > 0 && <FailBadge count={ex.failCount} />}
           </div>
           <div className="flex gap-1.5 mt-1.5">
             <span className="text-[13px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">

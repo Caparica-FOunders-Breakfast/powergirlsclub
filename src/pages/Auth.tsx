@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,9 @@ import { useFeatureFlags } from "@/hooks/useAppSettings";
 import { motion } from "framer-motion";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  // Landing-page CTAs open this in a specific mode (/auth?mode=signup|login).
+  const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "signup");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -105,7 +108,7 @@ const Auth = () => {
               Enter your email and we'll send you a reset link.
             </p>
             <div>
-              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Email</label>
+              <label className="text-sm font-bold text-foreground uppercase tracking-wide">Email</label>
               <Input
                 type="email"
                 value={email}
@@ -134,7 +137,7 @@ const Auth = () => {
           <>
             {!isLogin && (
               <div>
-                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Your Name</label>
+                <label className="text-sm font-bold text-foreground uppercase tracking-wide">Your Name</label>
                 <Input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -146,7 +149,7 @@ const Auth = () => {
             )}
 
             <div>
-              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Email</label>
+              <label className="text-sm font-bold text-foreground uppercase tracking-wide">Email</label>
               <Input
                 type="email"
                 value={email}
@@ -158,15 +161,15 @@ const Auth = () => {
             </div>
 
             <div>
-              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Password</label>
+              <label className="text-sm font-bold text-foreground uppercase tracking-wide">Password</label>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={isLogin ? "Enter your password" : "Create a password (min 6 chars)"}
                 required
                 minLength={6}
-                className="mt-1 border-2 border-primary/30 focus:border-primary"
+                className="mt-1 border-2 border-primary/30 focus:border-primary placeholder:text-muted-foreground/50 placeholder:font-normal"
               />
             </div>
 
