@@ -19,8 +19,24 @@ import More from "@/pages/More";
 import Dashboard from "@/pages/Dashboard";
 import Users from "@/pages/Users";
 import NotFound from "@/pages/NotFound";
+import Landing from "@/pages/Landing";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 
 const queryClient = new QueryClient();
+
+// App routes that require auth — used to send logged-out visitors to login
+// (rather than a 404) when they hit a real app URL directly.
+const PROTECTED_PATHS = [
+  "/week",
+  "/learn",
+  "/meals",
+  "/teams",
+  "/profile",
+  "/more",
+  "/dashboard",
+  "/users",
+];
 
 const AdminOnly = ({ children }: { children: JSX.Element }) => {
   const isAdmin = useIsAdmin();
@@ -100,7 +116,24 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/*" element={<ProtectedLayout />} />
+      {/* Public static pages — reachable whether or not you're logged in. */}
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      {user ? (
+        /* Logged in: everything (including "/") runs inside the app shell. */
+        <Route path="/*" element={<ProtectedLayout />} />
+      ) : (
+        <>
+          {/* Logged out: public landing page at "/". */}
+          <Route path="/" element={<Landing />} />
+          {/* Known app routes send you to login first; after signing in you
+              land in the app. Truly unknown URLs fall through to a real 404. */}
+          {PROTECTED_PATHS.map((p) => (
+            <Route key={p} path={p} element={<Navigate to="/auth?mode=login" replace />} />
+          ))}
+          <Route path="*" element={<NotFound />} />
+        </>
+      )}
     </Routes>
   );
 };
