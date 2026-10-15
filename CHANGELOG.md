@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-15 — Data backfill: normalize malformed plan rows (`fix/normalize-plan-exercise-rows`)
+
+Follow-up to bug #3. The structured editor fixed *new* edits, but existing
+rows in `default_workout_plans` / `user_workout_plans` still had kg jammed into
+`reps` ("3 × 20 Bodyweight") or empty `reps` ("3 ×").
+
+- `supabase/migrations/20261014120000_normalize_plan_exercise_rows.sql` — a
+  one-off, **idempotent** backfill. For known weighted lifts whose weight slot
+  reads "Bodyweight"/blank and whose `reps` is a number > 15, it moves the
+  number to `suggestedWeight` (as kg), resets `reps` to 10, and clears the bogus
+  bodyweight flag. Any empty `reps` defaults to 10. Bodyweight/cardio moves and
+  rows with a real kg weight are never touched.
+- **Not run here** — it mutates production data and there's no local Postgres in
+  this environment to execute it against. Review + dry-run (the file documents
+  how) before applying to prod. Logic was traced against the three QA-reported
+  rows; it is conservative by design (`reps > 15` guard, weighted-lift allowlist).
+
 ## 2026-10-14 — Member-area QA bug fixes (`feat/public-landing-page`)
 
 Ten fixes from the 13 Oct QA pass.
