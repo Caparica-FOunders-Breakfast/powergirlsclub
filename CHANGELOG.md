@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-15 — Drop Show Up Guarantee; flat €5/month (`feat/member-area-redesign`)
+
+Pricing pivot: a flat **€5/month**, no "Show Up Guarantee" / free-month mechanic.
+
+- Removed the Show Up Guarantee everywhere: homepage pricing box + FAQ, hero/nav
+  copy, login tracker row + join CTA, the Scorecard month card (Row 1 is now just
+  the current/best **streak** banner with a "Start today's workout" CTA), and the
+  Exercises right-column card. Deleted the `useShowUpGuarantee` hook.
+- Pricing is now **€5/month** across the homepage, login, Terms and meta
+  description; copy is "flat monthly price · cancel anytime".
+- Readiness "Tip" and other copy no longer reference a free month.
+
 ## 2026-11-15 — Member-area redesign: Exercises + Scorecard (`feat/member-area-redesign`)
 
 Rebuilt the two core member pages + the edit view to the new design canvas

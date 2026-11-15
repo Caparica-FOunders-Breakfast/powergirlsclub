@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useExerciseLogs, useSaveExerciseLog, usePriorExerciseWeights } from "@/hooks/useExerciseLogs";
 import { useProfile } from "@/hooks/useProfile";
-import { useShowUpGuarantee } from "@/hooks/useShowUpGuarantee";
 import {
   usePersonalWorkoutPlan,
   useSavePersonalDay,
@@ -81,7 +80,6 @@ const CurrentWeek = () => {
   const resetPersonalDay = useResetPersonalDay();
   const saveTravelDay = useSaveTravelDay();
   const resetTravelDay = useResetTravelDay();
-  const guarantee = useShowUpGuarantee();
   const { toast } = useToast();
 
   const now = new Date();
@@ -433,21 +431,6 @@ const CurrentWeek = () => {
 
           {/* Right column */}
           <aside style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
-            <section style={{ ...card, padding: 22 }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>SHOW UP GUARANTEE</p>
-              <p style={{ margin: "4px 0 0", ...bangers, fontSize: 34, letterSpacing: 0.5, lineHeight: 1.1 }}>{guarantee.thisWeekCount} of {guarantee.weeklyTarget} this week</p>
-              <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
-                {[0, 1, 2].map((i) => (
-                  <span key={i} style={{ flex: 1, height: 12, borderRadius: 999, background: i < guarantee.thisWeekCount ? C.magenta : "#FFFFFF", border: `2px solid ${C.ink}` }} />
-                ))}
-              </div>
-              <p style={{ margin: "10px 0 0", fontSize: 15, fontWeight: 600, color: C.body }}>
-                {guarantee.remainingThisWeek > 0
-                  ? `${guarantee.remainingThisWeek} more day${guarantee.remainingThisWeek > 1 ? "s" : ""} this week keeps your free month on track.`
-                  : "You've logged 3 this week. Nice."}
-              </p>
-            </section>
-
             {nextUp.length > 0 && (
               <section style={{ ...card, padding: 22 }}>
                 <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>NEXT UP</p>
@@ -467,7 +450,7 @@ const CurrentWeek = () => {
 
             <section style={{ background: C.lilac, border: `2px solid ${C.ink}`, borderRadius: 22, padding: 22 }}>
               <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>Tip for today</p>
-              <p style={{ margin: "6px 0 0", fontSize: 15, color: C.body }}>Not feeling it? Pick “Not ready” and do the light version. A short session still counts toward your free month.</p>
+              <p style={{ margin: "6px 0 0", fontSize: 15, color: C.body }}>Not feeling it? Pick “Not ready” and do the light version. A short session still counts — showing up is what builds the habit.</p>
             </section>
           </aside>
         </div>

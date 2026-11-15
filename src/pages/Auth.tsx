@@ -146,7 +146,7 @@ const Auth = () => {
       ? "Loading..."
       : isLogin
         ? "Let's go!"
-        : "Join for €10/month";
+        : "Join for €5/month";
 
   return (
     <div
@@ -169,14 +169,14 @@ const Auth = () => {
             <span style={{ display: "block", color: C.hl }}>Let's lift.</span>
           </h1>
           <p style={{ margin: "20px 0 0", maxWidth: 440, fontSize: 19, color: "rgba(255,255,255,0.92)" }}>
-            Log in to see this week's workouts, your streak and how close you are to a free month.
+            Log in to see this week's workouts, your streak and your progress over time.
           </p>
 
           {/* Preview card — static illustration */}
           <div style={{ marginTop: 36, maxWidth: 440, background: "#FFFFFF", color: C.ink, border: `2px solid ${C.ink}`, borderRadius: 20, boxShadow: `6px 6px 0 ${C.ink}`, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
               <p style={{ margin: 0, ...bangers, fontSize: 26, letterSpacing: 0.5 }}>This week</p>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.sub }}>2 of 3 done</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.sub }}>2 workouts this week</p>
             </div>
             <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 8, textAlign: "center", fontSize: 13, fontWeight: 800 }}>
               {weekDays.map((d, i) => {
@@ -196,8 +196,8 @@ const Auth = () => {
               })}
             </div>
             <div style={{ marginTop: 16, padding: "12px 14px", borderRadius: 12, background: C.lilac, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, fontSize: 14, fontWeight: 700 }}>
-              <span>Show Up Guarantee</span>
-              <span style={{ color: C.purple }}>Week 2 of 4</span>
+              <span>Current streak</span>
+              <span style={{ color: C.purple }}>3 days 🔥</span>
             </div>
           </div>
         </div>
@@ -341,10 +341,10 @@ const Auth = () => {
                         onClick={() => setIsLogin(false)}
                         style={{ marginTop: 20, display: "block", width: "100%", textAlign: "center", padding: "14px 20px", border: `2px solid ${C.ink}`, borderRadius: 14, background: C.lilac, color: C.ink, fontWeight: 800, font: "inherit", cursor: "pointer" }}
                       >
-                        Join the club for €10/month
+                        Join the club for €5/month
                       </button>
                       <p style={{ margin: "10px 0 0", textAlign: "center", fontSize: 14, color: C.sub }}>
-                        Show up all month and the next one is free.
+                        Flat €5/month. Cancel anytime.
                       </p>
                     </>
                   ) : (

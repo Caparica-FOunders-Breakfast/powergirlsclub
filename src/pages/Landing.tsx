@@ -153,10 +153,7 @@ const faqs = [
   ["Do I need experience?", "No. Power Club works from whatever your starting point is."],
   ["How much time does it take?", "30 to 40 minutes per session."],
   ["Can I train at home?", "Yes. Travel mode switches you to bodyweight and calisthenics workouts."],
-  [
-    "How does the Show Up Guarantee work?",
-    "Log at least 3 workouts in the app every week (max one per day) for 4 weeks in a row. Do it, and your next month is free. Your plan has 4 training days, so 3 of them is enough.",
-  ],
+  ["How much does it cost?", "€5 a month, flat. Cancel anytime."],
   ["Can I cancel anytime?", "Yes, anytime."],
 ];
 
@@ -180,7 +177,7 @@ const Landing = () => {
           </Link>
           <nav aria-label="Main" style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Link to={LOGIN} style={{ color: C.ink, fontWeight: 700, textDecoration: "none", padding: "12px 14px" }}>Log in</Link>
-            <Link to={SIGNUP} style={{ background: C.ink, color: "#FFFFFF", fontWeight: 800, textDecoration: "none", padding: "12px 20px", borderRadius: 12, border: `2px solid ${C.ink}` }}>Join for €10</Link>
+            <Link to={SIGNUP} style={{ background: C.ink, color: "#FFFFFF", fontWeight: 800, textDecoration: "none", padding: "12px 20px", borderRadius: 12, border: `2px solid ${C.ink}` }}>Join for €5</Link>
           </nav>
         </div>
       </header>
@@ -196,8 +193,8 @@ const Landing = () => {
             </h1>
             <p style={{ margin: "28px 0 0", maxWidth: 520, fontSize: 19, color: C.heroSub }}>Five exercises, three rounds of ten reps, a little more weight every week. No endless hours at the gym.</p>
             <div style={{ marginTop: 36, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 18 }}>
-              <Link to={SIGNUP} style={{ background: C.cta, color: C.ctaText, fontWeight: 800, fontSize: 18, textDecoration: "none", padding: "16px 28px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}` }}>Join Power Club for €10</Link>
-              <span style={{ color: C.heroSub, fontSize: 15, fontWeight: 600 }}>€10/month. Show up all month and the next one is free.</span>
+              <Link to={SIGNUP} style={{ background: C.cta, color: C.ctaText, fontWeight: 800, fontSize: 18, textDecoration: "none", padding: "16px 28px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}` }}>Join Power Club for €5</Link>
+              <span style={{ color: C.heroSub, fontSize: 15, fontWeight: 600 }}>€5/month. Cancel anytime.</span>
             </div>
           </div>
 
@@ -287,19 +284,15 @@ const Landing = () => {
         <h2 style={{ margin: 0, ...bangers, fontSize: 56, letterSpacing: 1, textAlign: "center" }}>Simple pricing</h2>
         <div style={{ margin: "40px auto 0", maxWidth: 460, background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, boxShadow: `8px 8px 0 ${C.shadow}`, padding: "36px 32px", textAlign: "center" }}>
           <p style={{ margin: 0, ...bangers, fontSize: 88, lineHeight: 1, color: C.pinkText }}>
-            €10<span style={{ fontFamily: "Nunito, sans-serif", fontSize: 20, fontWeight: 700, color: C.sub }}> /month</span>
+            €5<span style={{ fontFamily: "Nunito, sans-serif", fontSize: 20, fontWeight: 700, color: C.sub }}> /month</span>
           </p>
-          <p style={{ margin: "10px 0 0", fontWeight: 700, color: C.body }}>Cancel anytime</p>
-          <div style={{ marginTop: 24, background: "#F1E9FE", border: `2px solid ${C.ink}`, borderRadius: 16, padding: "18px 20px", textAlign: "left" }}>
-            <p style={{ margin: 0, ...bangers, fontSize: 26, letterSpacing: 0.5, color: "#6B2FB3" }}>Show Up Guarantee</p>
-            <p style={{ margin: "6px 0 0", fontWeight: 800, fontSize: 17 }}>Train 3 times a week for 4 weeks in a row and your next month is on us.</p>
-          </div>
+          <p style={{ margin: "10px 0 0", fontWeight: 700, color: C.body }}>Flat monthly price · Cancel anytime</p>
           <ul style={{ margin: "28px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
             {["Your weekly 4-day plan", "Progressive overload tracking", "Scorecard, streaks and records", "Travel mode and team challenges"].map((item) => (
               <li key={item} style={{ display: "flex", gap: 12, alignItems: "center", fontWeight: 600 }}>{check}{item}</li>
             ))}
           </ul>
-          <Link to={SIGNUP} style={{ marginTop: 30, display: "block", background: C.btn, color: "#FFFFFF", fontWeight: 800, fontSize: 18, textDecoration: "none", padding: "16px 24px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}` }}>Join for €10/month</Link>
+          <Link to={SIGNUP} style={{ marginTop: 30, display: "block", background: C.btn, color: "#FFFFFF", fontWeight: 800, fontSize: 18, textDecoration: "none", padding: "16px 24px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}` }}>Join for €5/month</Link>
         </div>
       </section>
 

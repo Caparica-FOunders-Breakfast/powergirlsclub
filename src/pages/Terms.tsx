@@ -11,8 +11,7 @@ const Terms = () => (
     </p>
     <h2>Your membership</h2>
     <p>
-      Power Club costs €10/month after a 2-week free trial. You can cancel anytime; cancel before
-      the trial ends and you pay nothing.
+      Power Club is a flat €5/month. You can cancel anytime from your account.
     </p>
     <h2>Using the app</h2>
     <p>

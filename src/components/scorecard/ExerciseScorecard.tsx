@@ -4,7 +4,6 @@ import { Plus } from "lucide-react";
 import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
 import { useActivityData } from "@/hooks/useActivityData";
 import { useStreaks } from "@/hooks/useActivityData";
-import { useShowUpGuarantee } from "@/hooks/useShowUpGuarantee";
 import { useProfile } from "@/hooks/useProfile";
 import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
 import { Button } from "@/components/ui/button";
@@ -110,7 +109,6 @@ export function ExerciseScorecard() {
   const { data: activityEntries } = useActivityData();
   const { data: profile } = useProfile();
   const { hiddenExercises, hideExercise, unhideExercise } = useScorecardVisibility();
-  const guarantee = useShowUpGuarantee();
   const streaks = useStreaks();
   const { toast } = useToast();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
@@ -260,52 +258,20 @@ export function ExerciseScorecard() {
     <div style={{ color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, display: "flex", flexDirection: "column", gap: 24 }}>
       <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1 }}>Scorecard</h1>
 
-      {/* Row 1: Show Up Guarantee + Streak */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
-        <section style={{ flex: "2 1 520px", minWidth: 0, background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, boxShadow: `6px 6px 0 ${C.ink}`, padding: 28 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-            <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>SHOW UP GUARANTEE · {guarantee.monthLabel.toUpperCase()}</p>
-              <h2 style={{ margin: "6px 0 0", ...bangers, fontSize: 40, letterSpacing: 1, lineHeight: 1 }}>{guarantee.sessions} of {guarantee.monthTarget} sessions</h2>
-              <p style={{ margin: "8px 0 0", fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>
-                {guarantee.remainingThisWeek > 0
-                  ? `${guarantee.remainingThisWeek} more this week keeps your free month on track.`
-                  : "You've hit 3 this week — nice work."}
-              </p>
-            </div>
-            <Link to="/week" style={{ background: C.yellow, color: C.ink, fontWeight: 800, textDecoration: "none", padding: "14px 22px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}`, whiteSpace: "nowrap" }}>
-              Start today's workout
-            </Link>
-          </div>
-          <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
-            {guarantee.weeks.map((wk) => (
-              <div key={wk.label} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 14, padding: "12px 14px" }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>{wk.label}</p>
-                <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
-                  {[0, 1, 2].map((i) => (
-                    <span key={i} style={{ flex: 1, height: 10, borderRadius: 999, background: i < wk.count ? "#FFFFFF" : "rgba(255,255,255,0.28)" }} />
-                  ))}
-                </div>
-                <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>{wk.status}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section style={{ flex: "1 1 260px", minWidth: 0, ...card, padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16 }}>
-          <div>
-            <Label>CURRENT STREAK</Label>
-            <p style={{ margin: "4px 0 0", ...bangers, fontSize: 64, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
-            <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
-              {streaks.current > 0 ? "Keep it going — train again today." : "Train today to start a new streak."}
-            </p>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 12, background: C.lilac, fontWeight: 800 }}>
-            <span>Best streak</span>
-            <span style={{ color: C.purple }}>{streaks.longest} days</span>
-          </div>
-        </section>
-      </div>
+      {/* Row 1: Streak */}
+      <section style={{ ...card, padding: 28, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+        <div>
+          <Label>CURRENT STREAK</Label>
+          <p style={{ margin: "4px 0 0", ...bangers, fontSize: 56, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
+          <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
+            {streaks.current > 0 ? "Keep it going — train again today." : "Train today to start a new streak."}
+            <span style={{ color: C.purple }}> · Best streak {streaks.longest} days</span>
+          </p>
+        </div>
+        <Link to="/week" style={{ background: C.pink, color: "#FFFFFF", fontWeight: 800, textDecoration: "none", padding: "16px 24px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}`, whiteSpace: "nowrap" }}>
+          Start today's workout
+        </Link>
+      </section>
 
       {/* Row 2: Activity */}
       {hasData && (
