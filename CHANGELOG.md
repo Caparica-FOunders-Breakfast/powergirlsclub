@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-15 — Profile: match the design more closely (`fix/profile-match-design`)
+
+- Rebuilt the "Your training week" card (`WeekPlanCard`) as the mockup's clean
+  7-column day/type grid (Mon–Sun, coloured by rest/train/travel) instead of the
+  old emoji tiles, keeping drag-to-reorder.
+- Strength-levels card now matches the mockup: segment bars per level, highest
+  level first, a "You" badge on your overall level (computed from your kg lifts),
+  and correct kg ranges (top level starts at 1.2× body weight, not 1.6×).
+
+
 ## 2026-11-15 — Code-split routes for faster first load (`perf/code-split-routes`)
 
 The whole app shipped as one ~1.4 MB JS chunk, so a first-time visitor downloaded

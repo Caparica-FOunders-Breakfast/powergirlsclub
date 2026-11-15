@@ -12,6 +12,7 @@ import {
 } from "@/hooks/useUserPreferences";
 import { useProfileSetup } from "@/hooks/useProfileSetup";
 import { useActivityData } from "@/hooks/useActivityData";
+import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
 import {
   usePersonalWorkoutPlan,
   useSavePersonalDay,
@@ -60,8 +61,17 @@ const STRENGTH_LEVELS = [
   { icon: "🔥", label: "Advanced" },
   { icon: "👑", label: "Very strong" },
 ] as const;
-const STRENGTH_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6] as const;
+// Upper bounds (× body weight) for Beginner/Leveling up/Strong/Advanced; the
+// top level (Very strong) starts at the last one.
+const STRENGTH_BOUNDS = [0.35, 0.6, 0.85, 1.2] as const;
 const PROJECTION_WEEKS = 12;
+// Exercises not measured in kg — excluded from the overall-level average.
+const NON_KG_NAMES = new Set([
+  "Plank", "Side Plank", "Battle Ropes", "Farmer Carry", "Push Ups", "Dead Bug",
+  "Bird Dog", "Hanging Knee Raises", "Box Jumps", "Bike Sprint (20s all-in + 3min rest)",
+  "Sprint / Jump Rope", "Recovery Day", "Rest Day", "Pull Ups", "Glute Bridges",
+]);
+const segsFor = (n: number) => [0, 1, 2, 3, 4].map((i) => (i < n ? "#E8308C" : "#EFE6F1"));
 
 type PasswordFieldProps = {
   id: string;
@@ -104,6 +114,7 @@ const Profile = () => {
   const { data: prefs } = useUserPreferences();
   const isAdmin = useIsAdmin();
   const { data: activity } = useActivityData();
+  const { data: grouped } = useExerciseScorecard();
   const { plan, mergedPlan, travelMode } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const savePrefs = useSaveUserPreferences();
@@ -138,6 +149,23 @@ const Profile = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
+
+  // Overall strength level = level of the average ratio (best weight / body
+  // weight) across kg-based lifts. Marks the "You" row in the levels table.
+  const overallLevelIndex = useMemo(() => {
+    if (!grouped || !bw) return -1;
+    const ratios: number[] = [];
+    grouped.forEach((entries, name) => {
+      if (NON_KG_NAMES.has(name)) return;
+      const latest = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).find((e) => !e.failed);
+      const cw = latest?.weight ?? 0;
+      if (cw > 0) ratios.push(cw / bw);
+    });
+    if (ratios.length === 0) return -1;
+    const avg = ratios.reduce((s, r) => s + r, 0) / ratios.length;
+    return getLevel(avg).index;
+  }, [grouped, bw]);
+
   const progressionKg = prefs?.progression_kg_per_week ?? PROGRESSION_DEFAULT;
   const displayName = profile?.display_name ?? "";
   const initials = (displayName[0] ?? "?").toUpperCase();
@@ -410,19 +438,26 @@ const Profile = () => {
               <section style={{ ...card, padding: 24 }}>
                 <h2 style={{ margin: 0, ...bangers, fontSize: 32, letterSpacing: 1 }}>Strength levels</h2>
                 <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.body }}>
-                  {bw ? `Based on your body weight (${bw} kg).` : "Locked until you set your body weight."}
+                  {bw ? `Based on your body weight (${bw} kg). Your overall level is marked.` : "Locked until you set your body weight."}
                 </p>
                 {bw ? (
                   <>
                     <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-                      {STRENGTH_LEVELS.map((level, idx) => {
-                        const val = Math.round(STRENGTH_RATIOS[idx] * bw);
-                        const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
-                        const range = idx === 0 ? `< ${val} kg` : idx === STRENGTH_LEVELS.length - 1 ? `≥ ${val} kg` : `${prevVal}–${val} kg`;
+                      {/* Highest level first, matching the design. */}
+                      {STRENGTH_LEVELS.map((_, i) => STRENGTH_LEVELS.length - 1 - i).map((idx) => {
+                        const level = STRENGTH_LEVELS[idx];
+                        const range =
+                          idx === 0 ? `under ${Math.round(STRENGTH_BOUNDS[0] * bw)} kg`
+                          : idx === STRENGTH_LEVELS.length - 1 ? `${Math.round(STRENGTH_BOUNDS[3] * bw)} kg and up`
+                          : `${Math.round(STRENGTH_BOUNDS[idx - 1] * bw)}–${Math.round(STRENGTH_BOUNDS[idx] * bw)} kg`;
+                        const you = idx === overallLevelIndex;
                         return (
-                          <div key={level.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: "#FFFFFF", border: `2px solid ${C.rowBorder}` }}>
-                            <span style={{ fontSize: 20, width: 24, textAlign: "center", flex: "none" }}>{level.icon}</span>
+                          <div key={level.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: you ? "#FFF5FA" : "#FFFFFF", border: `2px solid ${you ? C.magenta : C.rowBorder}` }}>
+                            <div style={{ display: "flex", gap: 3, width: 64, flex: "none" }}>
+                              {segsFor(idx + 1).map((bg, j) => <span key={j} style={{ flex: 1, height: 8, borderRadius: 999, background: bg }} />)}
+                            </div>
                             <span style={{ flex: 1, fontWeight: 800 }}>{level.label}</span>
+                            {you && <span style={{ padding: "2px 8px", borderRadius: 999, background: C.ink, color: "#FFFFFF", fontSize: 12, fontWeight: 800 }}>You</span>}
                             <span style={{ fontWeight: 700, color: C.body, fontSize: 15 }}>{range}</span>
                           </div>
                         );
