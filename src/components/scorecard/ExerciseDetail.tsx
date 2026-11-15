@@ -81,7 +81,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
         )}
       </div>
 
-      <div className="rounded-2xl border-2 border-border bg-card p-5">
+      <div className="rounded-2xl border-2 border-[#2B1736] bg-card p-5">
         <div className="flex items-center gap-3 mb-4">
           <span className="text-3xl">{level.icon}</span>
           <div>
@@ -186,7 +186,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
       </div>
 
       {/* History list */}
-      <div className="rounded-2xl border-2 border-border bg-card overflow-hidden">
+      <div className="rounded-2xl border-2 border-[#2B1736] bg-card overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
           <p className="text-xs font-bold text-muted-foreground uppercase">History ({entries.length})</p>
         </div>

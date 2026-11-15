@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-15 — Design consistency: shell + tokens (`feat/design-consistency`)
+
+Unify the whole app on the new design language.
+
+- Mobile side-menu restyled to the dark sidebar (matches desktop).
+- Content ground `#FBF9FB`; mobile header/bottom-nav use 2px `#2B1736` borders.
+- `gradient-primary` is now the exact design gradient (`#D1207A` → `#6B2FB3`).
+- `--primary` deepened to the design pink `#C21C70` app-wide; `.comic-border`
+  slimmed to 2px — so the not-yet-rebuilt pages (Dashboard, Meals, Language,
+  More) pick up the new colour/border language too.
+- NotFound rebuilt in the new language.
+
+
 ## 2026-11-15 — Profile: match the design more closely (`fix/profile-match-design`)
 
 - Rebuilt the "Your training week" card (`WeekPlanCard`) as the mockup's clean

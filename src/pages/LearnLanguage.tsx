@@ -60,7 +60,7 @@ export default function LearnLanguage() {
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-center py-12 bg-card rounded-2xl border-2 border-border"
+          className="text-center py-12 bg-card rounded-2xl border-2 border-[#2B1736]"
         >
           <p className="text-5xl mb-3">🌍</p>
           <h2 className="text-2xl font-display text-foreground">Learn a Language</h2>
@@ -122,7 +122,7 @@ export default function LearnLanguage() {
 
       {/* Tab switcher */}
       {activeLang && (
-        <div className="flex rounded-xl border-2 border-border overflow-hidden">
+        <div className="flex rounded-xl border-2 border-[#2B1736] overflow-hidden">
           <button
             onClick={() => setTab("plan")}
             className={cn(

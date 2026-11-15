@@ -129,7 +129,7 @@ const MetricCard = ({
   value: string;
   hint?: string;
 }) => (
-  <div className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5">
+  <div className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5">
     <div className="flex items-center gap-2 text-muted-foreground">
       <Icon className="w-4 h-4 text-primary" />
       <p className="text-[10px] font-bold uppercase tracking-wider">{label}</p>
@@ -316,7 +316,7 @@ const Dashboard = () => {
         <motion.section
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5"
+          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5"
         >
           <div className="flex items-center gap-2 mb-3">
             <Activity className="w-4 h-4 text-primary" />
@@ -356,7 +356,7 @@ const Dashboard = () => {
         <motion.section
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5"
+          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5"
         >
           <div className="flex items-center gap-2 mb-3">
             <Users className="w-4 h-4 text-primary" />
@@ -396,7 +396,7 @@ const Dashboard = () => {
         <motion.section
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5 space-y-3"
+          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5 space-y-3"
         >
           <div className="flex items-center gap-2">
             <ImagePlus className="w-4 h-4 text-primary" />
@@ -454,7 +454,7 @@ const Dashboard = () => {
         <motion.section
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5"
+          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5"
         >
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-primary" />

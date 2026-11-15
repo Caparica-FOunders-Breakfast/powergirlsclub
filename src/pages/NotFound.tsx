@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const location = useLocation();
@@ -10,22 +9,11 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-background">
-      <p className="font-display text-primary text-7xl sm:text-8xl tracking-wider drop-shadow">
-        404
-      </p>
-      <h1 className="mt-4 font-display text-2xl sm:text-3xl text-foreground tracking-wide">
-        This page took a rest day 💜
-      </h1>
-      <p className="mt-2 max-w-sm font-semibold text-muted-foreground">
-        We couldn't find the page you were looking for.
-      </p>
-      <Button
-        asChild
-        className="mt-8 h-12 px-6 font-bold gradient-primary text-primary-foreground comic-border border-primary-foreground/20 hover:opacity-90"
-      >
-        <Link to="/">Back home</Link>
-      </Button>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center", background: "#FBF9FB", color: "#2B1736", fontFamily: "Nunito, system-ui, sans-serif" }}>
+      <p style={{ margin: 0, fontFamily: "Bangers, cursive", fontSize: "clamp(72px, 16vw, 112px)", letterSpacing: 2, color: "#C21C70", lineHeight: 1 }}>404</p>
+      <h1 style={{ margin: "12px 0 0", fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>This page took a rest day 💜</h1>
+      <p style={{ margin: "8px 0 0", maxWidth: 360, fontWeight: 600, color: "#5E4E66" }}>We couldn't find the page you were looking for.</p>
+      <Link to="/" style={{ marginTop: 28, display: "inline-flex", alignItems: "center", height: 52, padding: "0 28px", background: "#C21C70", color: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 14, boxShadow: "4px 4px 0 #2B1736", fontWeight: 800, fontSize: 17, textDecoration: "none" }}>Back home</Link>
     </div>
   );
 };
