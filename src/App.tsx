@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,23 +8,33 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AdminProvider, useAdminView } from "@/contexts/AdminContext";
 import { AppSidebar, BottomNav, AppHeader, SidebarProvider } from "@/components/Navigation";
 import FeatureGate from "@/components/FeatureGate";
-import Auth from "@/pages/Auth";
-import ResetPassword from "@/pages/ResetPassword";
-import Leaderboard from "@/pages/Leaderboard";
-import CurrentWeek from "@/pages/CurrentWeek";
-import LearnLanguage from "@/pages/LearnLanguage";
-import TeamManagement from "@/pages/TeamManagement";
-import Profile from "@/pages/Profile";
-import MealPlan from "@/pages/MealPlan";
-import More from "@/pages/More";
-import Dashboard from "@/pages/Dashboard";
-import Users from "@/pages/Users";
-import NotFound from "@/pages/NotFound";
-import Landing from "@/pages/Landing";
-import Privacy from "@/pages/Privacy";
-import Terms from "@/pages/Terms";
+
+// Pages are code-split so a first load only ships the page it needs. The heavy
+// bits (charts, the member area, admin, language/meals) no longer block the
+// landing/login paint.
+const Auth = lazy(() => import("@/pages/Auth"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
+const CurrentWeek = lazy(() => import("@/pages/CurrentWeek"));
+const LearnLanguage = lazy(() => import("@/pages/LearnLanguage"));
+const TeamManagement = lazy(() => import("@/pages/TeamManagement"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const MealPlan = lazy(() => import("@/pages/MealPlan"));
+const More = lazy(() => import("@/pages/More"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Users = lazy(() => import("@/pages/Users"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const Landing = lazy(() => import("@/pages/Landing"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
+const Terms = lazy(() => import("@/pages/Terms"));
 
 const queryClient = new QueryClient();
+
+const PageFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 // App routes that require auth — used to send logged-out visitors to login
 // (rather than a 404) when they hit a real app URL directly.
@@ -66,6 +77,7 @@ const ProtectedLayout = () => {
         <div className="flex-1 flex flex-col min-w-0 lg:bg-[#f4f4f7]">
           <AppHeader />
           <main className="flex-1">
+            <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Leaderboard />} />
               <Route path="/week" element={<CurrentWeek />} />
@@ -97,6 +109,7 @@ const ProtectedLayout = () => {
               <Route path="/users" element={<AdminOnly><Users /></AdminOnly>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </main>
           <BottomNav />
         </div>
@@ -117,6 +130,7 @@ const AppRoutes = () => {
   }
 
   return (
+    <Suspense fallback={<PageFallback />}>
     <Routes>
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -139,6 +153,7 @@ const AppRoutes = () => {
         </>
       )}
     </Routes>
+    </Suspense>
   );
 };
 

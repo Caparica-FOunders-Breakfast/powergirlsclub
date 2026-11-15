@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-15 — Code-split routes for faster first load (`perf/code-split-routes`)
+
+The whole app shipped as one ~1.4 MB JS chunk, so a first-time visitor downloaded
+every page (member area, admin, charts, animations) just to see the landing page.
+
+- Lazy-load every route page with `React.lazy` + a `Suspense` fallback in
+  `src/App.tsx`.
+- Result: the main chunk drops ~1.4 MB → ~585 KB, and the heavy pieces now load on
+  demand — recharts (~367 KB, admin dashboard only), framer-motion (~123 KB), and
+  each member page as its own chunk. The landing/login paint no longer pulls any of
+  it.
+
+
 ## 2026-11-15 — Profile + Challenge redesign (`feat/profile-challenge-redesign`)
 
 Rebuilt the Profile and Challenge (Teams) pages to the new design, **keeping every
