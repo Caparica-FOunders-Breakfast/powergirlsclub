@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Power Club homepage</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF9FB}
+a{color:#C21C70}a:hover{color:#2B1736}
+summary{cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+</style>
+</helmet>
+<div style="width: 100%; background: #FBF9FB; color: #2B1736; font-family: Nunito, system-ui, sans-serif; font-size: 17px; line-height: 1.55">
+
+  <!-- NAV -->
+  <header style="background: #FBF9FB; border-bottom: 2px solid #2B1736">
+    <div style="max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+      <a href="#top" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #C21C70; font-family: Bangers, cursive; font-size: 30px; letter-spacing: 1px">
+        Power Club
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="{{c.heart}}" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"></path></svg>
+      </a>
+      <nav aria-label="Main" style="display: flex; align-items: center; gap: 12px">
+        <a href="Login.dc.html" style="color: #2B1736; font-weight: 700; text-decoration: none; padding: 12px 14px">Log in</a>
+        <a href="#trial" style="background: #2B1736; color: #FFFFFF; font-weight: 800; text-decoration: none; padding: 12px 20px; border-radius: 12px; border: 2px solid #2B1736">Join for €10</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section id="top" style="background: {{c.heroBg}}; border-bottom: 2px solid #2B1736">
+    <div style="max-width: 1120px; margin: 0 auto; padding: 88px 24px 96px; display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+      <div style="flex: 1 1 460px; min-width: 0">
+        <p style="margin: 0 0 20px; display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,0.12); color: {{c.heroText}}; font-weight: 700; font-size: 14px; letter-spacing: 0.5px">A strength club for busy people</p>
+        <h1 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: clamp(56px, 8vw, 96px); line-height: 0.95; letter-spacing: 1.5px; color: {{c.heroText}}">Get strong in 30 minutes.<span style="display: block; color: {{c.hl}}">Have fun doing it.</span></h1>
+        <p style="margin: 28px 0 0; max-width: 520px; font-size: 19px; color: {{c.heroSub}}">Five exercises, three rounds of ten reps, a little more weight every week. No endless hours at the gym.</p>
+        <div style="margin-top: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 18px">
+          <a id="trial" href="#pricing" style="background: {{c.cta}}; color: {{c.ctaText}}; font-weight: 800; font-size: 18px; text-decoration: none; padding: 16px 28px; border-radius: 14px; border: 2px solid #2B1736; box-shadow: 4px 4px 0 #2B1736">Join Power Club for €10</a>
+          <span style="color: {{c.heroSub}}; font-size: 15px; font-weight: 600">€10/month. Show up all month and the next one is free.</span>
+        </div>
+      </div>
+
+      <!-- Product card -->
+      <div style="flex: 1 1 360px; min-width: 0; max-width: 440px">
+        <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; box-shadow: 8px 8px 0 {{c.cardShadow}}; padding: 24px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+            <p style="margin: 0; font-family: Bangers, cursive; font-size: 30px; letter-spacing: 1px">Leg day</p>
+            <p style="margin: 0; font-size: 14px; font-weight: 700; color: #77677E">Week 6 · 3 × 10</p>
+          </div>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 12px; background: #F6F1F7">
+              <span style="font-weight: 700">Goblet squat</span>
+              <span style="font-size: 14px; font-weight: 700"><span style="color: #77677E">20 kg →</span> <span style="color: {{c.pinkText}}">22 kg</span></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 12px; background: #F6F1F7">
+              <span style="font-weight: 700">Romanian deadlift</span>
+              <span style="font-size: 14px; font-weight: 700"><span style="color: #77677E">30 kg →</span> <span style="color: {{c.pinkText}}">32 kg</span></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 12px; background: #F6F1F7">
+              <span style="font-weight: 700">Hip thrust</span>
+              <span style="font-size: 14px; font-weight: 700"><span style="color: #77677E">40 kg →</span> <span style="color: {{c.pinkText}}">42 kg</span></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 12px; background: #F6F1F7">
+              <span style="font-weight: 700">Walking lunges</span>
+              <span style="font-size: 14px; font-weight: 700"><span style="color: #77677E">8 kg →</span> <span style="color: {{c.pinkText}}">10 kg</span></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 12px; background: #F6F1F7">
+              <span style="font-weight: 700">Calf raises</span>
+              <span style="font-size: 14px; font-weight: 700"><span style="color: #77677E">16 kg →</span> <span style="color: {{c.pinkText}}">18 kg</span></span>
+            </div>
+          </div>
+          <div style="margin-top: 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #77677E">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{c.pinkText}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 1-5 2 1 3 3 3 3"></path></svg>
+            12-day streak · 34 min avg
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OUR PHILOSOPHY -->
+  <section style="max-width: 1120px; margin: 0 auto; padding: 104px 24px 32px">
+    <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 56px; letter-spacing: 1px; text-align: center">Our philosophy</h2>
+    <p style="margin: 8px auto 0; text-align: center; color: #77677E; font-size: 19px; max-width: 560px">Simple enough to remember. Effective enough to work.</p>
+    <div style="margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px">
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; box-shadow: 4px 4px 0 #2B1736; padding: 24px">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8M9 9.5h.01M15 9.5h.01"></path></svg>
+        </div>
+        <h3 style="margin: 18px 0 6px; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 0.5px">Only what you enjoy</h3>
+        <p style="margin: 0; color: #5E4E66; font-size: 16px">Find exercises that are fun. You will keep coming back to them.</p>
+      </div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; box-shadow: 4px 4px 0 #2B1736; padding: 24px">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M9 2h6"></path></svg>
+        </div>
+        <h3 style="margin: 18px 0 6px; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 0.5px">Short but effective</h3>
+        <p style="margin: 0; color: #5E4E66; font-size: 16px">30 minutes, 5 exercises, 10 reps, 3 times a week. That will get you there.</p>
+      </div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; box-shadow: 4px 4px 0 #2B1736; padding: 24px">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"></path></svg>
+        </div>
+        <h3 style="margin: 18px 0 6px; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 0.5px">Lift heavy</h3>
+        <p style="margin: 0; color: #5E4E66; font-size: 16px">Find your starting weight, then add 1 kg every week. Every set should feel like a challenge.</p>
+      </div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; box-shadow: 4px 4px 0 #2B1736; padding: 24px">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="17" height="10" rx="2"></rect><path d="M22 11v2M6 10v4M10 10v4"></path></svg>
+        </div>
+        <h3 style="margin: 18px 0 6px; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 0.5px">Train by readiness</h3>
+        <p style="margin: 0; color: #5E4E66; font-size: 16px"><strong style="color: #2B1736">Ready:</strong> push hard and go heavier than last time.</p>
+        <p style="margin: 6px 0 0; color: #5E4E66; font-size: 16px"><strong style="color: #2B1736">So-so:</strong> keep the same weight as last time.</p>
+        <p style="margin: 6px 0 0; color: #5E4E66; font-size: 16px"><strong style="color: #2B1736">Not ready:</strong> we scale it down to a lighter version for you.</p>
+      </div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; box-shadow: 4px 4px 0 #2B1736; padding: 24px">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M17 4v16M4 8h6M14 16h6"></path></svg>
+        </div>
+        <h3 style="margin: 18px 0 6px; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 0.5px">Leg day, arm day</h3>
+        <p style="margin: 0; color: #5E4E66; font-size: 16px">Alternate so each body part fully rests.</p>
+      </div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; box-shadow: 4px 4px 0 #2B1736; padding: 24px">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 8a3 3 0 0 1 6 0"></path><path d="M7.5 9.5h9l1.5 3.5a6 6 0 1 1-12 0z"></path></svg>
+        </div>
+        <h3 style="margin: 18px 0 6px; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 0.5px">Use free weights</h3>
+        <p style="margin: 0; color: #5E4E66; font-size: 16px">Dumbbells, kettlebells and barbells over machines. Your body works to keep you stable, so more muscles join in.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO IT'S FOR -->
+  <section style="max-width: 1120px; margin: 0 auto; padding: 80px 24px 32px; text-align: center">
+    <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 56px; letter-spacing: 1px">Who it's for</h2>
+    <p style="margin: 8px auto 0; color: #77677E; font-size: 19px; max-width: 620px">Anyone who wants to build muscle without living at the gym. Women and men, whatever your starting point.</p>
+    <div style="margin-top: 32px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px">
+      <span style="padding: 10px 20px; border-radius: 999px; background: {{c.chip}}; border: 2px solid #2B1736; font-weight: 800">Beginners</span>
+      <span style="padding: 10px 20px; border-radius: 999px; background: {{c.chip}}; border: 2px solid #2B1736; font-weight: 800">Dancers</span>
+      <span style="padding: 10px 20px; border-radius: 999px; background: {{c.chip}}; border: 2px solid #2B1736; font-weight: 800">Padel players</span>
+      <span style="padding: 10px 20px; border-radius: 999px; background: {{c.chip}}; border: 2px solid #2B1736; font-weight: 800">Busy founders</span>
+      <span style="padding: 10px 20px; border-radius: 999px; background: {{c.chip}}; border: 2px solid #2B1736; font-weight: 800">Women</span>
+      <span style="padding: 10px 20px; border-radius: 999px; background: {{c.chip}}; border: 2px solid #2B1736; font-weight: 800">Men</span>
+    </div>
+  </section>
+
+  <!-- WHAT YOU GET -->
+  <section style="max-width: 1120px; margin: 0 auto; padding: 80px 24px 104px">
+    <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 56px; letter-spacing: 1px; text-align: center">What you get inside</h2>
+    <div style="margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px">
+      <div style="display: flex; gap: 18px; align-items: flex-start; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; padding: 22px">
+        <div style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+        </div>
+        <div>
+          <h3 style="margin: 0 0 4px; font-size: 19px; font-weight: 800">Your weekly plan</h3>
+          <p style="margin: 0; color: #5E4E66; font-size: 16px">A 4-day split (lower body, upper body + core) with 5 exercises a day. Drag days around to fit your week.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 18px; align-items: flex-start; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; padding: 22px">
+        <div style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
+        </div>
+        <div>
+          <h3 style="margin: 0 0 4px; font-size: 19px; font-weight: 800">Progressive overload, built in</h3>
+          <p style="margin: 0; color: #5E4E66; font-size: 16px">Every exercise shows last week's weight and suggests the next step, like 20 kg → try 22 kg.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 18px; align-items: flex-start; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; padding: 22px">
+        <div style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
+        </div>
+        <div>
+          <h3 style="margin: 0 0 4px; font-size: 19px; font-weight: 800">Scorecard</h3>
+          <p style="margin: 0; color: #5E4E66; font-size: 16px">A yearly activity heatmap, streaks, personal records and your strength level for each exercise.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 18px; align-items: flex-start; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; padding: 22px">
+        <div style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 16l20-8-6 12-3-5-5-1z"></path></svg>
+        </div>
+        <div>
+          <h3 style="margin: 0 0 4px; font-size: 19px; font-weight: 800">Travel mode</h3>
+          <p style="margin: 0; color: #5E4E66; font-size: 16px">Switch to bodyweight and calisthenics workouts when you're away from the gym.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 18px; align-items: flex-start; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 18px; padding: 22px">
+        <div style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: {{c.tile}}; border: 2px solid #2B1736; display: flex; align-items: center; justify-content: center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{c.tileIcon}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.8.8 3 2.6 3.5 5.2"></path></svg>
+        </div>
+        <div>
+          <h3 style="margin: 0 0 4px; font-size: 19px; font-weight: 800">Teams and 4-week challenges</h3>
+          <p style="margin: 0; color: #5E4E66; font-size: 16px">Train with friends using a join code.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BAND (replaces the gold gradient) -->
+  <section style="background: {{c.band}}; border-top: 2px solid #2B1736; border-bottom: 2px solid #2B1736">
+    <div style="max-width: 1120px; margin: 0 auto; padding: 72px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 28px">
+      <div style="flex: 1 1 480px; min-width: 0">
+        <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: clamp(44px, 6vw, 64px); line-height: 1; letter-spacing: 1px; color: {{c.bandText}}">Stronger together, anywhere</h2>
+        <p style="margin: 12px 0 0; font-size: 19px; font-weight: 600; color: {{c.bandText}}">Train at the gym or at home and share your progress with the club.</p>
+      </div>
+      <a href="#pricing" style="flex: none; background: #FFFFFF; color: #2B1736; font-weight: 800; font-size: 18px; text-decoration: none; padding: 16px 28px; border-radius: 14px; border: 2px solid #2B1736; box-shadow: 4px 4px 0 #2B1736">Join the club</a>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="max-width: 1120px; margin: 0 auto; padding: 104px 24px 32px">
+    <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 56px; letter-spacing: 1px; text-align: center">Simple pricing</h2>
+    <div style="margin: 40px auto 0; max-width: 460px; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 22px; box-shadow: 8px 8px 0 {{c.shadow}}; padding: 36px 32px; text-align: center">
+      <p style="margin: 0; font-family: Bangers, cursive; font-size: 88px; line-height: 1; color: {{c.pinkText}}">€10<span style="font-family: Nunito, sans-serif; font-size: 20px; font-weight: 700; color: #77677E"> /month</span></p>
+      <p style="margin: 10px 0 0; font-weight: 700; color: #5E4E66">Cancel anytime</p>
+      <div style="margin-top: 24px; background: #F1E9FE; border: 2px solid #2B1736; border-radius: 16px; padding: 18px 20px; text-align: left">
+        <p style="margin: 0; font-family: Bangers, cursive; font-size: 26px; letter-spacing: 0.5px; color: #6B2FB3">Show Up Guarantee</p>
+        <p style="margin: 6px 0 0; font-weight: 800; font-size: 17px">Train 3 times a week for 4 weeks in a row and your next month is on us.</p>
+      </div>
+      <ul style="margin: 28px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; text-align: left">
+        <li style="display: flex; gap: 12px; align-items: center; font-weight: 600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{c.pinkText}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"></path></svg>Your weekly 4-day plan</li>
+        <li style="display: flex; gap: 12px; align-items: center; font-weight: 600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{c.pinkText}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"></path></svg>Progressive overload tracking</li>
+        <li style="display: flex; gap: 12px; align-items: center; font-weight: 600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{c.pinkText}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"></path></svg>Scorecard, streaks and records</li>
+        <li style="display: flex; gap: 12px; align-items: center; font-weight: 600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{c.pinkText}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"></path></svg>Travel mode and team challenges</li>
+      </ul>
+      <a href="#trial" style="margin-top: 30px; display: block; background: {{c.btn}}; color: #FFFFFF; font-weight: 800; font-size: 18px; text-decoration: none; padding: 16px 24px; border-radius: 14px; border: 2px solid #2B1736; box-shadow: 4px 4px 0 #2B1736">Join for €10/month</a>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section style="max-width: 760px; margin: 0 auto; padding: 96px 24px 112px">
+    <h2 style="margin: 0 0 32px; font-family: Bangers, cursive; font-weight: 400; font-size: 56px; letter-spacing: 1px; text-align: center">Questions?</h2>
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <details style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 14px; padding: 18px 22px">
+        <summary style="font-weight: 800; font-size: 18px">Do I need experience?</summary>
+        <p style="margin: 10px 0 0; color: #5E4E66">No. Power Club works from whatever your starting point is.</p>
+      </details>
+      <details style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 14px; padding: 18px 22px">
+        <summary style="font-weight: 800; font-size: 18px">How much time does it take?</summary>
+        <p style="margin: 10px 0 0; color: #5E4E66">30 to 40 minutes per session.</p>
+      </details>
+      <details style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 14px; padding: 18px 22px">
+        <summary style="font-weight: 800; font-size: 18px">Can I train at home?</summary>
+        <p style="margin: 10px 0 0; color: #5E4E66">Yes. Travel mode switches you to bodyweight and calisthenics workouts.</p>
+      </details>
+      <details style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 14px; padding: 18px 22px">
+        <summary style="font-weight: 800; font-size: 18px">How does the Show Up Guarantee work?</summary>
+        <p style="margin: 10px 0 0; color: #5E4E66">Log at least 3 workouts in the app every week (max one per day) for 4 weeks in a row. Do it, and your next month is free. Your plan has 4 training days, so 3 of them is enough.</p>
+      </details>
+      <details style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 14px; padding: 18px 22px">
+        <summary style="font-weight: 800; font-size: 18px">Can I cancel anytime?</summary>
+        <p style="margin: 10px 0 0; color: #5E4E66">Yes, anytime.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="background: #2B1736; color: #FFFFFF">
+    <div style="max-width: 1120px; margin: 0 auto; padding: 40px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px">
+      <div>
+        <p style="margin: 0; font-family: Bangers, cursive; font-size: 28px; letter-spacing: 1px; color: {{c.footAccent}}">Power Club</p>
+        <p style="margin: 2px 0 0; font-size: 14px; color: rgba(255,255,255,0.75)">Part of Caparica Founders Breakfast</p>
+      </div>
+      <nav aria-label="Footer" style="display: flex; gap: 20px; font-weight: 700; font-size: 15px">
+        <a href="#privacy" style="color: #FFFFFF; text-decoration: none; padding: 8px 0">Privacy</a>
+        <a href="#terms" style="color: #FFFFFF; text-decoration: none; padding: 8px 0">Terms</a>
+        <a href="#contact" style="color: #FFFFFF; text-decoration: none; padding: 8px 0">Contact</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"palette":{"editor":"enum","options":["Harley","Pink + Lime","Pink + Lilac","Pink + Mint"],"default":"Harley"},"$preview":{"width":1440,"height":4300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      'Harley': {
+        heroBg: 'linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)', heroText: '#FFFFFF', heroSub: 'rgba(255,255,255,0.92)', hl: '#FFD6EA', cardShadow: '#2B1736',
+        cta: '#FFE14D', ctaText: '#2B1736', pinkText: '#C21C70', heart: '#8B5CF6',
+        tile: '#E8308C', tileIcon: '#FFFFFF', chip: '#EBDDFB',
+        band: '#6B2FB3', bandText: '#FFFFFF', shadow: '#E8308C', btn: '#C21C70', footAccent: '#FF8AC4'
+      },
+      'Pink + Lime': {
+        heroBg: '#2B1736', heroText: '#FFFFFF', heroSub: 'rgba(255,255,255,0.82)', hl: '#C6F432', cardShadow: '#C6F432',
+        cta: '#C6F432', ctaText: '#2B1736', pinkText: '#C21C70', heart: '#E8308C',
+        tile: '#C6F432', tileIcon: '#2B1736', chip: '#EEFBC4',
+        band: '#C6F432', bandText: '#2B1736', shadow: '#C6F432', btn: '#C21C70', footAccent: '#C6F432'
+      },
+      'Pink + Lilac': {
+        heroBg: '#C21C70', heroText: '#FFFFFF', heroSub: 'rgba(255,255,255,0.88)', hl: '#FFD6EA', cardShadow: '#FFD6EA',
+        cta: '#FFFFFF', ctaText: '#2B1736', pinkText: '#C21C70', heart: '#8B5CF6',
+        tile: '#E9DDFD', tileIcon: '#5B21B6', chip: '#F1E9FE',
+        band: '#5B21B6', bandText: '#FFFFFF', shadow: '#B79BF2', btn: '#C21C70', footAccent: '#FFB3D6'
+      },
+      'Pink + Mint': {
+        heroBg: '#2B1736', heroText: '#FFFFFF', heroSub: 'rgba(255,255,255,0.82)', hl: '#5EEAD4', cardShadow: '#5EEAD4',
+        cta: '#5EEAD4', ctaText: '#2B1736', pinkText: '#C21C70', heart: '#E8308C',
+        tile: '#5EEAD4', tileIcon: '#2B1736', chip: '#D7FAF2',
+        band: '#5EEAD4', bandText: '#2B1736', shadow: '#5EEAD4', btn: '#C21C70', footAccent: '#5EEAD4'
+      }
+    };
+    const key = this.props.palette ?? 'Harley';
+    return { c: P[key] || P['Harley'] };
+  }
+}
+</script>
+</body>
+</html>

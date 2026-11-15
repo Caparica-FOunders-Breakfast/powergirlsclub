@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-11-15 — Homepage + login redesign (`feat/homepage-redesign`)
+
+Rebuilt the public landing page ([src/pages/Landing.tsx](src/pages/Landing.tsx)) and the
+log-in page ([src/pages/Auth.tsx](src/pages/Auth.tsx)) to match the approved design canvas
+(the "Harley" palette). Source mockups kept in [design/](design/) for reference.
+
+### "Keep me logged in" (now functional) + reset-password restyle
+- `src/integrations/supabase/authStorage.ts`: a custom storage adapter so the
+  checkbox is real — checked keeps the session in `localStorage` (survives a
+  browser restart), unchecked uses `sessionStorage` (cleared when the browser
+  closes). `client.ts` now uses it; `Auth.tsx` records the choice before sign-in
+  (signups always persist). *Heads-up: `client.ts` is a Lovable-generated file;
+  if it's ever regenerated, re-add the `storage: authStorage` line.*
+- `src/pages/ResetPassword.tsx` rebuilt in the new design language (gradient +
+  hard-shadow card, Bangers headings, pink buttons, show/hide password). Recovery
+  logic and all three states (checking / invalid / ready) unchanged.
+
+### Login page (`Auth.tsx`)
+- Two-panel layout: gradient brand panel (logo + SVG heart, "Your plan is waiting. Let's
+  lift.", a **static** "This week" tracker illustration) + form panel.
+- Form: "Back to home", Email, Password with a **show/hide** toggle, "Keep me logged in",
+  pink "Let's go!" button, "Join the club for €10/month" (lilac), footer links.
+- **Existing auth logic unchanged** — still `signIn` / `signUp` / `resetPasswordForEmail`,
+  the `?mode=` param, the signups feature flag, and the forgot-password flow; only the
+  layout/styling changed. "Keep me logged in" reflects the app's default persistent
+  session (unchecking is cosmetic for now).
+- Mobile stacks form-first (brand panel below) so login stays immediately reachable.
+- Scoped pink focus ring added in `index.css` (`.pc-auth input:focus`).
+
+### Landing page
+
+- New look: off-white `#FBF9FB` ground, deep-purple `#2B1736` ink/borders with hard
+  `4px/8px` offset shadows, a pink→purple gradient hero, yellow CTA, lilac chips.
+- New hero **product card** ("Leg day" with per-exercise weight progressions + streak).
+- "Our philosophy" (6 cards incl. **Train by readiness** — Ready / So-so / Not ready),
+  "Who it's for" chips, "What you get inside" (5 cards), "Stronger together" band,
+  pricing, FAQ (`<details>`), dark footer.
+- **Pricing model change (from the design):** dropped the "2-week free trial" framing
+  in favour of **€10/month + a "Show Up Guarantee"** (train 3×/week for 4 weeks → next
+  month free). CTAs now read "Join for €10" and point to `/auth?mode=signup`;
+  "Log in" → `/auth?mode=login`; footer Privacy/Terms → their routes. No payment flow
+  added — price is still display-only.
+- Updated `index.html` meta/OG description to drop "2 weeks free"; hid the native
+  `<summary>` disclosure marker in `index.css` for the FAQ.
+- Verified desktop + mobile in preview; FAQ toggles; console clean; `tsc`/build pass.
+
 ## 2026-10-15 — Data backfill: normalize malformed plan rows (`fix/normalize-plan-exercise-rows`)
 
 Follow-up to bug #3. The structured editor fixed *new* edits, but existing

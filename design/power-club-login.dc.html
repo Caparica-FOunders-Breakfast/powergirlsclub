@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Power Club log in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF9FB}
+a{color:#C21C70}a:hover{color:#2B1736}
+input:focus{outline:3px solid #E8308C;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 900px; display: flex; flex-wrap: wrap; background: #FBF9FB; color: #2B1736; font-family: Nunito, system-ui, sans-serif; font-size: 17px; line-height: 1.5">
+
+  <!-- BRAND PANEL -->
+  <section style="flex: 1 1 520px; min-width: 0; background: linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%); color: #FFFFFF; border-right: 2px solid #2B1736; padding: 48px 56px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 40px">
+    <a href="#home" style="display: inline-flex; align-items: center; gap: 8px; color: #FFFFFF; text-decoration: none; font-family: Bangers, cursive; font-size: 32px; letter-spacing: 1px; align-self: flex-start">
+      Power Club
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#FFD6EA" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"></path></svg>
+    </a>
+
+    <div>
+      <h1 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: clamp(52px, 6vw, 80px); line-height: 0.95; letter-spacing: 1.5px">Your plan is waiting.<span style="display: block; color: #FFD6EA">Let's lift.</span></h1>
+      <p style="margin: 20px 0 0; max-width: 440px; font-size: 19px; color: rgba(255,255,255,0.92)">Log in to see this week's workouts, your streak and how close you are to a free month.</p>
+
+      <!-- Preview card -->
+      <div style="margin-top: 36px; max-width: 440px; background: #FFFFFF; color: #2B1736; border: 2px solid #2B1736; border-radius: 20px; box-shadow: 6px 6px 0 #2B1736; padding: 22px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+          <p style="margin: 0; font-family: Bangers, cursive; font-size: 26px; letter-spacing: 0.5px">This week</p>
+          <p style="margin: 0; font-size: 14px; font-weight: 700; color: #77677E">2 of 3 done</p>
+        </div>
+        <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; text-align: center; font-size: 13px; font-weight: 800">
+          <div><div style="height: 36px; border-radius: 10px; background: #E8308C; border: 2px solid #2B1736"></div><span style="display: block; margin-top: 4px">Mon</span></div>
+          <div><div style="height: 36px; border-radius: 10px; background: #F6F1F7; border: 2px solid #E4DAE7"></div><span style="display: block; margin-top: 4px; color: #77677E">Tue</span></div>
+          <div><div style="height: 36px; border-radius: 10px; background: #E8308C; border: 2px solid #2B1736"></div><span style="display: block; margin-top: 4px">Wed</span></div>
+          <div><div style="height: 36px; border-radius: 10px; background: #FFFFFF; border: 2px dashed #6B2FB3"></div><span style="display: block; margin-top: 4px; color: #6B2FB3">Thu</span></div>
+          <div><div style="height: 36px; border-radius: 10px; background: #F6F1F7; border: 2px solid #E4DAE7"></div><span style="display: block; margin-top: 4px; color: #77677E">Fri</span></div>
+          <div><div style="height: 36px; border-radius: 10px; background: #F6F1F7; border: 2px solid #E4DAE7"></div><span style="display: block; margin-top: 4px; color: #77677E">Sat</span></div>
+          <div><div style="height: 36px; border-radius: 10px; background: #F6F1F7; border: 2px solid #E4DAE7"></div><span style="display: block; margin-top: 4px; color: #77677E">Sun</span></div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: #F1E9FE; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; font-weight: 700">
+          <span>Show Up Guarantee</span>
+          <span style="color: #6B2FB3">Week 2 of 4</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin: 0; font-weight: 700; font-size: 15px; color: rgba(255,255,255,0.88)">Stronger together, anywhere · Part of Caparica Founders Breakfast</p>
+  </section>
+
+  <!-- FORM PANEL -->
+  <section style="flex: 1 1 480px; min-width: 0; padding: 40px 56px; box-sizing: border-box; display: flex; flex-direction: column">
+    <a href="#home" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: 2px solid #2B1736; border-radius: 12px; background: #FFFFFF; color: #2B1736; text-decoration: none; font-weight: 800; font-size: 15px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2B1736" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+      Back to home
+    </a>
+
+    <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 0">
+      <form style="width: 100%; max-width: 420px">
+        <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 52px; letter-spacing: 1px">Welcome back!</h2>
+        <p style="margin: 4px 0 0; color: #77677E">Good to see you again. Ready to train?</p>
+
+        <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 8px">
+          <label for="email" style="font-weight: 800; font-size: 15px">Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="you@example.com" style="height: 52px; padding: 0 16px; border: 2px solid #2B1736; border-radius: 12px; background: #FFFFFF; font: inherit; color: #2B1736; box-sizing: border-box">
+        </div>
+
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <label for="password" style="font-weight: 800; font-size: 15px">Password</label>
+            <a href="#forgot" style="font-size: 14px; font-weight: 700">Forgot password?</a>
+          </div>
+          <div style="position: relative">
+            <input id="password" type="{{pwType}}" autocomplete="current-password" placeholder="Your password" style="width: 100%; height: 52px; padding: 0 56px 0 16px; border: 2px solid #2B1736; border-radius: 12px; background: #FFFFFF; font: inherit; color: #2B1736; box-sizing: border-box">
+            <button type="button" onClick="{{togglePw}}" aria-label="{{pwLabel}}" style="position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#77677E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+        </div>
+
+        <label style="margin-top: 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; cursor: pointer">
+          <input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #C21C70">
+          Keep me logged in
+        </label>
+
+        <button type="button" style="margin-top: 28px; width: 100%; height: 56px; background: #C21C70; color: #FFFFFF; border: 2px solid #2B1736; border-radius: 14px; box-shadow: 4px 4px 0 #2B1736; font: inherit; font-weight: 800; font-size: 18px; cursor: pointer">Let's go!</button>
+
+        <div style="margin: 32px 0 0; display: flex; align-items: center; gap: 12px; color: #77677E; font-size: 14px; font-weight: 700">
+          <span style="flex: 1; height: 2px; background: #E4DAE7"></span>
+          New to Power Club?
+          <span style="flex: 1; height: 2px; background: #E4DAE7"></span>
+        </div>
+
+        <a href="#home" style="margin-top: 20px; display: block; text-align: center; padding: 14px 20px; border: 2px solid #2B1736; border-radius: 14px; background: #F1E9FE; color: #2B1736; text-decoration: none; font-weight: 800">Join the club for €10/month</a>
+        <p style="margin: 10px 0 0; text-align: center; font-size: 14px; color: #77677E">Show up all month and the next one is free.</p>
+      </form>
+    </div>
+
+    <nav aria-label="Footer" style="display: flex; justify-content: center; gap: 20px; font-size: 14px; font-weight: 700">
+      <a href="#privacy" style="color: #77677E; text-decoration: none; padding: 8px 0">Privacy</a>
+      <a href="#terms" style="color: #77677E; text-decoration: none; padding: 8px 0">Terms</a>
+      <a href="#contact" style="color: #77677E; text-decoration: none; padding: 8px 0">Contact</a>
+    </nav>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const show = !!(this.state && this.state.showPw);
+    return {
+      pwType: show ? 'text' : 'password',
+      pwLabel: show ? 'Hide password' : 'Show password',
+      togglePw: () => this.setState({ showPw: !show })
+    };
+  }
+}
+</script>
+</body>
+</html>
