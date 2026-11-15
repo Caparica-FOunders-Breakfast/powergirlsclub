@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Power Club scorecard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF9FB}
+a{color:#C21C70}a:hover{color:#2B1736}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1900px; display: flex; flex-wrap: wrap; background: #FBF9FB; color: #2B1736; font-family: Nunito, system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+
+  <!-- SIDEBAR -->
+  <aside style="flex: 1 1 220px; min-width: 0; background: #2B1736; color: #FFFFFF; padding: 28px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+    <div style="padding: 0 10px">
+      <p style="margin: 0; font-family: Bangers, cursive; font-size: 32px; letter-spacing: 1px; color: #FF8AC4; line-height: 1">Power Club</p>
+      <p style="margin: 6px 0 0; font-size: 12px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.75)">STRONGER TOGETHER</p>
+    </div>
+    <nav aria-label="App" style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0 10px 6px; font-size: 12px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.6)">NAVIGATE</p>
+      <a href="#exercises" style="display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; color: #FFFFFF; text-decoration: none; font-weight: 700">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg>Exercises</a>
+      <a href="#scorecard" aria-current="page" style="display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; background: #E8308C; color: #FFFFFF; text-decoration: none; font-weight: 800">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Scorecard</a>
+      <a href="#challenge" style="display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; color: #FFFFFF; text-decoration: none; font-weight: 700">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"></path></svg>Challenge</a>
+      <a href="#language" style="display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; color: #FFFFFF; text-decoration: none; font-weight: 700">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"></path></svg>Language</a>
+      <a href="#profile" style="display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; color: #FFFFFF; text-decoration: none; font-weight: 700">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg>Profile</a>
+      <p style="margin: 18px 10px 6px; font-size: 12px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.6)">ADMIN ONLY</p>
+      <a href="#dashboard" style="display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; color: #FFFFFF; text-decoration: none; font-weight: 700">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>Dashboard</a>
+      <a href="#users" style="display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; color: #FFFFFF; text-decoration: none; font-weight: 700">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.8.8 3 2.6 3.5 5.2"></path></svg>Users</a>
+    </nav>
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,0.15)">
+      <span style="width: 40px; height: 40px; border-radius: 999px; background: #E8308C; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">KL</span>
+      <div>
+        <p style="margin: 0; font-weight: 800">Klarita</p>
+        <p style="margin: 0; font-size: 13px; color: rgba(255,255,255,0.7)">Admin</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main style="flex: 999 1 640px; min-width: 0; padding: 32px 40px 64px; box-sizing: border-box">
+    <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px">
+
+      <!-- Header -->
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+        <h1 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 52px; letter-spacing: 1px; line-height: 1">Scorecard</h1>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span style="font-size: 13px; font-weight: 800; color: #77677E">Viewing as</span>
+          <div style="display: flex; border: 2px solid #2B1736; border-radius: 12px; overflow: hidden">
+            <button type="button" style="min-height: 40px; padding: 0 16px; border: 0; background: #2B1736; color: #FFFFFF; font-weight: 800; font-size: 14px">Admin</button>
+            <button type="button" style="min-height: 40px; padding: 0 16px; border: 0; background: #FFFFFF; color: #2B1736; font-weight: 800; font-size: 14px">User</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 1: This month + Streak -->
+      <div style="display: flex; flex-wrap: wrap; gap: 24px">
+        <section style="flex: 2 1 520px; min-width: 0; background: linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%); color: #FFFFFF; border: 2px solid #2B1736; border-radius: 22px; box-shadow: 6px 6px 0 #2B1736; padding: 28px">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px">
+            <div>
+              <p style="margin: 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.88)">SHOW UP GUARANTEE · NOVEMBER</p>
+              <h2 style="margin: 6px 0 0; font-family: Bangers, cursive; font-weight: 400; font-size: 40px; letter-spacing: 1px; line-height: 1">4 of 12 sessions</h2>
+              <p style="margin: 8px 0 0; font-weight: 700; color: rgba(255,255,255,0.92)">2 more this week keeps your free month on track.</p>
+            </div>
+            <a href="#workout" style="background: #FFE14D; color: #2B1736; font-weight: 800; text-decoration: none; padding: 14px 22px; border-radius: 14px; border: 2px solid #2B1736; box-shadow: 4px 4px 0 #2B1736">Start today's workout</a>
+          </div>
+          <div style="margin-top: 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+            <sc-for list="{{weeks}}" as="wk" hint-placeholder-count="4">
+              <div style="background: rgba(255,255,255,0.14); border-radius: 14px; padding: 12px 14px">
+                <p style="margin: 0; font-size: 13px; font-weight: 800">{{wk.label}}</p>
+                <div style="margin-top: 8px; display: flex; gap: 6px">
+                  <sc-for list="{{wk.dots}}" as="dot" hint-placeholder-count="3">
+                    <span style="flex: 1; height: 10px; border-radius: 999px; background: {{dot.bg}}"></span>
+                  </sc-for>
+                </div>
+                <p style="margin: 8px 0 0; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.9)">{{wk.status}}</p>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="flex: 1 1 260px; min-width: 0; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 22px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px">
+          <div>
+            <p style="margin: 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #77677E">CURRENT STREAK</p>
+            <p style="margin: 4px 0 0; font-family: Bangers, cursive; font-size: 64px; line-height: 1; color: #C21C70">0 days</p>
+            <p style="margin: 8px 0 0; font-weight: 700; color: #5E4E66">Train today to start a new streak.</p>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 12px; background: #F1E9FE; font-weight: 800">
+            <span>Best streak</span>
+            <span style="color: #6B2FB3">11 days</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Row 2: Activity -->
+      <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 22px; padding: 24px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px">
+          <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 32px; letter-spacing: 1px">Activity this year</h2>
+          <div style="display: flex; border: 2px solid #2B1736; border-radius: 12px; overflow: hidden">
+            <sc-for list="{{ranges}}" as="r" hint-placeholder-count="4">
+              <button type="button" onClick="{{r.pick}}" style="min-height: 40px; padding: 0 14px; border: 0; background: {{r.bg}}; color: {{r.fg}}; font-weight: 800; font-size: 14px; cursor: pointer">{{r.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px">
+          <div style="padding: 14px 16px; border-radius: 14px; background: #F6F1F7">
+            <p style="margin: 0; font-size: 13px; font-weight: 800; color: #77677E">Workouts</p>
+            <p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 34px; line-height: 1.1">66</p>
+          </div>
+          <div style="padding: 14px 16px; border-radius: 14px; background: #F6F1F7">
+            <p style="margin: 0; font-size: 13px; font-weight: 800; color: #77677E">Days active</p>
+            <p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 34px; line-height: 1.1">26%<span style="font-family: Nunito, sans-serif; font-size: 14px; font-weight: 700; color: #77677E"> of days</span></p>
+          </div>
+          <div style="padding: 14px 16px; border-radius: 14px; background: #F6F1F7">
+            <p style="margin: 0; font-size: 13px; font-weight: 800; color: #77677E">Exercises logged</p>
+            <p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 34px; line-height: 1.1">277</p>
+          </div>
+          <div style="padding: 14px 16px; border-radius: 14px; background: #F6F1F7">
+            <p style="margin: 0; font-size: 13px; font-weight: 800; color: #77677E">You train most at</p>
+            <p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 34px; line-height: 1.1">1 PM</p>
+          </div>
+        </div>
+        <div style="margin-top: 20px; overflow-x: auto">
+          <div style="display: flex; gap: 3px; min-width: 760px">
+            <sc-for list="{{heat}}" as="col" hint-placeholder-count="53">
+              <div style="display: flex; flex-direction: column; gap: 3px; flex: 1">
+                <sc-for list="{{col.days}}" as="cell" hint-placeholder-count="7">
+                  <span style="display: block; aspect-ratio: 1; border-radius: 3px; background: {{cell.bg}}; outline: {{cell.ring}}; outline-offset: 1px"></span>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 8px; display: flex; justify-content: space-between; min-width: 760px; font-size: 12px; font-weight: 700; color: #77677E">
+            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+          </div>
+        </div>
+        <div style="margin-top: 12px; display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #77677E">
+          Less
+          <span style="width: 12px; height: 12px; border-radius: 3px; background: #F3EDF4"></span>
+          <span style="width: 12px; height: 12px; border-radius: 3px; background: #F9C3DC"></span>
+          <span style="width: 12px; height: 12px; border-radius: 3px; background: #EE6FAA"></span>
+          <span style="width: 12px; height: 12px; border-radius: 3px; background: #C21C70"></span>
+          More
+        </div>
+      </section>
+
+      <!-- Row 3: Strength + Exercises -->
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+        <section style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+          <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 22px; padding: 24px">
+            <p style="margin: 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #77677E">OVERALL STRENGTH</p>
+            <p style="margin: 4px 0 0; font-family: Bangers, cursive; font-size: 36px; letter-spacing: 1px; line-height: 1.1">Leveling up</p>
+            <p style="margin: 6px 0 0; color: #5E4E66">On average you lift <strong style="color: #2B1736">0.39×</strong> your bodyweight.</p>
+            <p style="margin: 20px 0 8px; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #77677E">STRONGEST LIFTS</p>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; background: #F6F1F7; font-weight: 700"><span>Barbell squat</span><span>45 kg <span style="color: #C21C70">0.71×</span></span></div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; background: #F6F1F7; font-weight: 700"><span>Romanian deadlift</span><span>40 kg <span style="color: #C21C70">0.63×</span></span></div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; background: #F6F1F7; font-weight: 700"><span>Hip thrust</span><span>40 kg <span style="color: #C21C70">0.63×</span></span></div>
+            </div>
+          </div>
+
+          <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 22px; padding: 24px">
+            <p style="margin: 0 0 12px; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #77677E">STRENGTH LEVELS</p>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <sc-for list="{{levels}}" as="lv" hint-placeholder-count="5">
+                <div style="display: flex; align-items: center; gap: 12px">
+                  <div style="display: flex; gap: 3px; width: 80px">
+                    <sc-for list="{{lv.segs}}" as="sg" hint-placeholder-count="5">
+                      <span style="flex: 1; height: 8px; border-radius: 999px; background: {{sg.bg}}"></span>
+                    </sc-for>
+                  </div>
+                  <span style="font-weight: 800; font-size: 15px">{{lv.name}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <p style="margin: 14px 0 0; font-size: 14px; color: #5E4E66">Levels compare your best weight to your bodyweight for each exercise.</p>
+          </div>
+        </section>
+
+        <section style="flex: 2 1 520px; min-width: 0; background: #FFFFFF; border: 2px solid #2B1736; border-radius: 22px; padding: 24px">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 32px; letter-spacing: 1px">Exercise progress</h2>
+            <a href="#add" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: 2px solid #2B1736; border-radius: 12px; background: #C21C70; color: #FFFFFF; text-decoration: none; font-weight: 800; font-size: 15px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add exercise</a>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+                <button type="button" onClick="{{f.pick}}" style="min-height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid #2B1736; background: {{f.bg}}; color: {{f.fg}}; font-weight: 800; font-size: 14px; white-space: nowrap; cursor: pointer">{{f.label}}</button>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span style="font-size: 13px; font-weight: 800; color: #77677E">Sort</span>
+              <sc-for list="{{sorts}}" as="s" hint-placeholder-count="3">
+                <button type="button" onClick="{{s.pick}}" style="min-height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: {{s.bg}}; color: {{s.fg}}; font-weight: 800; font-size: 14px; white-space: nowrap; cursor: pointer">{{s.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; flex-direction: column">
+            <sc-for list="{{rows}}" as="ex" hint-placeholder-count="10">
+              <a href="#exercise" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 14px 4px; border-top: 1px solid #EFE6F1; color: #2B1736; text-decoration: none">
+                <div style="flex: 1 1 200px; min-width: 0">
+                  <p style="margin: 0; font-weight: 800; font-size: 17px">{{ex.name}}<sc-if value="{{ex.pr}}" hint-placeholder-val="{{false}}"><span style="margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #FFE14D; border: 1.5px solid #2B1736; font-size: 11px; font-weight: 800; vertical-align: 2px">PR</span></sc-if></p>
+                  <p style="margin: 2px 0 0; font-size: 14px; font-weight: 600; color: #77677E">{{ex.group}} · {{ex.sessions}}</p>
+                </div>
+                <div style="flex: 0 1 190px; min-width: 150px">
+                  <div style="display: flex; gap: 3px">
+                    <sc-for list="{{ex.segs}}" as="sg" hint-placeholder-count="5">
+                      <span style="flex: 1; height: 8px; border-radius: 999px; background: {{sg.bg}}"></span>
+                    </sc-for>
+                  </div>
+                  <p style="margin: 4px 0 0; font-size: 13px; font-weight: 800; color: {{ex.levelColor}}">{{ex.level}}</p>
+                </div>
+                <div style="flex: 0 0 110px; text-align: right">
+                  <p style="margin: 0; font-family: Bangers, cursive; font-size: 26px; line-height: 1">{{ex.value}}<span style="font-family: Nunito, sans-serif; font-size: 14px; font-weight: 700; color: #77677E"> {{ex.unit}}</span></p>
+                  <p style="margin: 2px 0 0; font-size: 12px; font-weight: 700; color: #77677E">{{ex.bw}}</p>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#77677E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+              </a>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{hasMore}}" hint-placeholder-val="{{true}}">
+            <button type="button" onClick="{{toggleAll}}" style="margin-top: 8px; width: 100%; min-height: 48px; border: 2px dashed #B79BF2; border-radius: 14px; background: #FBF9FB; color: #6B2FB3; font-weight: 800; font-size: 15px; cursor: pointer">{{moreLabel}}</button>
+          </sc-if>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const filter = st.filter || 'All';
+    const sort = st.sort || 'Level';
+    const showAll = !!st.showAll;
+    const range = st.range || 'Year';
+
+    const LV = ['Beginner', 'Leveling up', 'Strong', 'Advanced', 'Very strong'];
+    const LVC = ['#6B2FB3', '#A3165E', '#C21C70', '#5B21B6', '#2B1736'];
+    const segsFor = (n) => [0, 1, 2, 3, 4].map(i => ({ bg: i < n ? '#E8308C' : '#EFE6F1' }));
+
+    const G = { core: 'Core', glutes: 'Glutes', legs: 'Legs', upper: 'Upper body', cardio: 'Cardio and power' };
+    const GROUP = { core: 'Core', glutes: 'Lower body', legs: 'Lower body', upper: 'Upper body', cardio: 'Cardio and power' };
+    const D = [
+      ['Plank','core',9,3,'60','sec','',true],
+      ['Hip thrust','glutes',17,3,'40','kg','0.63× BW',false],
+      ['Push ups','upper',11,2,'10','reps','',false],
+      ['Barbell squat','legs',8,3,'45','kg','0.71× BW',true],
+      ['Romanian deadlift','glutes',12,3,'40','kg','0.63× BW',false],
+      ['Leg extension','legs',3,3,'40','kg','0.63× BW',false],
+      ['Side plank','core',14,3,'30','sec','',false],
+      ['Lat pulldown','upper',13,2,'30','kg','0.48× BW',false],
+      ['Cable row','upper',3,2,'30','kg','0.48× BW',true],
+      ['Battle ropes','cardio',6,2,'20','sec','',false],
+      ['Seated row','upper',1,2,'25','kg','0.40× BW',false],
+      ['Goblet squat','legs',12,1,'20','kg','0.32× BW',false],
+      ['Smith machine lunges','legs',2,2,'22.5','kg','0.36× BW',true],
+      ['Kettlebell swings','cardio',6,1,'22','kg','0.35× BW',true],
+      ['Reverse lunges','legs',8,1,'20','kg','0.32× BW',false],
+      ['Farmer carry','cardio',11,2,'20','sec','',false],
+      ['Step ups','legs',8,1,'20','kg','0.32× BW',true],
+      ['Dumbbell shoulder press','upper',14,1,'19','kg','0.30× BW',true],
+      ['Russian twists','core',17,1,'17.5','kg','0.28× BW',true],
+      ['Cable kickbacks','glutes',3,1,'15','kg','0.24× BW',true],
+      ['Dead bug','core',13,2,'10','reps','',false],
+      ['Box jumps','legs',6,2,'10','reps','',false],
+      ['Back extension','upper',16,1,'10','kg','0.16× BW',false],
+      ['Bird dog','core',16,2,'10','reps','',false],
+      ['Hanging knee raises','core',6,2,'10','reps','',false],
+      ['Pull ups','upper',4,4,'10','kg','assisted',true],
+      ['Bike sprint','cardio',3,5,'5','rounds','20s all-in, 3 min rest',true]
+    ];
+    let list = D.map(d => ({
+      name: d[0], cat: d[1], group: G[d[1]], sessions: d[2] + (d[2] === 1 ? ' session' : ' sessions'), n: d[2],
+      lv: d[3], level: LV[d[3]-1], levelColor: LVC[d[3]-1], segs: segsFor(d[3]),
+      value: d[4], unit: d[5], bw: d[6], pr: d[7]
+    }));
+    if (filter !== 'All') list = list.filter(x => GROUP[x.cat] === filter);
+    if (sort === 'Level') list.sort((a, b) => b.lv - a.lv || b.n - a.n);
+    if (sort === 'Sessions') list.sort((a, b) => b.n - a.n);
+    if (sort === 'A–Z') list.sort((a, b) => a.name.localeCompare(b.name));
+    const total = list.length;
+    const rows = showAll ? list : list.slice(0, 8);
+
+    const filters = ['All', 'Lower body', 'Upper body', 'Core', 'Cardio and power'].map(l => ({
+      label: l, bg: l === filter ? '#2B1736' : '#FFFFFF', fg: l === filter ? '#FFFFFF' : '#2B1736',
+      pick: () => this.setState({ filter: l, showAll: false })
+    }));
+    const sorts = ['Level', 'Sessions', 'A–Z'].map(l => ({
+      label: l, bg: l === sort ? '#F1E9FE' : 'transparent', fg: l === sort ? '#5B21B6' : '#5E4E66',
+      pick: () => this.setState({ sort: l })
+    }));
+    const ranges = ['Year', '90 days', '30 days', '7 days'].map(l => ({
+      label: l, bg: l === range ? '#2B1736' : '#FFFFFF', fg: l === range ? '#FFFFFF' : '#2B1736',
+      pick: () => this.setState({ range: l })
+    }));
+
+    const weeks = [
+      { label: 'Week 1', done: 3, status: 'Done' },
+      { label: 'Week 2', done: 1, status: '1 of 3, this week' },
+      { label: 'Week 3', done: 0, status: 'Coming up' },
+      { label: 'Week 4', done: 0, status: 'Coming up' }
+    ].map(w => ({ ...w, dots: [0, 1, 2].map(i => ({ bg: i < w.done ? '#FFFFFF' : 'rgba(255,255,255,0.28)' })) }));
+
+    const levels = LV.slice().reverse().map((name, i) => ({ name, segs: segsFor(5 - i) }));
+
+    let seed = 7;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    const COLORS = ['#F3EDF4', '#F9C3DC', '#EE6FAA', '#C21C70'];
+    const heat = [];
+    for (let w = 0; w < 53; w++) {
+      const days = [];
+      for (let d = 0; d < 7; d++) {
+        const future = w > 45 || (w === 45 && d > 6);
+        const today = w === 45 && d === 6;
+        let bg = '#FFFFFF', ring = '1px solid #EFE6F1';
+        if (!future) {
+          const p = (w >= 8 && w <= 40) ? 0.42 : 0.12;
+          const r = rnd();
+          const lvl = r < p ? (r < p * 0.25 ? 3 : r < p * 0.6 ? 2 : 1) : 0;
+          bg = COLORS[lvl]; ring = 'none';
+        }
+        if (today) { bg = '#C21C70'; ring = '2px solid #2B1736'; }
+        days.push({ bg, ring });
+      }
+      heat.push({ days });
+    }
+
+    return {
+      rows, filters, sorts, ranges, weeks, levels, heat,
+      hasMore: total > 8,
+      moreLabel: showAll ? 'Show fewer' : 'Show all ' + total + ' exercises',
+      toggleAll: () => this.setState({ showAll: !showAll })
+    };
+  }
+}
+</script>
+</body>
+</html>
