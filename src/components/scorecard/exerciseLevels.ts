@@ -50,10 +50,10 @@ export const ASSISTED_EXERCISES = new Set(Object.keys(ASSISTED_EXERCISE_THRESHOL
 
 export const LEVEL_DEFS = [
   { label: "Beginner" as const, icon: "🌱", index: 0 },
-  { label: "Leveling Up" as const, icon: "⚡", index: 1 },
+  { label: "Leveling up" as const, icon: "⚡", index: 1 },
   { label: "Strong" as const, icon: "💪", index: 2 },
-  { label: "Very Strong" as const, icon: "🔥", index: 3 },
-  { label: "Elite" as const, icon: "👑", index: 4 },
+  { label: "Advanced" as const, icon: "🔥", index: 3 },
+  { label: "Very strong" as const, icon: "👑", index: 4 },
 ];
 
 export function getNonKgLevel(name: string, value: number) {
