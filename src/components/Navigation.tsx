@@ -148,10 +148,10 @@ export function AppSidebar() {
           The <aside> stretches to the full document height (flex align-stretch) so the
           dark background always runs to the bottom of the page; an inner sticky,
           viewport-tall column keeps the nav pinned while you scroll. */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 bg-[#1a0a2e] text-white border-r border-white/10">
+      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 bg-[#2B1736] text-white border-r border-white/10">
        <div className="lg:sticky lg:top-0 lg:h-screen flex flex-col">
         <div className="px-6 py-7 border-b border-white/10">
-          <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF2D87] leading-none">
+          <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF8AC4] leading-none">
             Power Club
           </h2>
           <p className="text-xs font-bold text-white/60 mt-2 uppercase tracking-wider">💜 Stronger Together</p>
@@ -167,7 +167,7 @@ export function AppSidebar() {
                 to={item.path}
                 end
                 className="flex items-center gap-3.5 px-5 py-3.5 rounded-xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-                activeClassName="bg-[#FF2D87]/15 text-[#FF2D87]"
+                activeClassName="bg-[#E8308C] text-white"
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 <span>{item.label}</span>
@@ -187,7 +187,7 @@ export function AppSidebar() {
                     to={item.path}
                     end
                     className="flex items-center gap-3.5 px-5 py-3.5 rounded-xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-                    activeClassName="bg-[#FF2D87]/15 text-[#FF2D87]"
+                    activeClassName="bg-[#E8308C] text-white"
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
                     <span>{item.label}</span>

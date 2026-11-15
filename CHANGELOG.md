@@ -1,5 +1,49 @@
 # Changelog
 
+## 2026-11-15 — Member-area redesign: Exercises + Scorecard (`feat/member-area-redesign`)
+
+Rebuilt the two core member pages + the edit view to the new design canvas
+(`design/power-club-this-week`, `-scorecard`, `-edit-exercises`), keeping the
+existing data/logging logic intact. **Behind auth — verified by build/typecheck/
+code review, not a logged-in click-through.**
+
+### New features
+- **Readiness selector** (Exercises): Ready / So-so / Not ready adjusts the
+  *suggested* target weight per exercise. Chosen per day, remembered in
+  localStorage. The weight input still starts empty and only persists what you
+  enter/confirm — no weight is ever logged that you didn't lift. (This is the one
+  deliberate deviation from the mockup's pre-filled input, to protect data.)
+- **Show Up Guarantee** tracking: new `useShowUpGuarantee` hook counts distinct
+  active days per week (target 3) over a 4-week window (target 12) from completed
+  logs. Shown on the Scorecard (month card + 4-week dots) and Exercises (this-week card).
+- **Current / best streak** card on the Scorecard (`useStreaks`/`computeStreaks`).
+
+### Scorecard (`Leaderboard` + `ExerciseScorecard`)
+- New layout: Show Up Guarantee + streak row; Activity (range toggle, stat tiles,
+  graduated year heatmap, legend); Overall strength + strength-levels legend;
+  Exercise progress list with group filters, **Level / Sessions / A–Z sort**, level
+  segments, PR badges, and show-all. Preserves the exercise derivation, hide/unhide
+  + Add exercise, and the `ExerciseDetail` drill-down. `ActivityOverview` and
+  `StrengthSummary` folded in and removed.
+
+### Exercises (`CurrentWeek`)
+- New focused-day layout: week strip (click a day to focus it), a gradient "today"
+  card with readiness + exercise list + finish, and a right column (Show Up
+  Guarantee, Next up, Tip). **All logging preserved**: `exercise_logs` write path,
+  `-1`=fail ("F"), blur/toggle saves, Complete/Undo, rest-day logging.
+
+### Edit exercises (`ExerciseEditor`)
+- Restyled to the design (numbered cards, single-select Type pills — Weights /
+  Bodyweight / Time / Rounds / Assisted — Sets/amount/load/progression fields,
+  video). Autosave model unchanged.
+
+### Other
+- Strength levels relabelled **Beginner / Leveling up / Strong / Advanced / Very
+  strong** (ratio thresholds unchanged) across the engines + Profile.
+- App sidebar colours aligned to the design (`#2B1736` ground, `#FF8AC4` logo,
+  `#E8308C` active).
+
+
 ## 2026-11-15 — Homepage + login redesign (`feat/homepage-redesign`)
 
 Rebuilt the public landing page ([src/pages/Landing.tsx](src/pages/Landing.tsx)) and the
