@@ -1,9 +1,24 @@
 # Changelog
 
-## 2026-11-15 — Homepage redesign (`feat/homepage-redesign`)
+## 2026-11-15 — Homepage + login redesign (`feat/homepage-redesign`)
 
-Rebuilt the public landing page ([src/pages/Landing.tsx](src/pages/Landing.tsx)) to
-match the approved design canvas (the "Harley" palette).
+Rebuilt the public landing page ([src/pages/Landing.tsx](src/pages/Landing.tsx)) and the
+log-in page ([src/pages/Auth.tsx](src/pages/Auth.tsx)) to match the approved design canvas
+(the "Harley" palette). Source mockups kept in [design/](design/) for reference.
+
+### Login page (`Auth.tsx`)
+- Two-panel layout: gradient brand panel (logo + SVG heart, "Your plan is waiting. Let's
+  lift.", a **static** "This week" tracker illustration) + form panel.
+- Form: "Back to home", Email, Password with a **show/hide** toggle, "Keep me logged in",
+  pink "Let's go!" button, "Join the club for €10/month" (lilac), footer links.
+- **Existing auth logic unchanged** — still `signIn` / `signUp` / `resetPasswordForEmail`,
+  the `?mode=` param, the signups feature flag, and the forgot-password flow; only the
+  layout/styling changed. "Keep me logged in" reflects the app's default persistent
+  session (unchecking is cosmetic for now).
+- Mobile stacks form-first (brand panel below) so login stays immediately reachable.
+- Scoped pink focus ring added in `index.css` (`.pc-auth input:focus`).
+
+### Landing page
 
 - New look: off-white `#FBF9FB` ground, deep-purple `#2B1736` ink/borders with hard
   `4px/8px` offset shadows, a pink→purple gradient hero, yellow CTA, lilac chips.
