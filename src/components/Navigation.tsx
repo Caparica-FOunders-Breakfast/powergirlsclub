@@ -82,15 +82,15 @@ export function AppSidebar() {
     <>
       {/* Mobile/tablet: offcanvas sidebar (Sheet on mobile, hidden-by-default on tablet) */}
       <div className="contents lg:hidden">
-        <Sidebar collapsible="offcanvas" className="border-r-2 border-primary/20">
-          <SidebarContent className="bg-card pt-4">
-            <div className="px-4 pb-4 border-b border-border">
-              <h2 className="text-2xl font-display text-primary tracking-wider">Power Club</h2>
-              <p className="text-xs font-bold text-muted-foreground">💜 Stronger Together</p>
+        <Sidebar collapsible="offcanvas" className="border-r-2 border-[#2B1736]">
+          <SidebarContent className="bg-[#2B1736] text-white pt-4">
+            <div className="px-5 pb-4 border-b border-white/10">
+              <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF8AC4] leading-none">Power Club</h2>
+              <p className="text-[11px] font-bold text-white/60 mt-2 uppercase tracking-wider">💜 Stronger Together</p>
             </div>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+              <SidebarGroupLabel className="font-bold text-[11px] uppercase tracking-widest text-white/40">
                 Navigate
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -101,8 +101,8 @@ export function AppSidebar() {
                         <NavLink
                           to={item.path}
                           end
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-foreground hover:bg-primary/10 transition-colors"
-                          activeClassName="bg-primary/10 text-primary"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                          activeClassName="bg-[#E8308C] text-white"
                         >
                           <item.icon className="h-5 w-5" />
                           <span>{item.label}</span>
@@ -116,7 +116,7 @@ export function AppSidebar() {
 
             {isAdmin && (
               <SidebarGroup>
-                <SidebarGroupLabel className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                <SidebarGroupLabel className="font-bold text-[11px] uppercase tracking-widest text-white/40">
                   Admin only
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -127,8 +127,8 @@ export function AppSidebar() {
                           <NavLink
                             to={item.path}
                             end
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-foreground hover:bg-primary/10 transition-colors"
-                            activeClassName="bg-primary/10 text-primary"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                            activeClassName="bg-[#E8308C] text-white"
                           >
                             <item.icon className="h-5 w-5" />
                             <span>{item.label}</span>
@@ -230,7 +230,7 @@ export function BottomNav() {
   const tabs = isAdmin ? adminMobileTabs : memberMobileTabs;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-primary/30 md:hidden pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-[#2B1736] md:hidden pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">
         {tabs.map(({ path, icon: Icon, label }) => {
           const isActive = path === "/more"
@@ -262,7 +262,7 @@ export function AppHeader() {
   return (
     <>
       {/* Mobile/tablet header */}
-      <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-primary/20 lg:hidden">
+      <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-[#2B1736] lg:hidden">
         <SidebarTrigger className="text-foreground hover:text-primary" />
         <h1 className="text-xl font-display text-primary tracking-wider">Power Club</h1>
         <div className="ml-auto">

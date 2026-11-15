@@ -142,7 +142,7 @@
     box-shadow: 0 0 20px hsl(var(--neon-teal) / 0.4), 0 0 40px hsl(var(--neon-teal) / 0.2);
   }
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--neon-pink)), hsl(var(--neon-blue)));
+    background: linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%);
   }
   .gradient-accent {
     background: linear-gradient(135deg, hsl(var(--neon-yellow)), hsl(var(--neon-teal)));
