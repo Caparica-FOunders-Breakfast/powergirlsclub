@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Pencil, Play, TrendingUp, Undo2 } from "lucide-react";
 import { useExerciseLogs, useSaveExerciseLog, usePriorExerciseWeights } from "@/hooks/useExerciseLogs";
-import { useActiveChallenge, useChallengeProgress } from "@/hooks/useChallenge";
 import { useProfile } from "@/hooks/useProfile";
 import {
   usePersonalWorkoutPlan,
@@ -12,34 +9,23 @@ import {
   useResetTravelDay,
 } from "@/hooks/usePersonalWorkoutPlan";
 import ExerciseEditor from "@/components/ExerciseEditor";
-
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
-import { startOfWeek, addWeeks, addDays, format, isSameWeek, differenceInDays } from "date-fns";
+import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 
-// Accepts the common YouTube URL shapes (watch?v=, youtu.be/, /shorts/, /embed/) — including
-// variants that carry extra query params like ?si=… — and returns a clean
-// https://www.youtube.com/embed/VIDEO_ID URL for the iframe. Returns null if no ID is found.
+// Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
   if (!url) return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
-
-  // Video IDs use [A-Za-z0-9_-]. The character class stops on the first ?, &, or /
-  // so any trailing query (e.g. ?si=…&feature=…) is dropped automatically.
   const patterns = [
     /youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/i,
     /youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/i,
     /youtu\.be\/([A-Za-z0-9_-]{6,})/i,
     /[?&]v=([A-Za-z0-9_-]{6,})/i,
   ];
-
   for (const re of patterns) {
     const match = trimmed.match(re);
     if (match) return `https://www.youtube.com/embed/${match[1]}`;
@@ -48,19 +34,48 @@ function toYouTubeEmbedUrl(url: string | undefined): string | null {
 }
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
-const DEFAULT_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6];
-const DEFAULT_TIME_THRESHOLDS = [15, 30, 60, 90, 120];
-const DEFAULT_REPS_THRESHOLDS = [5, 10, 20, 35, 50];
-const ASSISTED_FRACTIONS = [1, 0.75, 0.5, 0.25, 0];
-const LEVEL_EMOJIS = ["🌱", "⚡", "💪", "🔥", "👑"];
+
+const C = {
+  bg: "#FBF9FB",
+  ink: "#2B1736",
+  grad: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)",
+  sub: "#77677E",
+  body: "#5E4E66",
+  pink: "#C21C70",
+  magenta: "#E8308C",
+  tile: "#F6F1F7",
+  lilac: "#F1E9FE",
+  border: "#E4DAE7",
+  purple: "#6B2FB3",
+};
+const bangers = { fontFamily: "Bangers, cursive", fontWeight: 400 } as const;
+const card: React.CSSProperties = { background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22 };
+
+type Mood = "Ready" | "So-so" | "Not ready";
+const MOODS: { label: Mood; hint: string }[] = [
+  { label: "Ready", hint: "Push hard, go heavier" },
+  { label: "So-so", hint: "Same weight as last time" },
+  { label: "Not ready", hint: "Lighter version" },
+];
+const MOOD_TAG: Record<Mood, { text: string; bg: string; fg: string }> = {
+  "Ready": { text: "Go heavier", bg: "#FCE4F0", fg: "#A3165E" },
+  "So-so": { text: "Same as last time", bg: "#F1E9FE", fg: "#5B21B6" },
+  "Not ready": { text: "Light version", bg: "#F3EDF4", fg: "#5E4E66" },
+};
+
+const readMoods = (weekStart: string): Record<number, Mood> => {
+  try {
+    const raw = window.localStorage.getItem(`powerclub:mood:${weekStart}`);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
 
 const CurrentWeek = () => {
-  const { data: challenge } = useActiveChallenge();
-  const progress = useChallengeProgress(challenge?.start_date ?? null);
   const { data: profile } = useProfile();
   const bodyWeight = profile?.body_weight ?? 70;
-  const { plan: weeklyPlan, hasCustom, hasTravelCustom, travelMode } =
-    usePersonalWorkoutPlan();
+  const { plan: weeklyPlan, hasCustom, hasTravelCustom, travelMode } = usePersonalWorkoutPlan();
   const savePersonalDay = useSavePersonalDay();
   const resetPersonalDay = useResetPersonalDay();
   const saveTravelDay = useSaveTravelDay();
@@ -75,33 +90,36 @@ const CurrentWeek = () => {
   const weekStart = getWeekStart(selectedWeekDate);
   const isCurrentWeek = weekOffset === 0;
 
-  const { data: logs, isLoading: logsLoading } = useExerciseLogs(weekStart);
-  // The two most recent weeks each exercise was actually logged before this one,
-  // skipping over any weeks with no training. priorWeights[key] is ordered
-  // most-recent-first.
+  const { data: logs } = useExerciseLogs(weekStart);
   const { data: priorWeights } = usePriorExerciseWeights(weekStart);
   const saveLog = useSaveExerciseLog(weekStart);
 
   const today = now.getDay();
   const todayIndex = today === 0 ? 6 : today - 1;
 
-  const [expandedDay, setExpandedDay] = useState<number | null>(isCurrentWeek ? todayIndex : null);
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number>(isCurrentWeek ? todayIndex : 0);
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [localWeights, setLocalWeights] = useState<Record<string, string>>({});
   const [localCompleted, setLocalCompleted] = useState<Record<string, boolean>>({});
   const [initialized, setInitialized] = useState(false);
   const [videoModal, setVideoModal] = useState<{ name: string; url: string } | null>(null);
+  const [moodByDay, setMoodByDay] = useState<Record<number, Mood>>(() => readMoods(weekStart));
   const embedUrl = toYouTubeEmbedUrl(videoModal?.url);
 
-  // Reset state when week changes
+  // Reset state when the week changes.
   useEffect(() => {
     setInitialized(false);
     setLocalWeights({});
     setLocalCompleted({});
-    setExpandedDay(isCurrentWeek ? todayIndex : null);
+    setEditingDay(null);
+    setMoodByDay(readMoods(weekStart));
+    // Focus today on the current week, else the first workout day.
+    const firstWorkout = weeklyPlan.findIndex((d) => !d.isRest && !d.isRecovery);
+    setSelectedDayIndex(isCurrentWeek ? todayIndex : firstWorkout >= 0 ? firstWorkout : 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStart, isCurrentWeek, todayIndex]);
 
-  // Hydrate local state from DB
+  // Hydrate local state from DB.
   useEffect(() => {
     if (logs && !initialized) {
       const w: Record<string, string> = {};
@@ -118,25 +136,14 @@ const CurrentWeek = () => {
     }
   }, [logs, initialized]);
 
-  // Most recent logged weight per exercise (includes -1 for failures).
   const prevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
-    if (priorWeights) {
-      Object.entries(priorWeights).forEach(([key, weights]) => {
-        if (weights.length > 0) map[key] = weights[0];
-      });
-    }
+    if (priorWeights) Object.entries(priorWeights).forEach(([key, weights]) => { if (weights.length > 0) map[key] = weights[0]; });
     return map;
   }, [priorWeights]);
-
-  // Second-most-recent logged weight per exercise (for looking back past failures).
   const prevPrevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
-    if (priorWeights) {
-      Object.entries(priorWeights).forEach(([key, weights]) => {
-        if (weights.length > 1) map[key] = weights[1];
-      });
-    }
+    if (priorWeights) Object.entries(priorWeights).forEach(([key, weights]) => { if (weights.length > 1) map[key] = weights[1]; });
     return map;
   }, [priorWeights]);
 
@@ -147,14 +154,9 @@ const CurrentWeek = () => {
       return localCompleted[getExKey(dayIdx, 0)] ? 100 : 0;
     }
     if (day.exercises.length === 0) return 0;
-    const total = day.exercises.length;
     const done = day.exercises.filter((_, i) => localCompleted[getExKey(dayIdx, i)]).length;
-    return Math.round((done / total) * 100);
+    return Math.round((done / day.exercises.length) * 100);
   };
-
-  const totalWorkoutDays = weeklyPlan.length;
-  const completedDays = weeklyPlan.filter((d, i) => getDayCompletion(i, d) === 100).length;
-  const weeklyScore = Math.round((completedDays / totalWorkoutDays) * 100);
 
   const saveExercise = useCallback(
     (dayIdx: number, exIdx: number, exerciseName: string, weight: string, completed: boolean) => {
@@ -167,54 +169,35 @@ const CurrentWeek = () => {
         completed,
       });
     },
-    [saveLog]
+    [saveLog],
   );
 
   const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string) => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
-
-    // Require weight/value before marking as complete (F is valid)
     if (newVal && !localWeights[key]?.trim()) {
       toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time or F for failed." });
       return;
     }
-
     setLocalCompleted((prev) => ({ ...prev, [key]: newVal }));
     saveExercise(dayIdx, exIdx, exerciseName, localWeights[key] || "", newVal);
-
-    if (newVal) {
-      confetti({
-        particleCount: 30,
-        spread: 50,
-        colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"],
-        origin: { y: 0.8 },
-        gravity: 1.2,
-      });
-    }
+    if (newVal) confetti({ particleCount: 30, spread: 50, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.8 }, gravity: 1.2 });
   };
 
-  const handleWeightChange = (dayIdx: number, exIdx: number, exerciseName: string, value: string) => {
-    const key = getExKey(dayIdx, exIdx);
-    setLocalWeights((prev) => ({ ...prev, [key]: value }));
+  const handleWeightChange = (dayIdx: number, exIdx: number, value: string) => {
+    setLocalWeights((prev) => ({ ...prev, [getExKey(dayIdx, exIdx)]: value }));
   };
-
   const handleWeightBlur = (dayIdx: number, exIdx: number, exerciseName: string) => {
     const key = getExKey(dayIdx, exIdx);
     saveExercise(dayIdx, exIdx, exerciseName, localWeights[key] || "", localCompleted[key] || false);
   };
 
   const handleCompleteDay = (dayIdx: number, day: WorkoutDay) => {
-    // Check all exercises have a weight/value entered
-    const missing = day.exercises.filter((_, i) => {
-      const key = getExKey(dayIdx, i);
-      return !localWeights[key]?.trim();
-    });
+    const missing = day.exercises.filter((_, i) => !localWeights[getExKey(dayIdx, i)]?.trim());
     if (missing.length > 0) {
       toast({ title: "Fill in all values first! ⚖️", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight/reps/time (or F for failed).` });
       return;
     }
-
     const updates: Record<string, boolean> = {};
     day.exercises.forEach((ex, i) => {
       const key = getExKey(dayIdx, i);
@@ -222,13 +205,8 @@ const CurrentWeek = () => {
       saveExercise(dayIdx, i, ex.name, localWeights[key] || "", true);
     });
     setLocalCompleted((prev) => ({ ...prev, ...updates }));
-    confetti({
-      particleCount: 120,
-      spread: 80,
-      colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"],
-      origin: { y: 0.6 },
-    });
-    toast({ title: "DAY CRUSHED! 💪🔥" });
+    confetti({ particleCount: 120, spread: 80, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.6 } });
+    toast({ title: "Workout complete! 💪🔥" });
   };
 
   const handleUndoDay = (dayIdx: number, day: WorkoutDay) => {
@@ -239,549 +217,270 @@ const CurrentWeek = () => {
       saveExercise(dayIdx, i, ex.name, localWeights[key] || "", false);
     });
     setLocalCompleted((prev) => ({ ...prev, ...updates }));
-    toast({ title: "Day unmarked — you can edit now ✏️" });
+    toast({ title: "Workout reopened — you can edit now ✏️" });
   };
 
-  // Calculate challenge week number for the viewed week
-  // Calculate which challenge week the viewed week falls into (cycling 1-4)
-  const challengeWeekNum = useMemo(() => {
-    if (!challenge?.start_date) return null;
-    const challengeStart = startOfWeek(new Date(challenge.start_date + "T00:00:00"), { weekStartsOn: 1 });
-    const weeksDiff = Math.round(differenceInDays(selectedWeekDate, challengeStart) / 7);
-    if (weeksDiff < 0) return null;
-    return ((weeksDiff % 4) + 1);
-  }, [challenge?.start_date, selectedWeekDate]);
+  const toggleRestDone = (dayIdx: number, day: WorkoutDay) => {
+    const restKey = getExKey(dayIdx, 0);
+    const newVal = !localCompleted[restKey];
+    setLocalCompleted((prev) => ({ ...prev, [restKey]: newVal }));
+    saveExercise(dayIdx, 0, day.isRecovery ? "Recovery Day" : "Rest Day", "", newVal);
+    if (newVal) {
+      confetti({ particleCount: 40, spread: 60, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.7 }, gravity: 1.2 });
+      toast({ title: day.isRecovery ? "Recovery done! 🌿" : "Rest day logged! 😴" });
+    }
+  };
 
-  const weekLabel = isCurrentWeek
-    ? "This Week"
-    : weekOffset === -1
-    ? "Last Week"
-    : weekOffset === 1
-    ? "Next Week"
-    : format(selectedWeekDate, "MMM d, yyyy");
+  const setMood = (dayIdx: number, mood: Mood) => {
+    setMoodByDay((prev) => {
+      const next = { ...prev, [dayIdx]: mood };
+      try { window.localStorage.setItem(`powerclub:mood:${weekStart}`, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  if (!weeklyPlan.length) {
+    return (
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: C.pink, borderTopColor: "transparent" }} />
+      </div>
+    );
+  }
+
+  const selectedDay = weeklyPlan[selectedDayIndex] ?? weeklyPlan[0];
+  const weekRangeLabel = `${format(selectedWeekDate, "MMM d")} – ${format(addDays(selectedWeekDate, 6), "MMM d")}`;
+
+  // Editing takes over the view.
+  if (editingDay !== null) {
+    const day = weeklyPlan[editingDay];
+    return (
+      <div style={{ background: C.bg, minHeight: "100%", padding: "32px 24px 64px" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <button type="button" onClick={() => setEditingDay(null)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 14, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: "6px 0" }}>
+            ← Back to this week
+          </button>
+          <h1 style={{ margin: "6px 0 0", ...bangers, fontSize: 44, letterSpacing: 1, color: C.ink }}>Edit {day.day}</h1>
+          <p style={{ margin: "6px 0 18px", color: C.body, fontWeight: 700 }}>{day.label} · {day.exercises.length} exercises</p>
+          <ExerciseEditor
+            day={day}
+            dayIndex={editingDay}
+            hasCustom={travelMode ? hasTravelCustom(editingDay) : hasCustom(editingDay)}
+            onSave={(exercises) => {
+              if (travelMode) {
+                saveTravelDay.mutate({ dayIndex: editingDay, exercises, label: day.label, emoji: day.emoji });
+              } else {
+                savePersonalDay.mutate({ dayIndex: editingDay, exercises, label: day.label, emoji: day.emoji, isRest: day.isRest, isRecovery: day.isRecovery, restNote: day.restNote });
+              }
+            }}
+            onReset={() => {
+              if (travelMode) resetTravelDay.mutate(editingDay);
+              else resetPersonalDay.mutate(editingDay);
+              setEditingDay(null);
+              toast({ description: travelMode ? "Reset to the default travel workout" : "Reset to default exercises", duration: 1500 });
+            }}
+            onClose={() => setEditingDay(null)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const selDone = getDayCompletion(selectedDayIndex, selectedDay);
+  const doneCount = selectedDay.exercises.filter((_, i) => localCompleted[getExKey(selectedDayIndex, i)]).length;
+  const total = selectedDay.exercises.length;
+  const allDone = total > 0 && doneCount === total;
+  const mood: Mood = moodByDay[selectedDayIndex] ?? "Ready";
+  const isTodayFocused = isCurrentWeek && selectedDayIndex === todayIndex;
+
+  // Next up: upcoming workout days after the focused one.
+  const nextUp = weeklyPlan
+    .map((d, i) => ({ d, i }))
+    .filter(({ d, i }) => i > selectedDayIndex && !d.isRest && !d.isRecovery && d.exercises.length > 0)
+    .slice(0, 2)
+    .map(({ d, i }) => ({ day: d, index: i, rel: i === todayIndex + 1 && isCurrentWeek ? "Tomorrow" : format(addDays(selectedWeekDate, i), "MMM d") }));
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-7xl lg:px-8 lg:pb-8">
-      {/* Header */}
-      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-4 lg:text-left">
-        <h1 className="text-4xl font-display text-foreground">
-          <Dumbbell className="inline w-8 h-8 text-neon-teal mr-2" />
-          {weekLabel}
-        </h1>
-        {challengeWeekNum != null && (
-          <span className="inline-block mt-1 text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-            Week {challengeWeekNum}
-          </span>
-        )}
-
-        {/* Week navigation */}
-        <div className="flex items-center justify-center gap-4 mt-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setWeekOffset((o) => o - 1)}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <span className="text-sm font-bold text-muted-foreground">
-            {format(selectedWeekDate, "MMM d")} – {format(addDays(selectedWeekDate, 6), "MMM d")}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setWeekOffset((o) => o + 1)}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </Button>
-        </div>
-
-        {!isCurrentWeek && (
-          <Button
-            variant="link"
-            size="sm"
-            onClick={() => setWeekOffset(0)}
-            className="text-xs text-primary mt-1"
-          >
-            Go to current week
-          </Button>
-        )}
-      </motion.div>
-
-      {/* Weekly progress — card on mobile, slim strip on lg+ */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="mb-4 p-4 rounded-2xl bg-card border-2 border-border lg:p-3 lg:px-4 lg:rounded-lg lg:border"
-      >
-        <div className="lg:hidden">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-extrabold text-foreground">Weekly Progress</span>
-            <span className="text-sm font-display text-primary">{weeklyScore}%</span>
+    <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+        {/* Header */}
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 20 }}>
+          <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1 }}>This week</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, border: `2px solid ${C.ink}`, borderRadius: 12, background: "#FFFFFF" }}>
+            <button type="button" aria-label="Previous week" onClick={() => setWeekOffset((o) => o - 1)} style={{ width: 44, height: 40, border: 0, background: "transparent", cursor: "pointer", fontSize: 18, fontWeight: 800 }}>‹</button>
+            <span style={{ fontWeight: 800, fontSize: 15, padding: "0 4px", whiteSpace: "nowrap" }}>{weekRangeLabel}</span>
+            <button type="button" aria-label="Next week" onClick={() => setWeekOffset((o) => o + 1)} style={{ width: 44, height: 40, border: 0, background: "transparent", cursor: "pointer", fontSize: 18, fontWeight: 800 }}>›</button>
           </div>
-          <Progress value={weeklyScore} className="h-3 bg-muted [&>div]:gradient-primary" />
-          <p className="text-xs text-muted-foreground font-semibold mt-1.5">
-            {completedDays}/{totalWorkoutDays} workout days completed
-          </p>
+          {!isCurrentWeek && (
+            <button type="button" onClick={() => setWeekOffset(0)} style={{ fontWeight: 800, fontSize: 14, color: C.pink, background: "transparent", border: 0, cursor: "pointer" }}>Go to this week</button>
+          )}
         </div>
-        <div className="hidden lg:flex lg:items-center lg:gap-4">
-          <span className="text-sm font-extrabold text-foreground shrink-0">Weekly Progress</span>
-          <Progress value={weeklyScore} className="h-2 flex-1 bg-muted [&>div]:gradient-primary" />
-          <span className="text-sm font-display text-primary shrink-0 tabular-nums">{weeklyScore}%</span>
-          <span className="text-xs text-muted-foreground font-semibold shrink-0 tabular-nums">
-            {completedDays}/{totalWorkoutDays} days
-          </span>
-        </div>
-      </motion.div>
 
-      <div className="lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
-      <div className="lg:min-w-0">
-      {/* Loading state */}
-      {logsLoading && (
-        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />
-          ))}
-        </div>
-      )}
-
-      {/* Day cards */}
-      {!logsLoading && (
-        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start">
-          {weeklyPlan.map((day, dayIdx) => {
-            const expanded = expandedDay === dayIdx;
-            const completion = getDayCompletion(dayIdx, day);
-            const isToday = isCurrentWeek && dayIdx === todayIndex;
-
-
+        {/* Week strip */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 10, overflowX: "auto" }}>
+          {weeklyPlan.map((d, i) => {
+            const comp = getDayCompletion(i, d);
+            const isSel = i === selectedDayIndex;
+            const isToday = isCurrentWeek && i === todayIndex;
+            const isRest = (d.isRest || d.isRecovery) && d.exercises.length === 0;
+            const done = comp === 100;
+            const bg = isToday ? (done ? C.magenta : C.ink) : isRest ? C.tile : "#FFFFFF";
+            const fg = isToday ? "#FFFFFF" : isRest ? C.body : C.ink;
+            const border = isToday ? C.ink : isSel ? C.magenta : isRest ? C.tile : C.border;
+            const status = done ? "Done" : isToday ? "Today" : isRest ? "Rest day" : "Not logged";
             return (
-              <motion.div
-                key={day.day}
-                initial={{ x: -30, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: dayIdx * 0.04 }}
-                className={cn(
-                  "rounded-2xl border-2 overflow-hidden transition-all",
-                  isToday && "ring-2 ring-primary/40",
-                  completion === 100
-                    ? "bg-secondary/10 border-secondary"
-                    : "bg-card border-border hover:border-primary/30"
-                )}
-              >
-                {/* Day header */}
-                <button
-                  onClick={() => setExpandedDay(expanded ? null : dayIdx)}
-                  className="w-full flex items-center gap-3 p-4 text-left"
-                >
-                  <div
-                    className={cn(
-                      "w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0",
-                      isToday ? "bg-primary text-primary-foreground" : "bg-muted"
-                    )}
-                  >
-                    {day.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-extrabold text-foreground truncate">{day.day}</p>
-                      {isToday && (
-                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                          Today
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground font-bold">
-                      {day.label}
-                      {!day.isRest && !day.isRecovery && day.exercises.length > 0 && ` • ${day.exercises.length} exercises`}
-                    </p>
-                    {!day.isRest && !day.isRecovery && day.exercises.length > 0 && (
-                      <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full gradient-primary rounded-full transition-all duration-500"
-                          style={{ width: `${completion}%` }}
-                        />
-                      </div>
-                    )}
-                    {(day.isRest || day.isRecovery) && day.exercises.length === 0 && completion === 100 && (
-                      <p className="text-[10px] font-bold text-secondary mt-1">Checked off ✓</p>
-                    )}
-                  </div>
-                  {completion === 100 ? (
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                      <Check className="w-4 h-4 text-secondary-foreground" />
-                    </div>
-                  ) : (
-                    <ChevronDown
-                      className={cn("w-5 h-5 text-muted-foreground transition-transform shrink-0", expanded && "rotate-180")}
-                    />
-                  )}
-                </button>
-
-                {/* Expanded content */}
-                <AnimatePresence>
-                  {expanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-4 pb-4">
-                        {/* Edit button */}
-                        {editingDay !== dayIdx && (
-                          <div className="flex justify-end mb-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setEditingDay(dayIdx)}
-                              className="text-xs text-muted-foreground font-bold h-7"
-                            >
-                              <Pencil className="w-3 h-3 mr-1" /> Edit Exercises
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Exercise Editor */}
-                        <AnimatePresence>
-                          {editingDay === dayIdx && (
-                            <ExerciseEditor
-                              day={day}
-                              dayIndex={dayIdx}
-                              hasCustom={travelMode ? hasTravelCustom(dayIdx) : hasCustom(dayIdx)}
-                              onSave={(exercises) => {
-                                if (travelMode) {
-                                  // Persist travel edits separately — never touch the normal plan.
-                                  saveTravelDay.mutate({
-                                    dayIndex: dayIdx,
-                                    exercises,
-                                    label: day.label,
-                                    emoji: day.emoji,
-                                  });
-                                } else {
-                                  savePersonalDay.mutate({
-                                    dayIndex: dayIdx,
-                                    exercises,
-                                    label: day.label,
-                                    emoji: day.emoji,
-                                    isRest: day.isRest,
-                                    isRecovery: day.isRecovery,
-                                    restNote: day.restNote,
-                                  });
-                                }
-                              }}
-                              onReset={() => {
-                                if (travelMode) {
-                                  resetTravelDay.mutate(dayIdx);
-                                } else {
-                                  resetPersonalDay.mutate(dayIdx);
-                                }
-                                setEditingDay(null);
-                                toast({
-                                  description: travelMode
-                                    ? "Reset to the default travel workout"
-                                    : "Reset to default exercises",
-                                  duration: 1500,
-                                });
-                              }}
-                              onClose={() => setEditingDay(null)}
-                            />
-                          )}
-                        </AnimatePresence>
-
-                        {editingDay !== dayIdx && (day.isRest || day.isRecovery) && day.exercises.length === 0 && (
-                          <div className="p-4 rounded-xl bg-muted/50 text-center space-y-3">
-                            <p className="text-3xl mb-1">{day.isRecovery ? "🌿" : "😴"}</p>
-                            {day.restNote && (
-                              <p className="font-bold text-foreground text-sm">{day.restNote}</p>
-                            )}
-                            {(() => {
-                              const restKey = getExKey(dayIdx, 0);
-                              const restDone = localCompleted[restKey] || false;
-                              return (
-                                <button
-                                  onClick={() => {
-                                    const newVal = !restDone;
-                                    setLocalCompleted((prev) => ({ ...prev, [restKey]: newVal }));
-                                    const restLabel = day.isRecovery ? "Recovery Day" : "Rest Day";
-                                    saveExercise(dayIdx, 0, restLabel, "", newVal);
-                                    if (newVal) {
-                                      confetti({
-                                        particleCount: 40,
-                                        spread: 60,
-                                        colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"],
-                                        origin: { y: 0.7 },
-                                        gravity: 1.2,
-                                      });
-                                      toast({ title: day.isRecovery ? "Recovery done! 🌿" : "Rest day logged! 😴" });
-                                    }
-                                  }}
-                                  className={cn(
-                                    "inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all",
-                                    restDone
-                                      ? "bg-secondary/10 border-secondary text-foreground"
-                                      : "border-primary/30 text-muted-foreground hover:border-primary"
-                                  )}
-                                >
-                                  <div
-                                    className={cn(
-                                      "w-5 h-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
-                                      restDone ? "bg-secondary border-secondary text-secondary-foreground" : "border-primary/40"
-                                    )}
-                                  >
-                                    {restDone && <Check className="w-3 h-3" />}
-                                  </div>
-                                  {restDone ? "Done ✓" : "Mark as done"}
-                                </button>
-                              );
-                            })()}
-                          </div>
-                        )}
-
-                        {editingDay !== dayIdx && day.exercises.length > 0 && (
-                          <div className="space-y-2.5">
-                            {day.exercises.map((ex, exIdx) => {
-                              const key = getExKey(dayIdx, exIdx);
-                              const isDone = localCompleted[key] || false;
-                              const lastWeekWeight = prevWeightMap[key];
-
-                              return (
-                                <ExerciseCard
-                                  key={key}
-                                  exercise={ex}
-                                  bodyWeight={bodyWeight}
-                                  isDone={isDone}
-                                  weight={localWeights[key] || ""}
-                                  lastWeekWeight={lastWeekWeight}
-                                  prevPrevWeekWeight={prevPrevWeightMap[key]}
-                                  onWeightChange={(val) => handleWeightChange(dayIdx, exIdx, ex.name, val)}
-                                  onWeightBlur={() => handleWeightBlur(dayIdx, exIdx, ex.name)}
-                                  onToggle={() => toggleExercise(dayIdx, exIdx, ex.name)}
-                                  onVideoClick={(url) => setVideoModal({ name: ex.name, url })}
-                                />
-                              );
-                            })}
-
-                            {completion < 100 && (
-                              <Button
-                                onClick={() => handleCompleteDay(dayIdx, day)}
-                                className="w-full mt-2 gradient-primary text-primary-foreground font-bold comic-border border-primary-foreground/20"
-                              >
-                                Complete All 🔥
-                              </Button>
-                            )}
-                            {completion === 100 && (
-                              <Button
-                                variant="outline"
-                                onClick={() => handleUndoDay(dayIdx, day)}
-                                className="w-full mt-2 font-bold text-muted-foreground border-2 border-border"
-                              >
-                                <Undo2 className="w-4 h-4 mr-1" /> Undo Day
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+              <button key={i} type="button" onClick={() => setSelectedDayIndex(i)} style={{ minWidth: 96, textAlign: "left", background: bg, color: fg, border: `2px solid ${border}`, borderRadius: 16, padding: "12px 14px", cursor: "pointer", boxShadow: isSel && !isToday ? `3px 3px 0 ${C.magenta}` : isToday ? `4px 4px 0 ${C.magenta}` : "none" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontWeight: 800, fontSize: 14 }}>{d.day.slice(0, 3)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>{format(addDays(selectedWeekDate, i), "MMM d")}</span>
+                </div>
+                <p style={{ margin: "8px 0 0", fontWeight: 800, fontSize: 15, lineHeight: 1.25 }}>{isRest ? (d.isRecovery ? "Recovery" : "Rest") : d.label}</p>
+                <p style={{ margin: "4px 0 0", fontSize: 12, fontWeight: 700, opacity: 0.85 }}>{status}</p>
+              </button>
             );
           })}
         </div>
-      )}
-      </div>
 
-      <DesktopRightPanel
-        weeklyPlan={weeklyPlan}
-        getDayCompletion={getDayCompletion}
-        todayIndex={todayIndex}
-        isCurrentWeek={isCurrentWeek}
-        completedDays={completedDays}
-        totalWorkoutDays={totalWorkoutDays}
-        weeklyScore={weeklyScore}
-        localCompleted={localCompleted}
-      />
-      </div>
-
-      <Dialog open={!!videoModal} onOpenChange={(open) => !open && setVideoModal(null)}>
-        <DialogContent
-          className={cn(
-            "p-0 gap-0 overflow-hidden flex flex-col",
-            // Mobile: full-screen (override defaults explicitly so tailwind-merge picks these up)
-            "left-0 top-0 right-0 bottom-0 translate-x-0 translate-y-0 w-screen h-screen max-w-none max-h-none rounded-none border-0",
-            // sm+: centered modal with rounded corners + dark overlay (overlay comes from DialogOverlay)
-            "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:right-auto sm:bottom-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] sm:rounded-lg sm:border"
-          )}
-        >
-          <DialogHeader className="px-5 py-4 border-b border-border shrink-0 pr-12">
-            <DialogTitle className="font-display text-xl text-foreground text-left">
-              {videoModal?.name ?? ""}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video w-full bg-black shrink-0">
-            {embedUrl ? (
-              <iframe
-                key={videoModal?.name ?? ""}
-                src={embedUrl}
-                title={videoModal ? `${videoModal.name} tutorial` : "Exercise tutorial"}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/70 text-sm font-bold p-4 text-center">
-                Saved URL isn't a recognized YouTube link. Edit the exercise to fix it.
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+          {/* Focused day */}
+          <section style={{ flex: "2 1 560px", minWidth: 0, ...card, boxShadow: `6px 6px 0 ${C.magenta}`, overflow: "hidden" }}>
+            {(selectedDay.isRest || selectedDay.isRecovery) && total === 0 ? (
+              <div style={{ padding: 40, textAlign: "center" }}>
+                <p style={{ fontSize: 40, margin: 0 }}>{selectedDay.isRecovery ? "🌿" : "😴"}</p>
+                <h2 style={{ margin: "8px 0 0", ...bangers, fontSize: 36, letterSpacing: 1 }}>{selectedDay.isRecovery ? "Recovery day" : "Rest day"}</h2>
+                {selectedDay.restNote && <p style={{ margin: "8px 0 0", color: C.body, fontWeight: 700 }}>{selectedDay.restNote}</p>}
+                <button type="button" onClick={() => toggleRestDone(selectedDayIndex, selectedDay)} style={{ marginTop: 20, minHeight: 52, padding: "0 28px", background: selDone ? "#FFF5FA" : C.pink, color: selDone ? C.ink : "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 17, cursor: "pointer" }}>
+                  {selDone ? "Done ✓" : "Mark as done"}
+                </button>
               </div>
+            ) : (
+              <>
+                <div style={{ background: C.grad, color: "#FFFFFF", padding: "24px 28px", borderBottom: `2px solid ${C.ink}` }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
+                    <div>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>{isTodayFocused ? "TODAY · " : ""}{selectedDay.day.toUpperCase()}</p>
+                      <h2 style={{ margin: "4px 0 0", ...bangers, fontSize: 44, letterSpacing: 1, lineHeight: 1 }}>{selectedDay.label}</h2>
+                      <p style={{ margin: "6px 0 0", fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{total} exercises · 3 rounds · about 30 minutes</p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ margin: 0, ...bangers, fontSize: 40, lineHeight: 1 }}>{doneCount}/{total}</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.88)" }}>done</p>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 16, height: 10, borderRadius: 999, background: "rgba(255,255,255,0.28)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${total ? (doneCount / total) * 100 : 0}%`, background: "#FFFFFF", borderRadius: 999 }} />
+                  </div>
+                </div>
+
+                {/* Readiness */}
+                <div style={{ padding: "22px 28px 6px" }}>
+                  <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>How do you feel today?</p>
+                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                    {MOODS.map((r) => {
+                      const on = r.label === mood;
+                      return (
+                        <button key={r.label} type="button" aria-pressed={on} onClick={() => setMood(selectedDayIndex, r.label)} style={{ minHeight: 64, padding: "10px 12px", border: `2px solid ${C.ink}`, borderRadius: 14, background: on ? C.ink : "#FFFFFF", color: on ? "#FFFFFF" : C.ink, textAlign: "left", cursor: "pointer", boxShadow: on ? `3px 3px 0 ${C.magenta}` : "none" }}>
+                          <span style={{ display: "block", fontWeight: 800, fontSize: 16 }}>{r.label}</span>
+                          <span style={{ display: "block", fontSize: 13, fontWeight: 600, opacity: 0.9 }}>{r.hint}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Exercises */}
+                <div style={{ padding: "16px 28px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>EXERCISES</p>
+                  <button type="button" onClick={() => setEditingDay(selectedDayIndex)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 14, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: "8px 0" }}>
+                    ✎ Edit exercises
+                  </button>
+                </div>
+                <div style={{ padding: "0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {selectedDay.exercises.map((ex, i) => {
+                    const key = getExKey(selectedDayIndex, i);
+                    return (
+                      <FocusedExerciseRow
+                        key={i}
+                        exercise={ex}
+                        mood={mood}
+                        isDone={!!localCompleted[key]}
+                        weight={localWeights[key] || ""}
+                        lastWeekWeight={prevWeightMap[key]}
+                        prevPrevWeekWeight={prevPrevWeightMap[key]}
+                        onWeightChange={(v) => handleWeightChange(selectedDayIndex, i, v)}
+                        onWeightBlur={() => handleWeightBlur(selectedDayIndex, i, ex.name)}
+                        onToggle={() => toggleExercise(selectedDayIndex, i, ex.name)}
+                        onVideoClick={(url) => setVideoModal({ name: ex.name, url })}
+                      />
+                    );
+                  })}
+                </div>
+                <div style={{ padding: "20px 28px 28px" }}>
+                  {allDone ? (
+                    <button type="button" onClick={() => handleUndoDay(selectedDayIndex, selectedDay)} style={{ width: "100%", minHeight: 56, background: "#FFF5FA", color: C.ink, border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
+                      Workout complete! Reopen to edit
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => handleCompleteDay(selectedDayIndex, selectedDay)} style={{ width: "100%", minHeight: 56, background: C.pink, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
+                      Finish workout
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </section>
+
+          {/* Right column */}
+          <aside style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+            {nextUp.length > 0 && (
+              <section style={{ ...card, padding: 22 }}>
+                <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>NEXT UP</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {nextUp.map((n) => (
+                    <button key={n.index} type="button" onClick={() => setSelectedDayIndex(n.index)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 12, background: C.tile, border: 0, cursor: "pointer", textAlign: "left", width: "100%" }}>
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 800 }}>{n.day.day}</p>
+                        <p style={{ margin: 0, fontSize: 14, color: C.body }}>{n.day.label} · {n.day.exercises.length} exercises</p>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: n.rel === "Tomorrow" ? C.purple : C.sub }}>{n.rel}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section style={{ background: C.lilac, border: `2px solid ${C.ink}`, borderRadius: 22, padding: 22 }}>
+              <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>Tip for today</p>
+              <p style={{ margin: "6px 0 0", fontSize: 15, color: C.body }}>Not feeling it? Pick “Not ready” and do the light version. A short session still counts — showing up is what builds the habit.</p>
+            </section>
+          </aside>
+        </div>
+      </div>
+
+      <Dialog open={!!videoModal} onOpenChange={(o) => !o && setVideoModal(null)}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
+          <DialogHeader className="px-4 pt-4">
+            <DialogTitle>{videoModal?.name}</DialogTitle>
+          </DialogHeader>
+          <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%" }}>
+            {embedUrl ? (
+              <iframe src={embedUrl} title={videoModal?.name} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} />
+            ) : (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: C.sub }}>Couldn't load this video.</div>
             )}
           </div>
-          {/* Fills remaining vertical space below the video on mobile full-screen */}
-          <div className="flex-1 bg-background sm:hidden" />
         </DialogContent>
       </Dialog>
     </div>
   );
 };
 
-function DesktopRightPanel({
-  weeklyPlan,
-  getDayCompletion,
-  todayIndex,
-  isCurrentWeek,
-  completedDays,
-  totalWorkoutDays,
-  weeklyScore,
-  localCompleted,
-}: {
-  weeklyPlan: WorkoutDay[];
-  getDayCompletion: (dayIdx: number, day: WorkoutDay) => number;
-  todayIndex: number;
-  isCurrentWeek: boolean;
-  completedDays: number;
-  totalWorkoutDays: number;
-  weeklyScore: number;
-  localCompleted: Record<string, boolean>;
-}) {
-  const dayLetters = ["M", "T", "W", "T", "F", "S", "S"];
-  const dayCompletion = weeklyPlan.map((d, i) => getDayCompletion(i, d));
-  const exercisesDone = Object.values(localCompleted).filter(Boolean).length;
-  const daysLeft = Math.max(0, totalWorkoutDays - completedDays);
-
-  const upcoming = weeklyPlan
-    .map((d, i) => ({ day: d, idx: i, completion: dayCompletion[i] }))
-    .filter(({ idx, completion }) => (!isCurrentWeek || idx >= todayIndex) && completion < 100)
-    .slice(0, 4);
-
-  return (
-    <aside className="hidden lg:block lg:sticky lg:top-6 space-y-4">
-      {/* Stats 2x2 grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatTile label="Workouts" value={`${completedDays}/${totalWorkoutDays}`} accent="text-primary" />
-        <StatTile label="Progress" value={`${weeklyScore}%`} accent="text-neon-teal" />
-        <StatTile label="Exercises" value={String(exercisesDone)} accent="text-neon-yellow" />
-        <StatTile label="Days Left" value={String(daysLeft)} accent="text-neon-blue" />
-      </div>
-
-      {/* 7-day streak tracker */}
-      <div className="p-4 rounded-2xl bg-card border-2 border-border">
-        <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
-          7-Day Streak
-        </p>
-        <div className="flex items-center justify-between">
-          {weeklyPlan.map((_, i) => {
-            const done = dayCompletion[i] === 100;
-            const isToday = isCurrentWeek && i === todayIndex;
-            return (
-              <div key={i} className="flex flex-col items-center gap-1.5">
-                <div
-                  className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold transition-all",
-                    done
-                      ? "bg-secondary text-secondary-foreground"
-                      : isToday
-                      ? "border-2 border-primary text-primary"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {done ? <Check className="w-3.5 h-3.5" /> : dayLetters[i]}
-                </div>
-                <span className={cn("text-[9px] font-bold uppercase", isToday ? "text-primary" : "text-muted-foreground")}>
-                  {dayLetters[i]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Upcoming workouts */}
-      <div className="p-4 rounded-2xl bg-card border-2 border-border">
-        <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
-          Upcoming Workouts
-        </p>
-        {upcoming.length === 0 ? (
-          <p className="text-sm font-semibold text-muted-foreground">
-            All done — crushed the week! 🔥
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {upcoming.map(({ day, idx }) => {
-              const isToday = isCurrentWeek && idx === todayIndex;
-              return (
-                <li key={idx} className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center text-base shrink-0",
-                      isToday ? "bg-primary/15" : "bg-muted"
-                    )}
-                  >
-                    {day.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-extrabold text-foreground truncate">
-                      {day.day}
-                      {isToday && (
-                        <span className="ml-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                          Today
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-[11px] font-semibold text-muted-foreground truncate">{day.label}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-    </aside>
-  );
-}
-
-function StatTile({ label, value, accent }: { label: string; value: string; accent: string }) {
-  return (
-    <div className="p-3 rounded-xl bg-card border-2 border-border">
-      <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={cn("text-2xl font-display tabular-nums mt-1", accent)}>{value}</p>
-    </div>
-  );
-}
-
-function ExerciseCard({
-  exercise,
-  bodyWeight,
-  isDone,
-  weight,
-  lastWeekWeight,
-  prevPrevWeekWeight,
-  onWeightChange,
-  onWeightBlur,
-  onToggle,
-  onVideoClick,
+// ── Per-exercise row inside the focused day card ──
+function FocusedExerciseRow({
+  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight,
+  onWeightChange, onWeightBlur, onToggle, onVideoClick,
 }: {
   exercise: Exercise;
-  bodyWeight: number;
+  mood: Mood;
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
@@ -792,184 +491,70 @@ function ExerciseCard({
   onVideoClick: (url: string) => void;
 }) {
   const videoUrl = exercise.videoUrl?.trim();
-  const hasVideo = !!videoUrl;
   const isRounds = exercise.isRoundsBased;
   const isTime = exercise.isTimeBased;
   const isAssisted = exercise.isAssisted;
   const isBodyweight = exercise.isBodyweight && !isTime;
   const unit = isAssisted ? "kg" : isRounds ? "reps" : isTime ? "sec" : "kg";
-  const defaultThresholds = isAssisted
-    ? ASSISTED_FRACTIONS.map((fraction) => Math.round(fraction * bodyWeight))
-    : isTime
-      ? DEFAULT_TIME_THRESHOLDS
-      : isRounds
-        ? DEFAULT_REPS_THRESHOLDS
-        : DEFAULT_RATIOS.map((ratio) => Math.round(ratio * bodyWeight));
-  const thresholds = exercise.levelThresholds || defaultThresholds;
-  const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.\-]/g, "") || "0");
+
+  const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.-]/g, "") || "0");
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
 
-  // Failure logic: if last week was -1 (F), look back further
   const lastWeekFailed = lastWeekWeight === -1;
-  const effectiveLastWeight = lastWeekFailed
+  const effectiveLast = lastWeekFailed
     ? (prevPrevWeekWeight != null && prevPrevWeekWeight !== -1 ? prevPrevWeekWeight : null)
-    : lastWeekWeight;
-  const recommendedWeight = effectiveLastWeight != null ? effectiveLastWeight + increment : null;
-  // If failed last week, recommend the same weight they would have tried
-  const retryWeight = lastWeekFailed && prevPrevWeekWeight != null && prevPrevWeekWeight !== -1
-    ? prevPrevWeekWeight + increment
-    : null;
-  const hasEmojiPrefix = !!exercise.suggestedWeight && LEVEL_EMOJIS.some((emoji) => exercise.suggestedWeight.startsWith(emoji));
-  const buildRangeLabel = (index: number) => {
-    const value = thresholds[index];
-    const prevValue = index > 0 ? thresholds[index - 1] : 0;
-    return isAssisted
-      ? (index === 0 ? `≥ ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `${value} ${unit}` : `${value}–${thresholds[index - 1]} ${unit}`)
-      // Top level starts where the previous band ends, so there's no gap
-      // between "Very Strong" and "Elite" (was `≥ thresholds[4]`, which left
-      // the thresholds[3]–thresholds[4] range unlabelled).
-      : (index === 0 ? `< ${value} ${unit}` : index === LEVEL_EMOJIS.length - 1 ? `≥ ${prevValue} ${unit}` : `${prevValue}–${value} ${unit}`);
-  };
-  const matchedLevelIndex = exercise.suggestedWeight ? LEVEL_EMOJIS.findIndex((_, index) => buildRangeLabel(index) === exercise.suggestedWeight) : -1;
-  const displaySuggestedWeight = exercise.suggestedWeight
-    ? hasEmojiPrefix
-      ? exercise.suggestedWeight
-      : matchedLevelIndex >= 0
-        ? `${LEVEL_EMOJIS[matchedLevelIndex]} ${exercise.suggestedWeight}`
-        : exercise.suggestedWeight
-    : "";
+    : (lastWeekWeight != null ? lastWeekWeight : null);
 
+  // Readiness adjusts the SUGGESTED target (shown as placeholder/hint). The
+  // input still starts empty and only persists what the user enters, so no
+  // weight is ever logged that the user didn't lift.
+  let target: number | null = null;
+  if (effectiveLast != null) {
+    if (mood === "Ready") target = effectiveLast + increment;
+    else if (mood === "So-so") target = effectiveLast;
+    else target = isAssisted ? Math.round(effectiveLast * 1.2 * 2) / 2 : unit === "reps" ? Math.max(1, effectiveLast - 4) : Math.round(effectiveLast * 0.8 * 2) / 2;
+  }
+  const tag = MOOD_TAG[mood];
+  const lastLabel = lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
 
   return (
-    <motion.div
-      layout
-      className={cn(
-        "rounded-xl border-2 p-3 transition-all",
-        isDone ? "bg-secondary/5 border-secondary/40" : "bg-background border-border"
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <button
-          onClick={onToggle}
-          className={cn(
-            "mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
-            isDone ? "bg-secondary border-secondary text-secondary-foreground" : "border-primary/40 hover:border-primary"
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px 16px", padding: "14px 16px", border: `2px solid ${isDone ? C.magenta : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : "#FFFFFF" }}>
+      <button type="button" onClick={onToggle} aria-pressed={isDone} aria-label={`${isDone ? "Mark not done" : "Mark done"}: ${exercise.name}`} style={{ flex: "none", width: 44, height: 44, borderRadius: 999, border: `2px solid ${C.ink}`, background: isDone ? C.magenta : "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#FFFFFF" : C.border} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
+      </button>
+      <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 800, fontSize: 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
+          {exercise.name}
+          {videoUrl && (
+            <button type="button" onClick={() => onVideoClick(videoUrl)} aria-label={`Watch tutorial for ${exercise.name}`} style={{ flex: "none", width: 24, height: 24, borderRadius: 999, border: 0, background: "rgba(194,28,112,0.1)", color: C.pink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>▶</button>
           )}
-        >
-          {isDone && <Check className="w-3.5 h-3.5" />}
-        </button>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className={cn("font-extrabold text-sm text-foreground truncate", isDone && "line-through opacity-50")}>
-              {exercise.name}
-            </span>
-            {hasVideo && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onVideoClick(videoUrl!);
-                }}
-                aria-label={`Watch tutorial for ${exercise.name}`}
-                title="Watch tutorial"
-                className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-              >
-                <Play className="w-3 h-3 fill-current" />
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-            <span className="text-xs font-bold text-primary">
-              {isRounds
-                ? `${exercise.sets} rounds`
-                : exercise.reps
-                  ? `${exercise.sets} × ${exercise.reps}`
-                  : `${exercise.sets} sets`}
-            </span>
-            {displaySuggestedWeight && <span className="text-xs font-semibold text-muted-foreground">{displaySuggestedWeight}</span>}
-          </div>
-
-          {/* Bodyweight moves have no weight to track — just the progression cue. */}
-          {isBodyweight ? (
-            exercise.progression && (
-              <div className="flex items-center gap-1 mt-1">
-                <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
-                <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
-              </div>
-            )
-          ) : (
-            <>
-              {/* Last week value + recommendation */}
-              {lastWeekFailed && (
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                  <span className="text-[11px] font-bold text-destructive">
-                    ❌ Failed last week — try again!
-                  </span>
-                  {retryWeight != null && (
-                    <span className="text-[11px] font-bold text-neon-teal">
-                      → {retryWeight} {unit} {isTime ? "⏱️" : isRounds ? "🔁" : "💪"}
-                    </span>
-                  )}
-                </div>
-              )}
-              {!lastWeekFailed && lastWeekWeight != null && (
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                  <span className="text-[11px] font-semibold text-muted-foreground">
-                    Last week: {lastWeekWeight} {unit}
-                  </span>
-                  {recommendedWeight != null && (
-                    <span className="text-[11px] font-bold text-neon-teal">
-                      {isAssisted
-                        ? `→ Decrease to ${Math.max(0, recommendedWeight)} kg assist 🎯`
-                        : `→ Try ${recommendedWeight} ${unit} ${isTime ? "⏱️" : isRounds ? "🔁" : "💪"}`}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {!lastWeekWeight && !lastWeekFailed && (
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="text-[11px] font-semibold text-neon-teal">
-                    {isAssisted ? "🎯 Decrease weight assistance" : isTime ? "⏱️ Add time" : isRounds ? "🔁 Add reps" : "💪 Add weight"}
-                  </span>
-                </div>
-              )}
-
-              {!lastWeekFailed && lastWeekWeight != null && exercise.progression && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <TrendingUp className="w-3 h-3 text-neon-teal shrink-0" />
-                  <span className="text-[11px] font-semibold text-neon-teal">{exercise.progression}</span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="shrink-0">
-          <Input
-            type="text"
-            inputMode="text"
-            placeholder={isBodyweight ? `${exercise.reps}` : lastWeekFailed && retryWeight != null ? `${retryWeight}` : recommendedWeight != null ? `${recommendedWeight}` : unit}
-            value={weight}
-            onChange={(e) => {
-              const v = e.target.value;
-              // Allow F/f, numbers, decimals
-              if (v === "" || /^[Ff]$/.test(v) || /^\d*\.?\d*$/.test(v)) {
-                onWeightChange(v.toUpperCase());
-              }
-            }}
-            onBlur={onWeightBlur}
-            className={cn(
-              "w-16 h-8 text-center text-xs font-bold border-2 rounded-lg",
-              weight === "F" ? "border-destructive/50 text-destructive" : "border-primary/20",
-              isDone && "opacity-50"
-            )}
-            disabled={isDone}
-          />
-        </div>
+        </p>
+        <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.body }}>
+          <span style={{ color: C.pink }}>{isRounds ? `${exercise.sets} rounds` : exercise.reps ? `${exercise.sets} × ${exercise.reps}` : `${exercise.sets} sets`}</span> · {lastLabel}
+        </p>
       </div>
-    </motion.div>
+      {isBodyweight ? (
+        <span style={{ padding: "4px 10px", borderRadius: 999, background: C.tile, color: C.body, fontSize: 12, fontWeight: 800 }}>Bodyweight</span>
+      ) : (
+        <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ padding: "4px 10px", borderRadius: 999, background: tag.bg, color: tag.fg, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>{tag.text}</span>
+          <label style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${weight === "F" ? "#C0244E" : C.ink}`, borderRadius: 12, background: "#FFFFFF", overflow: "hidden", opacity: isDone ? 0.5 : 1 }}>
+            <input
+              type="text"
+              inputMode="text"
+              aria-label={`${exercise.name} today`}
+              placeholder={target != null ? String(target) : unit}
+              value={weight}
+              disabled={isDone}
+              onChange={(e) => { const v = e.target.value; if (v === "" || /^[Ff]$/.test(v) || /^\d*\.?\d*$/.test(v)) onWeightChange(v.toUpperCase()); }}
+              onBlur={onWeightBlur}
+              style={{ width: 56, height: "100%", border: 0, padding: "0 8px", textAlign: "right", fontWeight: 800, fontSize: 17, color: weight === "F" ? "#C0244E" : C.ink, background: "transparent" }}
+            />
+            <span style={{ padding: "0 12px 0 4px", fontSize: 14, fontWeight: 700, color: C.sub }}>{unit}</span>
+          </label>
+        </div>
+      )}
+    </div>
   );
 }
 

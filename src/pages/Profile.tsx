@@ -57,10 +57,10 @@ type MobileTab = "training" | "body" | "account";
 
 const STRENGTH_LEVELS = [
   { icon: "🌱", label: "Beginner" },
-  { icon: "⚡", label: "Leveling Up" },
+  { icon: "⚡", label: "Leveling up" },
   { icon: "💪", label: "Strong" },
-  { icon: "🔥", label: "Very Strong" },
-  { icon: "👑", label: "Elite" },
+  { icon: "🔥", label: "Advanced" },
+  { icon: "👑", label: "Very strong" },
 ] as const;
 // Boundaries are multiples of body weight. The first four define the upper bound
 // of the matching level; the fifth is the lower bound at which Elite starts.

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { canonicalExerciseName } from "@/lib/exerciseNormalize";
 
-export type ExerciseLevel = "Beginner" | "Leveling Up" | "Strong" | "Very Strong" | "Elite";
+export type ExerciseLevel = "Beginner" | "Leveling up" | "Strong" | "Advanced" | "Very strong";
 
 export interface ExerciseEntry {
   date: string;
@@ -24,17 +24,17 @@ export interface ExerciseCard {
 
 const LEVELS: { max: number; label: ExerciseLevel; icon: string }[] = [
   { max: 0.35, label: "Beginner", icon: "🌱" },
-  { max: 0.6, label: "Leveling Up", icon: "⚡" },
+  { max: 0.6, label: "Leveling up", icon: "⚡" },
   { max: 0.85, label: "Strong", icon: "💪" },
-  { max: 1.2, label: "Very Strong", icon: "🔥" },
-  { max: Infinity, label: "Elite", icon: "👑" },
+  { max: 1.2, label: "Advanced", icon: "🔥" },
+  { max: Infinity, label: "Very strong", icon: "👑" },
 ];
 
 export function getLevel(ratio: number): { label: ExerciseLevel; icon: string; index: number } {
   for (let i = 0; i < LEVELS.length; i++) {
     if (ratio < LEVELS[i].max) return { label: LEVELS[i].label, icon: LEVELS[i].icon, index: i };
   }
-  return { label: "Elite", icon: "👑", index: 4 };
+  return { label: "Very strong", icon: "👑", index: 4 };
 }
 
 export function getLevelProgress(ratio: number): number {

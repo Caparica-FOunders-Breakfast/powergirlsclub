@@ -1,33 +1,56 @@
-import { useState, useRef, useCallback } from "react";
-
-import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Award, ChevronRight, ChevronDown, X, Plus } from "lucide-react";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { useExerciseScorecard, getLevel, getLevelProgress, type ExerciseEntry } from "@/hooks/useExerciseScorecard";
+import { useState, useRef, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
 import { useActivityData } from "@/hooks/useActivityData";
+import { useStreaks } from "@/hooks/useActivityData";
 import { useProfile } from "@/hooks/useProfile";
 import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
-import { ActivityOverview } from "./ActivityOverview";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { ExerciseDetail } from "./ExerciseDetail";
-import { StrengthSummary } from "./StrengthSummary";
 import { AddExerciseModal } from "./AddExerciseModal";
-import { NON_KG_THRESHOLDS, LEVEL_DEFS, getNonKgLevel, getNonKgProgress, ASSISTED_EXERCISES, getAssistedLevel, getAssistedProgress } from "./exerciseLevels";
+import {
+  NON_KG_THRESHOLDS,
+  getNonKgLevel,
+  ASSISTED_EXERCISES,
+  getAssistedLevel,
+} from "./exerciseLevels";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  startOfWeek,
+  endOfWeek,
+  addDays,
+  subDays,
+  differenceInDays,
+  format,
+  isAfter,
+  isSameDay,
+} from "date-fns";
 
-/**
- * The "NF" badge next to an exercise = N failed attempts: weeks you logged an
- * "F" because you couldn't complete the set at that weight. Tooltip explains it
- * (native `title` alone didn't render on the desktop row and isn't discoverable).
- */
+// ── Palette (ported from the "Harley" scorecard design) ──
+const C = {
+  ink: "#2B1736",
+  grad: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)",
+  sub: "#77677E",
+  body: "#5E4E66",
+  pink: "#C21C70",
+  magenta: "#E8308C",
+  tile: "#F6F1F7",
+  lilac: "#F1E9FE",
+  seg: "#EFE6F1",
+  yellow: "#FFE14D",
+  purple: "#6B2FB3",
+};
+const bangers = { fontFamily: "Bangers, cursive", fontWeight: 400 } as const;
+const card: React.CSSProperties = { background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22 };
+const LEVEL_COLORS = ["#6B2FB3", "#A3165E", "#C21C70", "#5B21B6", "#2B1736"];
+const HEAT_COLORS = ["#F3EDF4", "#F9C3DC", "#EE6FAA", "#C21C70"];
+
 const FailBadge = ({ count }: { count: number }) => (
   <Tooltip>
     <TooltipTrigger asChild>
-      <span className="shrink-0 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive cursor-help">
+      <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 999, background: "#FCE4F0", color: "#A3165E", fontSize: 11, fontWeight: 800, cursor: "help", whiteSpace: "nowrap" }}>
         {count}F
       </span>
     </TooltipTrigger>
@@ -38,99 +61,73 @@ const FailBadge = ({ count }: { count: number }) => (
   </Tooltip>
 );
 
-// Unit mapping: exercises not measured in kg
+// Unit mapping: exercises not measured in kg.
 const EXERCISE_UNITS: Record<string, string> = {
-  "Plank": "sec",
-  "Side Plank": "sec",
-  "Battle Ropes": "sec",
-  "Farmer Carry": "sec",
-  "Push Ups": "reps",
-  "Dead Bug": "reps",
-  "Bird Dog": "reps",
-  "Hanging Knee Raises": "reps",
-  "Box Jumps": "reps",
-  "Bike Sprint (20s all-in + 3min rest)": "rounds",
-  "Sprint / Jump Rope": "rounds",
-  "Recovery Day": "—",
-  "Rest Day": "—",
-  "Pull Ups": "kg assist",
-  // Bodyweight move — tracked in reps, never rated on the kg strength scale.
-  "Glute Bridges": "reps",
+  "Plank": "sec", "Side Plank": "sec", "Battle Ropes": "sec", "Farmer Carry": "sec",
+  "Push Ups": "reps", "Dead Bug": "reps", "Bird Dog": "reps", "Hanging Knee Raises": "reps", "Box Jumps": "reps",
+  "Bike Sprint (20s all-in + 3min rest)": "rounds", "Sprint / Jump Rope": "rounds",
+  "Recovery Day": "—", "Rest Day": "—", "Pull Ups": "kg assist", "Glute Bridges": "reps",
 };
-
 const getUnit = (name: string) => EXERCISE_UNITS[name] || "kg";
 
-// Category mapping
 const EXERCISE_CATEGORIES: Record<string, string> = {
-  "Goblet Squat": "🦵 Legs",
-  "Barbell Squat": "🦵 Legs",
-  "Smith Machine Lunges": "🦵 Legs",
-  "Step Ups": "🦵 Legs",
-  "Box Jumps": "🦵 Legs",
-  "Leg Extension": "🦵 Legs",
-  "Reverse Lunges": "🦵 Legs",
-  "Hip Thrust": "🍑 Glutes",
-  "Cable Kickbacks": "🍑 Glutes",
-  "Romanian Deadlift": "🍑 Glutes",
-  "Glute Bridges": "🍑 Glutes",
-  "Lat Pulldown": "💪 Upper Body",
-  "Dumbbell Shoulder Press": "💪 Upper Body",
-  "Seated Row": "💪 Upper Body",
-  "Cable Row": "💪 Upper Body",
-   "Push Ups": "💪 Upper Body",
-   "Pull Ups": "💪 Upper Body",
-  "Back Extension": "💪 Upper Body",
-  "Plank": "🧘 Core",
-  "Dead Bug": "🧘 Core",
-  "Russian Twists": "🧘 Core",
-  "Side Plank": "🧘 Core",
-  "Bird Dog": "🧘 Core",
-  "Hanging Knee Raises": "🧘 Core",
-  "Kettlebell Swings": "⚡ Cardio & Power",
-  "Battle Ropes": "⚡ Cardio & Power",
-  "Sprint / Jump Rope": "⚡ Cardio & Power",
-  "Bike Sprint (20s all-in + 3min rest)": "⚡ Cardio & Power",
-  "Farmer Carry": "⚡ Cardio & Power",
+  "Goblet Squat": "Legs", "Barbell Squat": "Legs", "Smith Machine Lunges": "Legs", "Step Ups": "Legs",
+  "Box Jumps": "Legs", "Leg Extension": "Legs", "Reverse Lunges": "Legs",
+  "Hip Thrust": "Glutes", "Cable Kickbacks": "Glutes", "Romanian Deadlift": "Glutes", "Glute Bridges": "Glutes",
+  "Lat Pulldown": "Upper body", "Dumbbell Shoulder Press": "Upper body", "Seated Row": "Upper body",
+  "Cable Row": "Upper body", "Push Ups": "Upper body", "Pull Ups": "Upper body", "Back Extension": "Upper body",
+  "Plank": "Core", "Dead Bug": "Core", "Russian Twists": "Core", "Side Plank": "Core", "Bird Dog": "Core",
+  "Hanging Knee Raises": "Core",
+  "Kettlebell Swings": "Cardio and power", "Battle Ropes": "Cardio and power", "Sprint / Jump Rope": "Cardio and power",
+  "Bike Sprint (20s all-in + 3min rest)": "Cardio and power", "Farmer Carry": "Cardio and power",
+};
+// Category → filter group.
+const GROUP_OF: Record<string, string> = {
+  "Legs": "Lower body", "Glutes": "Lower body", "Upper body": "Upper body",
+  "Core": "Core", "Cardio and power": "Cardio and power", "Other": "Other",
+};
+const FILTERS = ["All", "Lower body", "Upper body", "Core", "Cardio and power"];
+const SORTS = ["Level", "Sessions", "A–Z"] as const;
+const RANGES = ["Year", "90 days", "30 days", "7 days"] as const;
+
+const segsFor = (n: number) =>
+  [0, 1, 2, 3, 4].map((i) => ({ bg: i < n ? C.magenta : C.seg }));
+
+const formatHour = (h: number) => {
+  if (h === 0) return "12 AM";
+  if (h === 12) return "12 PM";
+  return h < 12 ? `${h} AM` : `${h - 12} PM`;
 };
 
-const CATEGORY_ORDER = ["🦵 Legs", "🍑 Glutes", "💪 Upper Body", "🧘 Core", "⚡ Cardio & Power", "🏋️ Other"];
-
-const CATEGORY_FILTERS: { key: string; label: string; match: (cat: string) => boolean }[] = [
-  { key: "all", label: "All", match: () => true },
-  { key: "lower", label: "Lower Body", match: (c) => c.includes("Legs") || c.includes("Glutes") },
-  { key: "upper", label: "Upper Body", match: (c) => c.includes("Upper Body") },
-  { key: "core", label: "Core", match: (c) => c.includes("Core") },
-  { key: "hiit", label: "Cardio & Power", match: (c) => c.includes("Cardio") },
-];
+// Pink pill section label.
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>{children}</p>
+);
 
 export function ExerciseScorecard() {
   const { data: grouped, isLoading } = useExerciseScorecard();
   const { data: activityEntries } = useActivityData();
   const { data: profile } = useProfile();
   const { hiddenExercises, hideExercise, unhideExercise } = useScorecardVisibility();
+  const streaks = useStreaks();
   const { toast } = useToast();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>("All");
+  const [sort, setSort] = useState<(typeof SORTS)[number]>("Level");
+  const [range, setRange] = useState<(typeof RANGES)[number]>("Year");
+  const [showAll, setShowAll] = useState(false);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  void undoTimerRef;
 
   const bw = profile?.body_weight ? Number(profile.body_weight) : null;
 
   const handleRemoveExercise = useCallback((exerciseName: string) => {
     hideExercise.mutate(exerciseName);
-
     const { dismiss } = toast({
       description: "Exercise removed from Scorecard",
       action: (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs font-bold"
-          onClick={() => {
-            unhideExercise.mutate(exerciseName);
-            dismiss();
-          }}
-        >
+        <Button variant="outline" size="sm" className="h-7 text-xs font-bold" onClick={() => { unhideExercise.mutate(exerciseName); dismiss(); }}>
           Undo
         </Button>
       ),
@@ -138,67 +135,101 @@ export function ExerciseScorecard() {
     });
   }, [hideExercise, unhideExercise, toast]);
 
-  const handleAddExercise = useCallback((exerciseName: string) => {
-    unhideExercise.mutate(exerciseName);
-  }, [unhideExercise]);
+  // ── Exercise cards (same derivation as before) ──
+  const exercises = useMemo(() => {
+    if (!grouped) return [];
+    return Array.from(grouped.entries())
+      .filter(([name]) => !hiddenExercises.includes(name))
+      .map(([name, entries]) => {
+        const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const latestNonFailed = sorted.find((e) => !e.failed);
+        const currentWeight = latestNonFailed?.weight ?? 0;
+        const isAssisted = ASSISTED_EXERCISES.has(name);
+        const nonFailed = entries.filter((e) => !e.failed);
+        const bestWeight = nonFailed.length === 0 ? 0 : isAssisted ? Math.min(...nonFailed.map((e) => e.weight)) : Math.max(...nonFailed.map((e) => e.weight));
+        const failCount = entries.filter((e) => e.failed).length;
+        const unit = getUnit(name);
+        const useRatio = unit === "kg" && !!bw;
+        const ratio = useRatio ? currentWeight / bw! : 0;
+        const hasThresholds = !useRatio && !isAssisted && NON_KG_THRESHOLDS[name] != null;
+        const level = isAssisted ? getAssistedLevel(name, currentWeight) : useRatio ? getLevel(ratio) : hasThresholds ? getNonKgLevel(name, currentWeight) : { label: "—" as const, icon: "📈", index: -1 };
+        const category = EXERCISE_CATEGORIES[name] || "Other";
+        const group = GROUP_OF[category] || "Other";
+        const sessions = sorted.length;
+        const isPR = sessions > 1 && currentWeight === bestWeight;
+        const bwLabel = useRatio && ratio > 0 ? `${ratio.toFixed(2)}× BW` : isAssisted ? "assisted" : "";
+        return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, group, unit, useRatio, hasThresholds, isAssisted, failCount, sessions, isPR, bwLabel };
+      });
+  }, [grouped, hiddenExercises, bw]);
+
+  // ── Overall strength (avg ratio of kg lifts) ──
+  const strength = useMemo(() => {
+    const weightBased = exercises.filter((e) => e.useRatio && e.ratio > 0);
+    if (weightBased.length === 0) return null;
+    const avgRatio = weightBased.reduce((s, e) => s + e.ratio, 0) / weightBased.length;
+    const overall = getLevel(avgRatio);
+    const top3 = [...weightBased].sort((a, b) => b.ratio - a.ratio).slice(0, 3);
+    return { avgRatio, overall, top3 };
+  }, [exercises]);
+
+  // ── Activity stats (range-filtered) + heatmap (full year) ──
+  const activity = useMemo(() => {
+    const entries = activityEntries ?? [];
+    const now = new Date();
+    const rangeDays = range === "7 days" ? 7 : range === "30 days" ? 30 : range === "90 days" ? 90 : null;
+    const cutoff = rangeDays ? subDays(now, rangeDays) : null;
+    const filtered = cutoff ? entries.filter((e) => new Date(e.date + "T00:00:00") >= cutoff) : entries;
+    const daySet = new Set(filtered.map((e) => e.date));
+    const workouts = daySet.size;
+    const exercisesLogged = filtered.length;
+    const hourBuckets = new Map<number, number>();
+    for (const e of filtered) hourBuckets.set(e.hour, (hourBuckets.get(e.hour) ?? 0) + 1);
+    let peakHour: number | null = null, peakCount = 0;
+    for (const [h, c] of hourBuckets) if (c > peakCount) { peakHour = h; peakCount = c; }
+    let windowDays = rangeDays ?? 365;
+    if (!rangeDays && entries.length) windowDays = Math.max(1, differenceInDays(now, new Date(entries[0].date + "T00:00:00")) + 1);
+    const daysActivePct = windowDays ? Math.round((workouts / windowDays) * 100) : 0;
+
+    // Heatmap over the current calendar year.
+    const dayCounts = new Map<string, number>();
+    for (const e of entries) dayCounts.set(e.date, (dayCounts.get(e.date) ?? 0) + 1);
+    const year = now.getFullYear();
+    const gridStart = startOfWeek(new Date(year, 0, 1), { weekStartsOn: 1 });
+    const gridEnd = endOfWeek(new Date(year, 11, 31), { weekStartsOn: 1 });
+    const cols: { days: { bg: string; ring: string; title: string }[] }[] = [];
+    let cursor = gridStart;
+    while (cursor <= gridEnd) {
+      const days: { bg: string; ring: string; title: string }[] = [];
+      for (let d = 0; d < 7; d++) {
+        const day = addDays(cursor, d);
+        const key = format(day, "yyyy-MM-dd");
+        const inYear = day.getFullYear() === year;
+        const future = isAfter(day, now) && !isSameDay(day, now);
+        const count = dayCounts.get(key) ?? 0;
+        let bg = "transparent", ring = "none";
+        if (!inYear) { bg = "transparent"; ring = "none"; }
+        else if (isSameDay(day, now)) { bg = C.pink; ring = `2px solid ${C.ink}`; }
+        else if (future) { bg = "#FFFFFF"; ring = "1px solid #EFE6F1"; }
+        else { bg = count === 0 ? HEAT_COLORS[0] : count === 1 ? HEAT_COLORS[1] : count <= 3 ? HEAT_COLORS[2] : HEAT_COLORS[3]; }
+        days.push({ bg, ring, title: inYear ? `${format(day, "MMM d, yyyy")} — ${count} exercise${count === 1 ? "" : "s"}` : "" });
+      }
+      cols.push({ days });
+      cursor = addDays(cursor, 7);
+    }
+    return { workouts, exercisesLogged, peakHour, daysActivePct, cols };
+  }, [activityEntries, range]);
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div style={{ padding: "24px 0", display: "flex", flexDirection: "column", gap: 16 }}>
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 bg-muted rounded-2xl animate-pulse" />
+          <div key={i} style={{ height: 120, background: C.tile, borderRadius: 22 }} className="animate-pulse" />
         ))}
       </div>
     );
   }
 
-  if (!grouped || grouped.size === 0) {
-    return (
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="text-center py-12 bg-card rounded-2xl border-2 border-border"
-      >
-        <p className="text-5xl mb-3">📊</p>
-        <h2 className="text-2xl font-display text-foreground">No Data Yet</h2>
-        <p className="text-muted-foreground font-semibold mt-2">
-          Complete exercises with weights to see your progression
-        </p>
-      </motion.div>
-    );
-  }
-
-  const allExerciseNames = Array.from(grouped.keys());
-
-  // Build exercise cards, filtering out hidden ones
-  const exercises = Array.from(grouped.entries())
-    .filter(([name]) => !hiddenExercises.includes(name))
-    .map(([name, entries]) => {
-      const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      const latestNonFailed = sorted.find((e) => !e.failed);
-      const currentWeight = latestNonFailed?.weight ?? 0;
-      const isAssisted = ASSISTED_EXERCISES.has(name);
-      const nonFailedEntries = entries.filter((e) => !e.failed);
-      const bestWeight = nonFailedEntries.length === 0 ? 0 : isAssisted
-        ? Math.min(...nonFailedEntries.map((e) => e.weight))
-        : Math.max(...nonFailedEntries.map((e) => e.weight));
-      const failCount = entries.filter((e) => e.failed).length;
-      const unit = getUnit(name);
-      const useRatio = unit === "kg" && !!bw;
-      const ratio = useRatio ? currentWeight / bw! : 0;
-      const hasThresholds = !useRatio && !isAssisted && NON_KG_THRESHOLDS[name] != null;
-      const level = isAssisted
-        ? getAssistedLevel(name, currentWeight)
-        : useRatio
-          ? getLevel(ratio)
-          : hasThresholds
-            ? getNonKgLevel(name, currentWeight)
-            : { label: "—" as const, icon: "📈", index: -1 };
-      const category = EXERCISE_CATEGORIES[name] || "🏋️ Other";
-      return { name, entries: sorted, currentWeight, bestWeight, ratio, level, category, unit, useRatio, hasThresholds, isAssisted, failCount };
-    });
-
-  // Detail view
+  // Detail drill-down keeps the existing component.
   if (selectedExercise) {
     const ex = exercises.find((e) => e.name === selectedExercise);
     if (ex) {
@@ -207,302 +238,192 @@ export function ExerciseScorecard() {
           exercise={ex}
           bodyWeight={bw}
           onBack={() => setSelectedExercise(null)}
-          onRemove={(name) => {
-            handleRemoveExercise(name);
-            setSelectedExercise(null);
-          }}
+          onRemove={(name) => { handleRemoveExercise(name); setSelectedExercise(null); }}
         />
       );
     }
   }
 
-  const hasHiddenExercises = hiddenExercises.length > 0;
-
-  const activeFilter = CATEGORY_FILTERS.find((f) => f.key === categoryFilter) ?? CATEGORY_FILTERS[0];
-  const filteredExercises = exercises
-    .filter((ex) => activeFilter.match(ex.category))
-    .sort((a, b) => {
-      if (a.isAssisted && b.isAssisted) return a.bestWeight - b.bestWeight;
-      return b.bestWeight - a.bestWeight;
-    });
+  const hasData = grouped && grouped.size > 0;
+  const filtered = exercises.filter((e) => filter === "All" || e.group === filter);
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === "Sessions") return b.sessions - a.sessions;
+    if (sort === "A–Z") return a.name.localeCompare(b.name);
+    return b.level.index - a.level.index || b.sessions - a.sessions;
+  });
+  const rows = showAll ? sorted : sorted.slice(0, 8);
+  const hasHidden = hiddenExercises.length > 0;
 
   return (
-    <div className="space-y-4">
-      {/* Activity Overview (responsive — mobile + desktop) */}
-      <ActivityOverview entries={activityEntries ?? []} />
+    <div style={{ color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, display: "flex", flexDirection: "column", gap: 24 }}>
+      <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1 }}>Scorecard</h1>
 
-      {/* Strength Summary */}
-      <StrengthSummary exercises={exercises} bodyWeight={bw} />
+      {/* Row 1: Streak */}
+      <section style={{ ...card, padding: 28, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+        <div>
+          <Label>CURRENT STREAK</Label>
+          <p style={{ margin: "4px 0 0", ...bangers, fontSize: 56, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
+          <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
+            {streaks.current > 0 ? "Keep it going — train again today." : "Train today to start a new streak."}
+            <span style={{ color: C.purple }}> · Best streak {streaks.longest} days</span>
+          </p>
+        </div>
+        <Link to="/week" style={{ background: C.pink, color: "#FFFFFF", fontWeight: 800, textDecoration: "none", padding: "16px 24px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}`, whiteSpace: "nowrap" }}>
+          Start today's workout
+        </Link>
+      </section>
 
-      {/* Strength Level Legend */}
-      <Collapsible defaultOpen={false}>
-        <motion.div
-          initial={{ y: -5, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-2xl border-2 border-border bg-card px-4 py-3"
-        >
-          <CollapsibleTrigger className="flex items-center justify-between w-full group">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Strength Levels</p>
-            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              {[
-                { icon: "🌱", label: "Beginner", range: "< 0.35x" },
-                { icon: "⚡", label: "Leveling Up", range: "0.35–0.60x" },
-                { icon: "💪", label: "Strong", range: "0.60–0.85x" },
-                { icon: "🔥", label: "Very Strong", range: "0.85–1.20x" },
-                { icon: "👑", label: "Elite", range: "> 1.20x" },
-              ].map((l) => (
-                <span key={l.label} className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <span>{l.icon}</span>
-                  <span className="font-semibold text-foreground">{l.label}</span>
-                  <span className="opacity-60">{l.range}</span>
-                </span>
+      {/* Row 2: Activity */}
+      {hasData && (
+        <section style={{ ...card, padding: 24 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+            <h2 style={{ margin: 0, ...bangers, fontSize: 32, letterSpacing: 1 }}>Activity this year</h2>
+            <div style={{ display: "flex", border: `2px solid ${C.ink}`, borderRadius: 12, overflow: "hidden" }}>
+              {RANGES.map((r) => (
+                <button key={r} type="button" onClick={() => setRange(r)} style={{ minHeight: 40, padding: "0 14px", border: 0, background: r === range ? C.ink : "#FFFFFF", color: r === range ? "#FFFFFF" : C.ink, fontWeight: 800, fontSize: 14, cursor: "pointer" }}>{r}</button>
               ))}
             </div>
-          </CollapsibleContent>
-        </motion.div>
-      </Collapsible>
-
-      {/* Exercise Progress card */}
-      <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
-        <div className="p-4 lg:p-5 border-b border-border">
-          <h3 className="font-display text-xl text-foreground lg:text-2xl mb-3">Exercise Progress</h3>
-          <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
-            {CATEGORY_FILTERS.map((f) => {
-              const active = categoryFilter === f.key;
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setCategoryFilter(f.key)}
-                  className={cn(
-                    "shrink-0 px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all",
-                    active
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {f.label}
-                </button>
-              );
-            })}
           </div>
-        </div>
-
-        {filteredExercises.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-sm text-muted-foreground font-semibold">
-              No exercises in this category yet.
-            </p>
-          </div>
-        ) : (
-          <div className="p-3 space-y-3 lg:p-0 lg:space-y-0 lg:divide-y lg:divide-border">
-            {filteredExercises.map((ex, i) => (
-              <ExerciseRow
-                key={ex.name}
-                ex={ex}
-                index={i}
-                bodyWeight={bw}
-                onSelect={setSelectedExercise}
-              />
+          <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+            {[
+              { label: "Workouts", value: String(activity.workouts) },
+              { label: "Days active", value: `${activity.daysActivePct}%`, suffix: " of days" },
+              { label: "Exercises logged", value: String(activity.exercisesLogged) },
+              { label: "You train most at", value: activity.peakHour != null ? formatHour(activity.peakHour) : "—" },
+            ].map((s) => (
+              <div key={s.label} style={{ padding: "14px 16px", borderRadius: 14, background: C.tile }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.sub }}>{s.label}</p>
+                <p style={{ margin: "2px 0 0", ...bangers, fontSize: 34, lineHeight: 1.1 }}>
+                  {s.value}
+                  {s.suffix && <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, fontWeight: 700, color: C.sub }}>{s.suffix}</span>}
+                </p>
+              </div>
             ))}
           </div>
-        )}
+          <div style={{ marginTop: 20, overflowX: "auto" }}>
+            <div style={{ display: "flex", gap: 3, minWidth: 760 }}>
+              {activity.cols.map((col, ci) => (
+                <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
+                  {col.days.map((cell, di) => (
+                    <span key={di} title={cell.title} style={{ display: "block", aspectRatio: "1", borderRadius: 3, background: cell.bg, outline: cell.ring, outlineOffset: 1 }} />
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", minWidth: 760, fontSize: 12, fontWeight: 700, color: C.sub }}>
+              {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m) => <span key={m}>{m}</span>)}
+            </div>
+          </div>
+          <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: C.sub }}>
+            Less
+            {HEAT_COLORS.map((c) => <span key={c} style={{ width: 12, height: 12, borderRadius: 3, background: c }} />)}
+            More
+          </div>
+        </section>
+      )}
+
+      {/* Row 3: Strength + Exercise progress */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+        <section style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+          {strength && (
+            <div style={{ ...card, padding: 24 }}>
+              <Label>OVERALL STRENGTH</Label>
+              <p style={{ margin: "4px 0 0", ...bangers, fontSize: 36, letterSpacing: 1, lineHeight: 1.1 }}>{strength.overall.label}</p>
+              <p style={{ margin: "6px 0 0", color: C.body }}>On average you lift <strong style={{ color: C.ink }}>{strength.avgRatio.toFixed(2)}×</strong> your bodyweight.</p>
+              <p style={{ margin: "20px 0 8px", fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>STRONGEST LIFTS</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {strength.top3.map((ex) => (
+                  <div key={ex.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 12, background: C.tile, fontWeight: 700 }}>
+                    <span>{ex.name}</span>
+                    <span>{ex.currentWeight} {ex.unit} <span style={{ color: C.pink }}>{ex.ratio.toFixed(2)}×</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ ...card, padding: 24 }}>
+            <Label>STRENGTH LEVELS</Label>
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+              {["Very strong", "Advanced", "Strong", "Leveling up", "Beginner"].map((name, i) => (
+                <div key={name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ display: "flex", gap: 3, width: 80 }}>
+                    {segsFor(5 - i).map((sg, j) => <span key={j} style={{ flex: 1, height: 8, borderRadius: 999, background: sg.bg }} />)}
+                  </div>
+                  <span style={{ fontWeight: 800, fontSize: 15 }}>{name}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ margin: "14px 0 0", fontSize: 14, color: C.body }}>Levels compare your best weight to your bodyweight for each exercise.</p>
+          </div>
+        </section>
+
+        <section style={{ flex: "2 1 520px", minWidth: 0, ...card, padding: 24 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <h2 style={{ margin: 0, ...bangers, fontSize: 32, letterSpacing: 1 }}>Exercise progress</h2>
+            <button type="button" onClick={() => setAddModalOpen(true)} disabled={!hasHidden} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: `2px solid ${C.ink}`, borderRadius: 12, background: hasHidden ? C.pink : "#EDE7EF", color: hasHidden ? "#FFFFFF" : C.sub, fontWeight: 800, fontSize: 15, cursor: hasHidden ? "pointer" : "not-allowed" }}>
+              <Plus className="w-4 h-4" /> Add exercise
+            </button>
+          </div>
+
+          <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {FILTERS.map((f) => (
+                <button key={f} type="button" onClick={() => { setFilter(f); setShowAll(false); }} style={{ minHeight: 40, padding: "0 14px", borderRadius: 999, border: `2px solid ${C.ink}`, background: f === filter ? C.ink : "#FFFFFF", color: f === filter ? "#FFFFFF" : C.ink, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", cursor: "pointer" }}>{f}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: C.sub }}>Sort</span>
+              {SORTS.map((s) => (
+                <button key={s} type="button" onClick={() => setSort(s)} style={{ minHeight: 40, padding: "0 12px", borderRadius: 10, border: 0, background: s === sort ? C.lilac : "transparent", color: s === sort ? "#5B21B6" : C.body, fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", cursor: "pointer" }}>{s}</button>
+              ))}
+            </div>
+          </div>
+
+          {rows.length === 0 ? (
+            <p style={{ margin: "24px 0 0", textAlign: "center", color: C.sub, fontWeight: 600 }}>No exercises in this category yet.</p>
+          ) : (
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column" }}>
+              {rows.map((ex) => (
+                <button key={ex.name} type="button" onClick={() => setSelectedExercise(ex.name)} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px 20px", padding: "14px 4px", borderTop: "1px solid #EFE6F1", border: 0, borderTopWidth: 1, background: "transparent", color: C.ink, textAlign: "left", cursor: "pointer", width: "100%" }}>
+                  <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>
+                      {ex.name}
+                      {ex.isPR && <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 999, background: C.yellow, border: `1.5px solid ${C.ink}`, fontSize: 11, fontWeight: 800, verticalAlign: 2 }}>PR</span>}
+                      {ex.failCount > 0 && <FailBadge count={ex.failCount} />}
+                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 600, color: C.sub }}>{ex.group} · {ex.sessions} session{ex.sessions === 1 ? "" : "s"}</p>
+                  </div>
+                  <div style={{ flex: "0 1 190px", minWidth: 150 }}>
+                    <div style={{ display: "flex", gap: 3 }}>
+                      {segsFor(ex.level.index + 1).map((sg, j) => <span key={j} style={{ flex: 1, height: 8, borderRadius: 999, background: ex.level.index < 0 ? C.seg : sg.bg }} />)}
+                    </div>
+                    <p style={{ margin: "4px 0 0", fontSize: 13, fontWeight: 800, color: ex.level.index < 0 ? C.sub : LEVEL_COLORS[ex.level.index] }}>{ex.level.label}</p>
+                  </div>
+                  <div style={{ flex: "0 0 110px", textAlign: "right" }}>
+                    <p style={{ margin: 0, ...bangers, fontSize: 26, lineHeight: 1 }}>{ex.currentWeight}<span style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, fontWeight: 700, color: C.sub }}> {ex.unit}</span></p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, fontWeight: 700, color: C.sub }}>{ex.bwLabel}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {sorted.length > 8 && (
+            <button type="button" onClick={() => setShowAll((v) => !v)} style={{ marginTop: 8, width: "100%", minHeight: 48, border: "2px dashed #B79BF2", borderRadius: 14, background: "#FBF9FB", color: C.purple, fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+              {showAll ? "Show fewer" : `Show all ${sorted.length} exercises`}
+            </button>
+          )}
+        </section>
       </div>
 
-      {/* Add Exercise Button */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <button
-          onClick={() => setAddModalOpen(true)}
-          disabled={!hasHiddenExercises}
-          className={cn(
-            "w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed transition-all active:scale-[0.98]",
-            hasHiddenExercises
-              ? "border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5"
-              : "border-border text-muted-foreground/50 cursor-not-allowed"
-          )}
-        >
-          <Plus className="w-4 h-4" />
-          <span className="text-sm font-bold">Add Exercise</span>
-        </button>
-      </motion.div>
-
-      {/* Add Exercise Modal */}
       <AddExerciseModal
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
-        allExercises={allExerciseNames}
+        allExercises={grouped ? Array.from(grouped.keys()) : []}
         hiddenExercises={hiddenExercises}
-        onAdd={handleAddExercise}
+        onAdd={(name) => unhideExercise.mutate(name)}
       />
     </div>
   );
 }
-
-type ExerciseRowData = {
-  name: string;
-  entries: ExerciseEntry[];
-  currentWeight: number;
-  bestWeight: number;
-  ratio: number;
-  level: { label: string; icon: string; index: number };
-  category: string;
-  unit: string;
-  useRatio: boolean;
-  hasThresholds: boolean;
-  isAssisted: boolean;
-  failCount: number;
-};
-
-function ExerciseRow({
-  ex,
-  index,
-  bodyWeight,
-  onSelect,
-}: {
-  ex: ExerciseRowData;
-  index: number;
-  bodyWeight: number | null;
-  onSelect: (name: string) => void;
-}) {
-  const isPR = ex.currentWeight === ex.bestWeight && ex.entries.length > 1;
-  const progress = ex.isAssisted
-    ? getAssistedProgress(ex.name, ex.currentWeight)
-    : ex.useRatio
-      ? (bodyWeight ? getLevelProgress(ex.ratio) : 0)
-      : ex.hasThresholds
-        ? getNonKgProgress(ex.name, ex.currentWeight)
-        : 0;
-  const hasProgress = ex.useRatio || ex.hasThresholds || ex.isAssisted;
-
-  return (
-    <motion.div
-      initial={{ x: -10, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ delay: index * 0.03 }}
-      className={cn(
-        "relative group transition-colors",
-        // Desktop alternating row backgrounds
-        index % 2 === 1 ? "lg:bg-muted/30" : "lg:bg-card",
-        "lg:hover:bg-muted/50"
-      )}
-    >
-      {/* Mobile layout — stacked card with progress bar at bottom */}
-      <button
-        onClick={() => onSelect(ex.name)}
-        className="lg:hidden w-full text-left rounded-2xl border-2 border-border bg-card p-4 transition-all active:scale-[0.98]"
-      >
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-lg">{ex.level.icon}</span>
-            <h3 className="font-extrabold text-sm text-foreground truncate">{ex.name}</h3>
-            {isPR && (
-              <span className="shrink-0 text-base" title="Personal Record">⭐</span>
-            )}
-            {ex.failCount > 0 && <FailBadge count={ex.failCount} />}
-          </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-            {ex.category}
-          </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-            {ex.entries.length} session{ex.entries.length === 1 ? "" : "s"}
-          </span>
-        </div>
-
-        <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-xl font-display text-foreground tabular-nums">{ex.currentWeight}</span>
-          <span className="text-xs font-bold text-muted-foreground">{ex.unit}</span>
-          {ex.useRatio && (
-            <span className="text-[10px] font-bold text-muted-foreground">{ex.ratio.toFixed(2)}x BW</span>
-          )}
-        </div>
-
-        {hasProgress ? (
-          <div>
-            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(progress, 100)}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
-              />
-            </div>
-            <p className="text-[10px] font-bold text-muted-foreground mt-1">{ex.level.label}</p>
-          </div>
-        ) : (
-          <p className="text-[10px] font-bold text-muted-foreground italic">Tracked in {ex.unit}</p>
-        )}
-      </button>
-
-      {/* Desktop layout — 90px tall single row */}
-      <button
-        onClick={() => onSelect(ex.name)}
-        className="hidden lg:flex w-full text-left h-[90px] px-5 items-center gap-4 cursor-pointer"
-      >
-        <span className="text-2xl shrink-0">{ex.level.icon}</span>
-
-        <div className="w-64 shrink-0 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <h3 className="font-extrabold text-[18px] leading-tight text-foreground truncate">{ex.name}</h3>
-            {ex.failCount > 0 && <FailBadge count={ex.failCount} />}
-          </div>
-          <div className="flex gap-1.5 mt-1.5">
-            <span className="text-[13px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-              {ex.category}
-            </span>
-            <span className="text-[13px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-              {ex.entries.length} session{ex.entries.length === 1 ? "" : "s"}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          {hasProgress ? (
-            <>
-              <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(progress, 100)}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
-                />
-              </div>
-              <p className="text-[11px] font-bold text-muted-foreground mt-1">{ex.level.label}</p>
-            </>
-          ) : (
-            <p className="text-[11px] font-bold text-muted-foreground italic">Tracked in {ex.unit}</p>
-          )}
-        </div>
-
-        <div className="text-right shrink-0 min-w-[88px]">
-          <span className="text-[22px] font-display text-foreground tabular-nums leading-none">{ex.currentWeight}</span>
-          <span className="text-[16px] font-bold text-muted-foreground ml-1">{ex.unit}</span>
-          {ex.useRatio && (
-            <p className="text-[11px] font-bold text-muted-foreground mt-0.5">{ex.ratio.toFixed(2)}x BW</p>
-          )}
-        </div>
-
-        <div className="w-[54px] shrink-0 flex justify-end">
-          {isPR && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-accent/15 text-accent">
-              ⭐ PR
-            </span>
-          )}
-        </div>
-
-        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-      </button>
-    </motion.div>
-  );
-}
-

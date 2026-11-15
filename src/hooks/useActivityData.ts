@@ -57,3 +57,49 @@ export const useActivityData = () => {
     enabled: !!user,
   });
 };
+
+const dateKey = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+/**
+ * Current + longest streak (in consecutive calendar days with ≥1 completed
+ * exercise) from a set of active local-date keys. Today not yet logged does not
+ * break the current streak.
+ */
+export const computeStreaks = (dates: Iterable<string>): { current: number; longest: number } => {
+  const set = new Set(dates);
+  // Current: walk back from today.
+  let current = 0;
+  const today = new Date();
+  for (let i = 0; i < 400; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if (set.has(dateKey(d))) current++;
+    else if (i === 0) continue; // today not logged yet doesn't break it
+    else break;
+  }
+  // Longest: scan sorted distinct days for the longest consecutive run.
+  const sorted = Array.from(set).sort();
+  let longest = 0;
+  let run = 0;
+  let prev: Date | null = null;
+  for (const key of sorted) {
+    const cur = new Date(key + "T00:00:00");
+    if (prev && Math.round((cur.getTime() - prev.getTime()) / 86400000) === 1) run++;
+    else run = 1;
+    if (run > longest) longest = run;
+    prev = cur;
+  }
+  return { current, longest };
+};
+
+/** Current + best streak for the signed-in user. */
+export const useStreaks = () => {
+  const { data: entries } = useActivityData();
+  const dates = new Set((entries ?? []).map((e) => e.date));
+  return computeStreaks(dates);
+};

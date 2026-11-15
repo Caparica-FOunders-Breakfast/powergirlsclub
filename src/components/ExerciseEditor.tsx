@@ -1,9 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Plus, Trash2, GripVertical, RotateCcw, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
 
@@ -16,253 +11,146 @@ interface ExerciseEditorProps {
   onClose: () => void;
 }
 
-const ExerciseEditor = ({ day, dayIndex, hasCustom, onSave, onReset, onClose }: ExerciseEditorProps) => {
-  const [exercises, setExercises] = useState<Exercise[]>([...day.exercises]);
+const C = {
+  ink: "#2B1736",
+  sub: "#77677E",
+  body: "#5E4E66",
+  pink: "#C21C70",
+  border: "#E4DAE7",
+  lilac: "#F1E9FE",
+  purple: "#5B21B6",
+};
 
-  // Skip the first effect run — that's the initial mount with the day's exercises,
-  // not a user edit. After that, every change autosaves via the debounced callback.
+const TYPES = ["Weights", "Bodyweight", "Time", "Rounds", "Assisted"] as const;
+type ExType = (typeof TYPES)[number];
+
+const typeOf = (ex: Exercise): ExType =>
+  ex.isAssisted ? "Assisted" : ex.isTimeBased ? "Time" : ex.isRoundsBased ? "Rounds" : ex.isBodyweight ? "Bodyweight" : "Weights";
+
+const CFG: Record<ExType, { amountLabel: string; amountUnit: string; showLoad: boolean; loadLabel: string; progLabel: string; progSign: string; progUnit: string }> = {
+  Weights: { amountLabel: "Reps", amountUnit: "reps", showLoad: true, loadLabel: "Starting weight", progLabel: "Add each week", progSign: "+", progUnit: "kg" },
+  Bodyweight: { amountLabel: "Reps", amountUnit: "reps", showLoad: false, loadLabel: "", progLabel: "Add each week", progSign: "+", progUnit: "reps" },
+  Time: { amountLabel: "Hold for", amountUnit: "sec", showLoad: false, loadLabel: "", progLabel: "Add each week", progSign: "+", progUnit: "sec" },
+  Rounds: { amountLabel: "Reps / round", amountUnit: "reps", showLoad: false, loadLabel: "", progLabel: "Add each week", progSign: "+", progUnit: "reps" },
+  Assisted: { amountLabel: "Reps", amountUnit: "reps", showLoad: true, loadLabel: "Assistance", progLabel: "Less help each week", progSign: "−", progUnit: "kg" },
+};
+
+const field: React.CSSProperties = { height: 44, border: `2px solid ${C.ink}`, borderRadius: 12, padding: "0 12px", fontWeight: 800, fontSize: 16, color: C.ink, boxSizing: "border-box", width: "100%", background: "#FFFFFF" };
+const fieldLabel: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: C.body };
+
+const ExerciseEditor = ({ day, hasCustom, onSave, onReset, onClose }: ExerciseEditorProps) => {
+  const [exercises, setExercises] = useState<Exercise[]>([...day.exercises]);
+  const [videoOpen, setVideoOpen] = useState<Record<number, boolean>>({});
+
   const hydrated = useRef(false);
-  // Only flag dirty when the user actually edits — otherwise opening + closing
-  // the editor (a read-only interaction) would write the day's defaults back
-  // into user_workout_plans and incorrectly mark the user as Custom.
   const dirty = useRef(false);
   const latestExercises = useRef(exercises);
   latestExercises.current = exercises;
 
   const autosave = useDebouncedCallback((next: Exercise[]) => {
-    const valid = next.filter((ex) => ex.name.trim());
-    onSave(valid);
+    onSave(next.filter((ex) => ex.name.trim()));
   }, 800);
 
   useEffect(() => {
-    if (!hydrated.current) {
-      hydrated.current = true;
-      return;
-    }
+    if (!hydrated.current) { hydrated.current = true; return; }
     dirty.current = true;
     autosave(exercises);
   }, [exercises, autosave]);
 
-  // If the user closes the editor with a pending edit, flush it. If they
-  // didn't touch anything, skip — nothing to save.
-  useEffect(
-    () => () => {
-      if (dirty.current) autosave.flush(latestExercises.current);
-    },
-    [autosave],
-  );
+  useEffect(() => () => { if (dirty.current) autosave.flush(latestExercises.current); }, [autosave]);
 
-  const addExercise = () => {
-    setExercises([...exercises, {
-      name: "",
-      sets: 3,
-      reps: "10",
-      suggestedWeight: "",
-      progression: "",
-    }]);
-  };
-
-  const removeExercise = (idx: number) => {
-    setExercises(exercises.filter((_, i) => i !== idx));
-  };
-
-  const updateExercise = (idx: number, field: keyof Exercise, value: any) => {
-    setExercises(exercises.map((ex, i) => i === idx ? { ...ex, [field]: value } : ex));
-  };
+  const addExercise = () => setExercises([...exercises, { name: "", sets: 3, reps: "10", suggestedWeight: "", progression: "" }]);
+  const removeExercise = (idx: number) => setExercises(exercises.filter((_, i) => i !== idx));
+  const update = (idx: number, patch: Partial<Exercise>) => setExercises(exercises.map((ex, i) => (i === idx ? { ...ex, ...patch } : ex)));
+  const setType = (idx: number, t: ExType) => update(idx, { isBodyweight: t === "Bodyweight", isTimeBased: t === "Time", isRoundsBased: t === "Rounds", isAssisted: t === "Assisted" });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      className="overflow-hidden"
-    >
-      <div className="px-4 pb-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-bold uppercase text-muted-foreground">Edit Exercises</p>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, fontFamily: "Nunito, system-ui, sans-serif", color: C.ink }}>
+      <p style={{ margin: 0, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 700, color: C.body }}>
+        <span style={{ color: C.pink, fontWeight: 900 }}>✓</span> Changes save automatically
+      </p>
 
-        {exercises.map((ex, idx) => {
-          const isAssisted = !!ex.isAssisted;
-          // A plain weighted lift (not bodyweight / time / rounds / assisted)
-          // is the only kind that gets an explicit kg weight field.
-          const canWeight = !ex.isBodyweight && !ex.isTimeBased && !ex.isRoundsBased && !isAssisted;
-          // Pull the numeric part out of suggestedWeight ("20 kg" → "20").
-          const weightValue = ex.suggestedWeight
-            ? ex.suggestedWeight.replace(/[^0-9.]/g, "")
-            : "";
-          const repsLabel = ex.isTimeBased ? "Seconds" : ex.isRoundsBased ? "Reps/round" : "Reps";
+      {exercises.map((ex, idx) => {
+        const t = typeOf(ex);
+        const cfg = CFG[t];
+        const loadValue = ex.suggestedWeight ? ex.suggestedWeight.replace(/[^0-9.]/g, "") : "";
+        const progValue = ex.progression ? ex.progression.replace(/[^0-9.]/g, "") : "";
+        return (
+          <div key={idx} style={{ background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 18, padding: "18px 20px", boxShadow: `4px 4px 0 ${C.border}` }}>
+            {/* Name row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ flex: "none", width: 28, height: 28, borderRadius: 999, background: C.ink, color: "#FFFFFF", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>
+              <input value={ex.name} onChange={(e) => update(idx, { name: e.target.value })} placeholder="Exercise name" aria-label="Exercise name" style={{ flex: 1, minWidth: 0, height: 44, border: 0, borderBottom: `2px solid ${C.border}`, background: "transparent", fontWeight: 800, fontSize: 19, color: C.ink, padding: "0 4px" }} />
+              <button type="button" onClick={() => removeExercise(idx)} aria-label={`Remove ${ex.name || "exercise"}`} style={{ flex: "none", width: 44, height: 44, border: `2px solid ${C.border}`, borderRadius: 12, background: "#FFFFFF", cursor: "pointer", color: "#A3165E", fontSize: 16 }}>🗑</button>
+            </div>
 
-          return (
-            <motion.div
-              key={idx}
-              layout
-              className="p-3 rounded-xl border-2 border-border bg-background space-y-2"
-            >
-              <div className="flex items-center gap-2">
-                <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
-                <Input
-                  value={ex.name}
-                  onChange={(e) => updateExercise(idx, "name", e.target.value)}
-                  placeholder="Exercise name"
-                  className="flex-1 h-8 text-sm font-bold border-primary/20"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeExercise(idx)}
-                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
+            {/* Type */}
+            <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: C.sub, marginRight: 4 }}>Type</span>
+              {TYPES.map((ty) => {
+                const on = ty === t;
+                return (
+                  <button key={ty} type="button" aria-pressed={on} onClick={() => setType(idx, ty)} style={{ minHeight: 40, padding: "0 14px", borderRadius: 999, border: `2px solid ${on ? C.ink : C.border}`, background: on ? C.ink : "#FFFFFF", color: on ? "#FFFFFF" : C.ink, fontWeight: 800, fontSize: 14, cursor: "pointer", whiteSpace: "nowrap" }}>{ty}</button>
+                );
+              })}
+            </div>
 
-              <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">
-                  Video URL (YouTube)
-                </label>
-                <Input
-                  type="url"
-                  inputMode="url"
-                  value={ex.videoUrl ?? ""}
-                  onChange={(e) => updateExercise(idx, "videoUrl", e.target.value)}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="h-7 text-xs border-primary/20"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Sets</label>
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    value={ex.sets}
-                    onChange={(e) => updateExercise(idx, "sets", parseInt(e.target.value) || 0)}
-                    className="h-7 text-xs text-center border-primary/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">{repsLabel}</label>
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    value={ex.reps}
-                    onChange={(e) => updateExercise(idx, "reps", e.target.value)}
-                    placeholder="10"
-                    className="h-7 text-xs text-center border-primary/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Weight</label>
-                  {canWeight ? (
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.5"
-                        value={weightValue}
-                        onChange={(e) =>
-                          updateExercise(
-                            idx,
-                            "suggestedWeight",
-                            e.target.value ? `${e.target.value} kg` : "",
-                          )
-                        }
-                        placeholder="20"
-                        className="h-7 text-xs text-center border-primary/20 pr-6"
-                      />
-                      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground pointer-events-none">
-                        kg
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="h-7 flex items-center justify-center text-[10px] font-bold text-muted-foreground rounded-md border border-dashed border-border">
-                      {ex.isBodyweight ? "Bodyweight" : ex.isTimeBased ? "Timed" : ex.isAssisted ? "Assisted" : "—"}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">
-                  Progression per week ({isAssisted ? "kg less assist" : ex.isTimeBased ? "sec" : ex.isRoundsBased ? "reps" : "kg"})
-                </label>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-muted-foreground">{isAssisted ? "−" : "+"}</span>
-                  <Input
-                    type="number"
-                    step="0.5"
-                    value={ex.progression?.replace(/[^0-9.\-]/g, "") || ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const prefix = isAssisted ? "-" : "+";
-                      const unit = isAssisted ? " kg/week" : ex.isTimeBased ? " sec/week" : ex.isRoundsBased ? " reps/week" : " kg/week";
-                      updateExercise(idx, "progression", val ? `${prefix}${val}${unit}` : "");
-                    }}
-                    placeholder={isAssisted ? "2" : "2.5"}
-                    className="h-7 text-xs text-center border-primary/20 flex-1"
-                  />
-                  <span className="text-[10px] font-bold text-muted-foreground shrink-0">
-                    {isAssisted ? "kg/week" : ex.isTimeBased ? "sec/week" : ex.isRoundsBased ? "reps/week" : "kg/week"}
+            {/* Fields */}
+            <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={fieldLabel}>Sets</span>
+                <input type="text" inputMode="numeric" value={ex.sets} onChange={(e) => update(idx, { sets: parseInt(e.target.value) || 0 })} style={field} />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={fieldLabel}>{cfg.amountLabel}</span>
+                <span style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${C.ink}`, borderRadius: 12, overflow: "hidden" }}>
+                  <input type="text" inputMode="numeric" value={ex.reps} onChange={(e) => update(idx, { reps: e.target.value })} placeholder="10" style={{ flex: 1, minWidth: 0, height: "100%", border: 0, padding: "0 12px", fontWeight: 800, fontSize: 16, color: C.ink }} />
+                  <span style={{ padding: "0 12px", fontSize: 14, fontWeight: 700, color: C.sub }}>{cfg.amountUnit}</span>
+                </span>
+              </label>
+              {cfg.showLoad && (
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={fieldLabel}>{cfg.loadLabel}</span>
+                  <span style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${C.ink}`, borderRadius: 12, overflow: "hidden" }}>
+                    <input type="text" inputMode="decimal" value={loadValue} onChange={(e) => update(idx, { suggestedWeight: e.target.value ? `${e.target.value} kg` : "" })} placeholder="20" style={{ flex: 1, minWidth: 0, height: "100%", border: 0, padding: "0 12px", fontWeight: 800, fontSize: 16, color: C.ink }} />
+                    <span style={{ padding: "0 12px", fontSize: 14, fontWeight: 700, color: C.sub }}>kg</span>
                   </span>
-                </div>
-              </div>
+                </label>
+              )}
+              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={fieldLabel}>{cfg.progLabel}</span>
+                <span style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${C.ink}`, borderRadius: 12, overflow: "hidden", background: C.lilac }}>
+                  <span style={{ padding: "0 0 0 12px", fontWeight: 800, color: C.purple }}>{cfg.progSign}</span>
+                  <input type="text" inputMode="decimal" value={progValue} onChange={(e) => update(idx, { progression: e.target.value ? `${cfg.progSign}${e.target.value} ${cfg.progUnit}/week` : "" })} placeholder={cfg.progUnit === "kg" ? "1" : cfg.progUnit === "sec" ? "5" : "2"} style={{ flex: 1, minWidth: 0, height: "100%", border: 0, padding: "0 6px", fontWeight: 800, fontSize: 16, color: C.ink, background: "transparent" }} />
+                  <span style={{ padding: "0 12px", fontSize: 14, fontWeight: 700, color: C.purple }}>{cfg.progUnit}</span>
+                </span>
+              </label>
+            </div>
 
-              <div className="flex flex-wrap gap-1.5">
-                {([
-                  { key: "isBodyweight", label: "Bodyweight" },
-                  { key: "isTimeBased", label: "Time-based" },
-                  { key: "isRoundsBased", label: "Rep-based" },
-                  { key: "isAssisted", label: "Assisted" },
-                ] as const).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => updateExercise(idx, key, !ex[key])}
-                    className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors",
-                      ex[key]
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          );
-        })}
+            {/* Video */}
+            <div style={{ marginTop: 12 }}>
+              {videoOpen[idx] || ex.videoUrl ? (
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={fieldLabel}>How-to video (YouTube link)</span>
+                  <input type="url" value={ex.videoUrl ?? ""} onChange={(e) => update(idx, { videoUrl: e.target.value })} placeholder="https://youtube.com/watch?v=..." style={{ ...field, fontWeight: 600, fontSize: 15 }} />
+                </label>
+              ) : (
+                <button type="button" onClick={() => setVideoOpen((v) => ({ ...v, [idx]: true }))} style={{ minHeight: 40, padding: 0, border: 0, background: "transparent", color: C.pink, fontWeight: 800, fontSize: 14, cursor: "pointer" }}>▶ Add how-to video</button>
+              )}
+            </div>
+          </div>
+        );
+      })}
 
-        <Button
-          variant="outline"
-          onClick={addExercise}
-          className="w-full border-dashed border-2 border-primary/30 text-primary font-bold text-sm"
-        >
-          <Plus className="w-4 h-4 mr-1" /> Add Exercise
-        </Button>
+      <button type="button" onClick={addExercise} style={{ width: "100%", minHeight: 56, border: `2px dashed ${C.pink}`, borderRadius: 16, background: "#FFFFFF", color: C.pink, fontWeight: 800, fontSize: 16, cursor: "pointer" }}>＋ Add exercise</button>
 
-        <div className="flex items-center justify-between pt-1">
-          <p className="text-[10px] font-bold text-muted-foreground">
-            Changes save automatically
-          </p>
-          {hasCustom && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onReset}
-              className="h-7 text-xs text-muted-foreground font-bold"
-            >
-              <RotateCcw className="w-3 h-3 mr-1" /> Reset to default
-            </Button>
-          )}
-        </div>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+        {hasCustom ? (
+          <button type="button" onClick={onReset} style={{ minHeight: 44, padding: "0 4px", border: 0, background: "transparent", color: C.body, fontWeight: 800, fontSize: 15, cursor: "pointer" }}>↺ Reset to default</button>
+        ) : <span />}
+        <button type="button" onClick={onClose} style={{ minHeight: 52, padding: "0 32px", background: C.pink, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 17, cursor: "pointer" }}>Done</button>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

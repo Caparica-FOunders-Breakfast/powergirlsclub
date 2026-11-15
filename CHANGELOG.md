@@ -1,5 +1,60 @@
 # Changelog
 
+## 2026-11-15 — Drop Show Up Guarantee; flat €5/month (`feat/member-area-redesign`)
+
+Pricing pivot: a flat **€5/month**, no "Show Up Guarantee" / free-month mechanic.
+
+- Removed the Show Up Guarantee everywhere: homepage pricing box + FAQ, hero/nav
+  copy, login tracker row + join CTA, the Scorecard month card (Row 1 is now just
+  the current/best **streak** banner with a "Start today's workout" CTA), and the
+  Exercises right-column card. Deleted the `useShowUpGuarantee` hook.
+- Pricing is now **€5/month** across the homepage, login, Terms and meta
+  description; copy is "flat monthly price · cancel anytime".
+- Readiness "Tip" and other copy no longer reference a free month.
+
+## 2026-11-15 — Member-area redesign: Exercises + Scorecard (`feat/member-area-redesign`)
+
+Rebuilt the two core member pages + the edit view to the new design canvas
+(`design/power-club-this-week`, `-scorecard`, `-edit-exercises`), keeping the
+existing data/logging logic intact. **Behind auth — verified by build/typecheck/
+code review, not a logged-in click-through.**
+
+### New features
+- **Readiness selector** (Exercises): Ready / So-so / Not ready adjusts the
+  *suggested* target weight per exercise. Chosen per day, remembered in
+  localStorage. The weight input still starts empty and only persists what you
+  enter/confirm — no weight is ever logged that you didn't lift. (This is the one
+  deliberate deviation from the mockup's pre-filled input, to protect data.)
+- **Show Up Guarantee** tracking: new `useShowUpGuarantee` hook counts distinct
+  active days per week (target 3) over a 4-week window (target 12) from completed
+  logs. Shown on the Scorecard (month card + 4-week dots) and Exercises (this-week card).
+- **Current / best streak** card on the Scorecard (`useStreaks`/`computeStreaks`).
+
+### Scorecard (`Leaderboard` + `ExerciseScorecard`)
+- New layout: Show Up Guarantee + streak row; Activity (range toggle, stat tiles,
+  graduated year heatmap, legend); Overall strength + strength-levels legend;
+  Exercise progress list with group filters, **Level / Sessions / A–Z sort**, level
+  segments, PR badges, and show-all. Preserves the exercise derivation, hide/unhide
+  + Add exercise, and the `ExerciseDetail` drill-down. `ActivityOverview` and
+  `StrengthSummary` folded in and removed.
+
+### Exercises (`CurrentWeek`)
+- New focused-day layout: week strip (click a day to focus it), a gradient "today"
+  card with readiness + exercise list + finish, and a right column (Show Up
+  Guarantee, Next up, Tip). **All logging preserved**: `exercise_logs` write path,
+  `-1`=fail ("F"), blur/toggle saves, Complete/Undo, rest-day logging.
+
+### Edit exercises (`ExerciseEditor`)
+- Restyled to the design (numbered cards, single-select Type pills — Weights /
+  Bodyweight / Time / Rounds / Assisted — Sets/amount/load/progression fields,
+  video). Autosave model unchanged.
+
+### Other
+- Strength levels relabelled **Beginner / Leveling up / Strong / Advanced / Very
+  strong** (ratio thresholds unchanged) across the engines + Profile.
+- App sidebar colours aligned to the design (`#2B1736` ground, `#FF8AC4` logo,
+  `#E8308C` active).
+
 ## 2026-11-15 — Flat €5/month, drop Show Up Guarantee (`fix/flat-5-pricing`)
 
 Pricing pivot on the public pages: a flat **€5/month**, no "Show Up Guarantee" /
