@@ -6,6 +6,17 @@ Rebuilt the public landing page ([src/pages/Landing.tsx](src/pages/Landing.tsx))
 log-in page ([src/pages/Auth.tsx](src/pages/Auth.tsx)) to match the approved design canvas
 (the "Harley" palette). Source mockups kept in [design/](design/) for reference.
 
+### "Keep me logged in" (now functional) + reset-password restyle
+- `src/integrations/supabase/authStorage.ts`: a custom storage adapter so the
+  checkbox is real — checked keeps the session in `localStorage` (survives a
+  browser restart), unchecked uses `sessionStorage` (cleared when the browser
+  closes). `client.ts` now uses it; `Auth.tsx` records the choice before sign-in
+  (signups always persist). *Heads-up: `client.ts` is a Lovable-generated file;
+  if it's ever regenerated, re-add the `storage: authStorage` line.*
+- `src/pages/ResetPassword.tsx` rebuilt in the new design language (gradient +
+  hard-shadow card, Bangers headings, pink buttons, show/hide password). Recovery
+  logic and all three states (checking / invalid / ready) unchanged.
+
 ### Login page (`Auth.tsx`)
 - Two-panel layout: gradient brand panel (logo + SVG heart, "Your plan is waiting. Let's
   lift.", a **static** "This week" tracker illustration) + form panel.

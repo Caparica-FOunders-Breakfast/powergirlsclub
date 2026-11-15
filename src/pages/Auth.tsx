@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { setKeepLoggedIn } from "@/integrations/supabase/authStorage";
 import { useToast } from "@/hooks/use-toast";
 import { useFeatureFlags } from "@/hooks/useAppSettings";
 
@@ -74,8 +75,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [showPw, setShowPw] = useState(false);
-  // Reflects the app's default persistent session — unchecking is cosmetic for now.
-  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
+  // Checked → session persists in localStorage; unchecked → sessionStorage
+  // (cleared when the browser closes). Applied in handleSubmit before sign-in.
+  const [keepLoggedIn, setKeepLoggedInState] = useState(true);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
@@ -111,6 +113,9 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      // Decide where the session is stored before it's created. Signups always
+      // persist; logins honor the "Keep me logged in" checkbox.
+      setKeepLoggedIn(isLogin ? keepLoggedIn : true);
       if (isLogin) {
         await signIn(email, password);
       } else {
@@ -300,7 +305,7 @@ const Auth = () => {
                 <input
                   type="checkbox"
                   checked={keepLoggedIn}
-                  onChange={(e) => setKeepLoggedIn(e.target.checked)}
+                  onChange={(e) => setKeepLoggedInState(e.target.checked)}
                   style={{ width: 20, height: 20, accentColor: C.pink }}
                 />
                 Keep me logged in
