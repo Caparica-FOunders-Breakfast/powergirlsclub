@@ -27,7 +27,7 @@ const More = () => {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: i * 0.08 }}
             onClick={() => navigate(item.path)}
-            className="flex items-center gap-4 bg-card rounded-2xl border-2 border-border p-4 text-left hover:border-primary/30 transition-colors active:scale-[0.98]"
+            className="flex items-center gap-4 bg-card rounded-2xl border-2 border-[#2B1736] p-4 text-left hover:border-primary/30 transition-colors active:scale-[0.98]"
           >
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">
               {item.emoji}

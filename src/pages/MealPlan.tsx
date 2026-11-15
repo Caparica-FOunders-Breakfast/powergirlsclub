@@ -39,7 +39,7 @@ function RoutineDayCard({ day, emoji, meals, totalProtein, proteinTarget, index,
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
       <Collapsible open={open} onOpenChange={setOpen}>
-        <div className={cn("rounded-2xl border-2 bg-card overflow-hidden transition-colors", allDone ? "border-primary/40 bg-primary/5" : "border-border")}>
+        <div className={cn("rounded-2xl border-2 bg-card overflow-hidden transition-colors", allDone ? "border-[#2B1736] bg-primary/5" : "border-[#2B1736]")}>
           <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3 text-left">
             <div className="flex items-center gap-3">
               <span className="text-xl">{allDone ? "✅" : emoji}</span>
@@ -103,7 +103,7 @@ function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; prote
 
   return (
     <div className="space-y-4">
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-4 bg-card rounded-2xl border-2 border-border">
+      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-4 bg-card rounded-2xl border-2 border-[#2B1736]">
         <p className="text-3xl mb-1">📋</p>
         <h2 className="text-xl font-display text-foreground">Your Weekly Plan</h2>
         <p className="text-xs font-bold text-muted-foreground mt-1">
@@ -111,7 +111,7 @@ function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; prote
         </p>
       </motion.div>
 
-      <div className="flex rounded-xl border-2 border-border overflow-hidden">
+      <div className="flex rounded-xl border-2 border-[#2B1736] overflow-hidden">
         <button onClick={() => setTab("plan")} className={cn("flex-1 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5", tab === "plan" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground")}>
           <Utensils className="w-3.5 h-3.5" /> Weekly Plan
         </button>
@@ -147,7 +147,7 @@ function WeeklyFromRoutine({ plan, proteinTarget }: { plan: GeneratedPlan; prote
 
 function EmptyWeeklyPlan() {
   return (
-    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-12 bg-card rounded-2xl border-2 border-border">
+    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-12 bg-card rounded-2xl border-2 border-[#2B1736]">
       <p className="text-4xl mb-3">📋</p>
       <h2 className="text-xl font-display text-foreground">No Plan Yet</h2>
       <p className="text-sm font-bold text-muted-foreground mt-2 px-6">
@@ -214,7 +214,7 @@ function PowerRoutine() {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="text-center py-4 bg-card rounded-2xl border-2 border-border relative"
+        className="text-center py-4 bg-card rounded-2xl border-2 border-[#2B1736] relative"
       >
         <button
           onClick={() => setShowPrefs(!showPrefs)}
@@ -274,7 +274,7 @@ function PowerRoutine() {
 
       {plan && (
         <>
-          <div className="flex rounded-xl border-2 border-border overflow-hidden">
+          <div className="flex rounded-xl border-2 border-[#2B1736] overflow-hidden">
             {[
               { key: "meals" as const, label: "Meals", icon: Utensils },
               { key: "grocery" as const, label: "Grocery", icon: ShoppingCart },
@@ -328,7 +328,7 @@ export default function MealPlan() {
 
   return (
     <div className="p-4 pb-24 max-w-lg mx-auto space-y-4 lg:max-w-7xl lg:px-8 lg:pb-8">
-      <div className="flex rounded-xl border-2 border-border overflow-hidden">
+      <div className="flex rounded-xl border-2 border-[#2B1736] overflow-hidden">
         <button
           onClick={() => setMode("power")}
           className={cn(
