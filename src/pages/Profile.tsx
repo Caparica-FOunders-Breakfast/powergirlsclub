@@ -1,20 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ChevronRight,
-  Dumbbell,
-  Eye,
-  EyeOff,
-  Flame,
-  KeyRound,
-  LogOut,
-  Pencil,
-  Plane,
-  Scale,
-  TrendingUp,
-  Trophy,
-} from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
@@ -45,15 +31,27 @@ import { WeekPlanCard } from "@/components/profile-setup/WeekPlanCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SavedIndicator } from "@/components/ui/SavedIndicator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
 
-type MobileTab = "training" | "body" | "account";
+const C = {
+  bg: "#FBF9FB",
+  ink: "#2B1736",
+  grad: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)",
+  sub: "#77677E",
+  body: "#5E4E66",
+  pink: "#C21C70",
+  magenta: "#E8308C",
+  tile: "#F6F1F7",
+  lilac: "#F1E9FE",
+  border: "#E4DAE7",
+  rowBorder: "#EFE6F1",
+  purple: "#6B2FB3",
+};
+const bangers = { fontFamily: "Bangers, cursive", fontWeight: 400 } as const;
+const card: React.CSSProperties = { background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22 };
 
 const STRENGTH_LEVELS = [
   { icon: "🌱", label: "Beginner" },
@@ -62,10 +60,7 @@ const STRENGTH_LEVELS = [
   { icon: "🔥", label: "Advanced" },
   { icon: "👑", label: "Very strong" },
 ] as const;
-// Boundaries are multiples of body weight. The first four define the upper bound
-// of the matching level; the fifth is the lower bound at which Elite starts.
 const STRENGTH_RATIOS = [0.35, 0.6, 0.85, 1.2, 1.6] as const;
-
 const PROJECTION_WEEKS = 12;
 
 type PasswordFieldProps = {
@@ -78,39 +73,29 @@ type PasswordFieldProps = {
   onToggleShow: () => void;
 };
 
-const PasswordField = ({
-  id,
-  label,
-  autoComplete,
-  value,
-  onChange,
-  show,
-  onToggleShow,
-}: PasswordFieldProps) => (
+const PasswordField = ({ id, label, autoComplete, value, onChange, show, onToggleShow }: PasswordFieldProps) => (
   <div className="flex flex-col gap-1.5">
     <Label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
       {label}
     </Label>
     <div className="relative">
-      <Input
-        id={id}
-        type={show ? "text" : "password"}
-        autoComplete={autoComplete}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="border-2 border-border pr-10"
-      />
-      <button
-        type="button"
-        onClick={onToggleShow}
-        aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
-        aria-pressed={show}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-      >
+      <Input id={id} type={show ? "text" : "password"} autoComplete={autoComplete} value={value} onChange={(e) => onChange(e.target.value)} className="border-2 border-border pr-10" />
+      <button type="button" onClick={onToggleShow} aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`} aria-pressed={show} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
         {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
       </button>
     </div>
   </div>
+);
+
+// A settings row: label + value + action link.
+const SettingRow = ({ label, value, action, onClick }: { label: string; value: React.ReactNode; action: string; onClick: () => void }) => (
+  <button type="button" onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 24px", width: "100%", textAlign: "left", background: "transparent", border: 0, borderBottom: `1px solid ${C.rowBorder}`, cursor: "pointer" }}>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.sub }}>{label}</p>
+      <p style={{ margin: 0, fontWeight: 800, fontSize: 17, color: C.ink }}>{value}</p>
+    </div>
+    <span style={{ fontSize: 14, fontWeight: 800, color: C.pink }}>{action}</span>
+  </button>
 );
 
 const Profile = () => {
@@ -126,32 +111,23 @@ const Profile = () => {
   const navigate = useNavigate();
 
   const setup = useProfileSetup();
-  // The wizard takes over the page for users still missing a required field.
   const wizardActive = setup.ready && setup.state.wizardActive;
-  // Steps 1–3 dim "More settings"; step 4 / returning users show it fully.
-  const dimSettings = wizardActive && setup.state.step < 4;
 
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
 
-  const [mobileTab, setMobileTab] = useState<MobileTab>("training");
-
-  // Inline name edit (triggered from Identity card icon OR Account card row).
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState("");
 
-  // Body weight inline expander on Account card.
   const [weightExpanded, setWeightExpanded] = useState(false);
   const [bodyWeight, setBodyWeight] = useState("");
   const [weightSaved, setWeightSaved] = useState(false);
   const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Standalone progression edit + plan generator + import.
   const [progressionEditOpen, setProgressionEditOpen] = useState(false);
   const [generatorOpen, setGeneratorOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
-  // Password modal.
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -166,7 +142,6 @@ const Profile = () => {
   const displayName = profile?.display_name ?? "";
   const initials = (displayName[0] ?? "?").toUpperCase();
 
-  // Real stats from completed exercise logs. Weeks Won has no historical winner store, so "—".
   const stats = useMemo(() => {
     if (!activity || activity.length === 0) return { workouts: 0, bestStreak: 0 };
     const days = new Set(activity.map((e) => e.date));
@@ -184,23 +159,16 @@ const Profile = () => {
     return { workouts: days.size, bestStreak: longest };
   }, [activity]);
 
-  // The user's saved plan, for the "Your week" card + import target.
   const trainingDays = useMemo(() => prefs?.training_days ?? [], [prefs]);
   const selectedPlanDays = useMemo(
     () =>
       [...trainingDays]
         .sort((a, b) => a - b)
         .map((idx) => ({ idx, day: mergedPlan[idx] }))
-        .filter(
-          (e): e is { idx: number; day: NonNullable<typeof e.day> } => !!e.day,
-        ),
+        .filter((e): e is { idx: number; day: NonNullable<typeof e.day> } => !!e.day),
     [trainingDays, mergedPlan],
   );
 
-  // Drag-and-drop reordering on the "Your week" card. The card owns the visual
-  // arrangement (tiles make room as you drag) and hands us the resulting week
-  // plus the weekday columns whose workout changed. We write those columns and
-  // recompute training_days. Rethrow on failure so the card can animate back.
   const dayPayload = (d: WorkoutDay, dayIndex: number) => ({
     dayIndex,
     exercises: d.exercises,
@@ -217,17 +185,10 @@ const Profile = () => {
       for (const col of changed) {
         await savePersonalDay.mutateAsync(dayPayload(next[col], col));
       }
-      const training = next
-        .map((d, i) => ({ d, i }))
-        .filter(({ d }) => !d.isRest)
-        .map(({ i }) => i);
+      const training = next.map((d, i) => ({ d, i })).filter(({ d }) => !d.isRest).map(({ i }) => i);
       await savePrefs.mutateAsync({ ...prefs, training_days: training });
     } catch (e) {
-      toast({
-        title: "Couldn't move that day",
-        description: e instanceof Error ? e.message : undefined,
-        variant: "destructive",
-      });
+      toast({ title: "Couldn't move that day", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
       throw e;
     }
   };
@@ -235,17 +196,9 @@ const Profile = () => {
   const handleToggleTravel = async (on: boolean) => {
     try {
       await setTravelMode.mutateAsync(on);
-      toast(
-        on
-          ? { title: "Travel mode on ✈️", description: "Bodyweight workouts, your plan is saved." }
-          : { title: "Welcome back 💪", description: "Your normal plan is restored." },
-      );
+      toast(on ? { title: "Travel mode on ✈️", description: "Bodyweight workouts, your plan is saved." } : { title: "Welcome back 💪", description: "Your normal plan is restored." });
     } catch (e) {
-      toast({
-        title: "Couldn't switch travel mode",
-        description: e instanceof Error ? e.message : undefined,
-        variant: "destructive",
-      });
+      toast({ title: "Couldn't switch travel mode", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     }
   };
 
@@ -256,7 +209,6 @@ const Profile = () => {
 
   const handleNameBlur = async () => {
     const trimmed = name.trim();
-    // Close without saving on empty or no-op.
     if (!trimmed || trimmed === displayName) {
       setEditingName(false);
       return;
@@ -292,16 +244,9 @@ const Profile = () => {
     saveWeightDebounced(value);
   };
 
-  // Levels-card "Update weight": during setup, jump back to step 1; for a
-  // returning user, just open the inline body-weight editor (levels recalc
-  // automatically from profile.body_weight).
   const handleUpdateWeight = () => {
-    if (wizardActive) {
-      setup.startWeightEdit();
-    } else {
-      setWeightExpanded(true);
-      setMobileTab("account");
-    }
+    if (wizardActive) setup.startWeightEdit();
+    else setWeightExpanded(true);
   };
 
   const openProgressionEdit = () => {
@@ -309,12 +254,7 @@ const Profile = () => {
     setProgressionEditOpen(true);
   };
 
-  useEffect(
-    () => () => {
-      if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current);
-    },
-    [],
-  );
+  useEffect(() => () => { if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current); }, []);
 
   const resetPasswordFields = () => {
     setCurrentPassword("");
@@ -343,24 +283,18 @@ const Profile = () => {
       toast({ title: "New password must be different from current password", variant: "destructive" });
       return;
     }
-
     setChangingPassword(true);
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPassword });
       if (signInError) {
         toast({ title: "Current password is incorrect", variant: "destructive" });
         return;
       }
-
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) {
         toast({ title: "Couldn't update password", description: updateError.message, variant: "destructive" });
         return;
       }
-
       resetPasswordFields();
       setPasswordOpen(false);
       toast({ title: "Password updated 🔑" });
@@ -369,421 +303,157 @@ const Profile = () => {
     }
   };
 
-  // Sections are visible on desktop always; on mobile only when their tab is active.
-  const showIf = (tab: MobileTab) => (mobileTab === tab ? "" : "hidden lg:block");
   const showProgressionSummary = !wizardActive || setup.state.step === 4;
 
+  const headerStat = (value: string, label: React.ReactNode) => (
+    <div style={{ background: "rgba(255,255,255,0.16)", borderRadius: 16, padding: "14px 16px" }}>
+      <p style={{ margin: 0, ...bangers, fontSize: 40, lineHeight: 1 }}>{value}</p>
+      <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 800 }}>{label}</p>
+    </div>
+  );
+
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-6xl lg:px-8 lg:pb-8">
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="text-center mb-4 lg:text-left lg:mb-6"
-      >
-        <h1 className="text-4xl font-display text-foreground">Profile</h1>
-      </motion.div>
-
-      {/* Mobile tab bar */}
-      <div className="lg:hidden flex items-center gap-1 p-1 bg-muted rounded-xl mb-4">
-        {(
-          [
-            { key: "training", label: "Training" },
-            { key: "body", label: "Body" },
-            { key: "account", label: "Account" },
-          ] as { key: MobileTab; label: string }[]
-        ).map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setMobileTab(t.key)}
-            className={cn(
-              "flex-1 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all",
-              mobileTab === t.key
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Two-column grid on desktop, single column on mobile */}
-      <div className="lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 lg:items-start">
-        {/* Left column */}
-        <aside className="space-y-4">
-          {/* Identity card */}
-          <motion.section
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className={cn(
-              "relative rounded-2xl border-2 border-border bg-card p-6 text-center",
-              showIf("account")
-            )}
-          >
-            {!editingName && (
-              <button
-                onClick={handleStartEditName}
-                aria-label="Edit name"
-                className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
-            )}
-
-            <div
-              className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-display text-primary-foreground"
-              style={{ backgroundColor: "#FF2D87" }}
-            >
-              {initials}
-            </div>
-
+    <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+        {/* Header */}
+        <section style={{ background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 24, boxShadow: `6px 6px 0 ${C.ink}`, padding: "28px 32px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
+          <span style={{ flex: "none", width: 96, height: 96, borderRadius: 999, background: "#FFFFFF", color: C.pink, border: `3px solid ${C.ink}`, ...bangers, fontSize: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>{initials}</span>
+          <div style={{ flex: "1 1 220px", minWidth: 0 }}>
             {editingName ? (
-              <div className="flex flex-col gap-1 mb-2">
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onBlur={handleNameBlur}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      (e.currentTarget as HTMLInputElement).blur();
-                    } else if (e.key === "Escape") {
-                      setName(displayName);
-                      setEditingName(false);
-                    }
-                  }}
-                  placeholder="Your name"
-                  className="border-2 border-primary/30 text-center"
-                  autoFocus
-                />
-                <p className="text-[10px] font-bold text-muted-foreground">
-                  Press Enter or click away to save · Esc to cancel
-                </p>
-              </div>
-            ) : (
-              <h2 className="text-2xl font-display text-foreground lg:text-3xl">
-                {displayName || "—"}
-              </h2>
-            )}
-
-            <p className="text-sm text-muted-foreground font-bold break-all">{user?.email}</p>
-
-            {isAdmin && (
-              <div className="mt-2">
-                <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold uppercase">
-                  Admin 👑
-                </span>
-              </div>
-            )}
-          </motion.section>
-
-          {/* Stats card */}
-          <motion.section
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className={cn("grid grid-cols-3 gap-3", showIf("body"))}
-          >
-            {[
-              {
-                icon: Dumbbell,
-                label: "Workouts",
-                value: String(stats.workouts),
-                color: "text-secondary",
-                hint: "Total days you've completed at least one exercise.",
-              },
-              {
-                icon: Flame,
-                label: "Best Streak",
-                value: String(stats.bestStreak),
-                color: "text-accent",
-                hint: "Your longest run of consecutive active days.",
-              },
-              {
-                icon: Trophy,
-                label: "Weeks Won",
-                value: "—",
-                color: "text-primary",
-                hint: "Weeks you topped your challenge leaderboard. Shows “—” until you finish a week in a challenge.",
-              },
-            ].map((stat) => (
-              <Tooltip key={stat.label}>
-                <TooltipTrigger asChild>
-                  <div className="bg-card rounded-xl border-2 border-border p-3 text-center cursor-help">
-                    <stat.icon className={cn("w-6 h-6 mx-auto mb-1", stat.color)} />
-                    <p className="font-display text-2xl text-foreground tabular-nums">{stat.value}</p>
-                    <p className="text-xs font-bold text-muted-foreground">{stat.label}</p>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[200px] text-center">
-                  {stat.hint}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </motion.section>
-
-          {/* Account rows card ("More settings") */}
-          <motion.section
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className={cn(
-              "rounded-2xl border-2 border-border bg-card overflow-hidden divide-y divide-border transition-opacity",
-              dimSettings && "opacity-55",
-              showIf("account")
-            )}
-          >
-            {/* Body weight (expandable) */}
-            <div>
-              <button
-                onClick={() => setWeightExpanded((v) => !v)}
-                className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
-              >
-                <Scale className="w-5 h-5 text-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                    Body weight
-                  </p>
-                  <p className="text-sm font-bold text-foreground">{bw ? `${bw} kg` : "Not set"}</p>
-                </div>
-                <ChevronRight
-                  className={cn(
-                    "w-4 h-4 text-muted-foreground shrink-0 transition-transform",
-                    weightExpanded && "rotate-90"
-                  )}
-                />
-              </button>
-              {weightExpanded && (
-                <div className="px-4 pb-4 space-y-1.5">
-                  <Input
-                    type="number"
-                    placeholder={bw ? String(bw) : "kg"}
-                    value={bodyWeight}
-                    onChange={(e) => handleWeightChange(e.target.value)}
-                    className="h-9 text-sm border-2 border-border"
-                  />
-                  <div className="flex items-center justify-between min-h-[16px]">
-                    <p className="text-[10px] font-bold text-muted-foreground">
-                      Saves automatically
-                    </p>
-                    <SavedIndicator show={weightSaved} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Progression, opens step 3 standalone */}
-            <button
-              onClick={openProgressionEdit}
-              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
-            >
-              <TrendingUp className="w-5 h-5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                  Progression
-                </p>
-                <p className="text-sm font-bold text-foreground">
-                  +{progressionKg} kg/week · change anytime
-                </p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
-
-            {/* Change password, opens modal */}
-            <button
-              onClick={() => setPasswordOpen(true)}
-              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
-            >
-              <KeyRound className="w-5 h-5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                  Security
-                </p>
-                <p className="text-sm font-bold text-foreground">Change password</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
-
-            {/* Edit profile name, triggers inline edit on Identity card */}
-            <button
-              onClick={handleStartEditName}
-              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
-            >
-              <Pencil className="w-5 h-5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                  Profile
-                </p>
-                <p className="text-sm font-bold text-foreground">Edit profile name</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
-          </motion.section>
-
-          {/* Sign out */}
-          <Button
-            onClick={signOut}
-            variant="outline"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              width: "100%",
-            }}
-            className={cn(
-              "h-12 font-bold text-destructive border-destructive/30 hover:bg-destructive/10",
-              showIf("account")
-            )}
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
-          </Button>
-        </aside>
-
-        {/* Right column, setup wizard (incomplete) or training + body cards */}
-        <main className="space-y-4">
-          {!setup.ready ? null : wizardActive ? (
-            <div className={showIf("training")}>
-              <ProfileSetupWizard
-                setup={setup}
-                onGoToWeek={() => navigate("/week")}
-                onImport={() => setImportOpen(true)}
-                onGenerate={() => setGeneratorOpen(true)}
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleNameBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLInputElement).blur(); }
+                  else if (e.key === "Escape") { setName(displayName); setEditingName(false); }
+                }}
+                placeholder="Your name"
+                autoFocus
+                className="text-2xl font-display text-foreground"
               />
-            </div>
-          ) : (
-            <>
-              <section
-                className={cn(
-                  "flex items-center gap-4 rounded-2xl border-2 p-4 transition-colors",
-                  travelMode
-                    ? "border-primary bg-primary/5"
-                    : "border-border bg-card",
-                  showIf("training"),
-                )}
-              >
-                <div
-                  className={cn(
-                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-                    travelMode ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  <Plane className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-display text-lg text-foreground">Travel mode</p>
-                  <p className="text-xs text-muted-foreground">
-                    No gym? Train with bodyweight &amp; calisthenics. Your plan is saved and
-                    comes right back when you switch off.
+            ) : (
+              <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1, display: "flex", alignItems: "center", gap: 10 }}>
+                {displayName || "Power Girl"}
+                <button type="button" onClick={handleStartEditName} aria-label="Edit name" style={{ width: 28, height: 28, borderRadius: 8, border: 0, background: "rgba(255,255,255,0.2)", color: "#FFFFFF", cursor: "pointer", fontSize: 13 }}>✎</button>
+              </h1>
+            )}
+            <p style={{ margin: "4px 0 0", fontWeight: 700, color: "rgba(255,255,255,0.9)", wordBreak: "break-all" }}>{user?.email}{isAdmin ? " · Admin 👑" : ""}</p>
+          </div>
+          <div style={{ flex: "2 1 380px", minWidth: 0, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+            {headerStat(String(stats.workouts), "Workouts")}
+            {headerStat(`${stats.bestStreak} days`, "Best streak")}
+            {headerStat("—", <>Weeks won · <a href="/teams" onClick={(e) => { e.preventDefault(); navigate("/teams"); }} style={{ color: "#FFFFFF" }}>join a challenge</a></>)}
+          </div>
+        </section>
+
+        {!setup.ready ? null : wizardActive ? (
+          <ProfileSetupWizard setup={setup} onGoToWeek={() => navigate("/week")} onImport={() => setImportOpen(true)} onGenerate={() => setGeneratorOpen(true)} />
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+            {/* LEFT */}
+            <div style={{ flex: "3 1 520px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+              <WeekPlanCard plan={plan} onReorder={travelMode ? undefined : handleReorderDays} travelMode={travelMode} onSetUpAgain={setup.restartWizard} />
+
+              {/* Travel mode */}
+              <section style={{ background: travelMode ? C.lilac : "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, padding: "22px 24px", display: "flex", alignItems: "center", gap: 18 }}>
+                <span style={{ flex: "none", width: 48, height: 48, borderRadius: 12, background: C.purple, border: `2px solid ${C.ink}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 16l20-8-6 12-3-5-5-1z" /></svg>
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h2 style={{ margin: 0, fontWeight: 800, fontSize: 19 }}>Travel mode</h2>
+                  <p style={{ margin: "2px 0 0", fontSize: 15, color: C.body }}>
+                    {travelMode ? "On. Your days switch to bodyweight workouts. Switch off to get your gym plan back." : "No gym nearby? Switch to bodyweight workouts. Your plan comes back when you switch off."}
                   </p>
                 </div>
-                <Switch
-                  checked={travelMode}
-                  onCheckedChange={handleToggleTravel}
-                  disabled={setTravelMode.isPending}
-                  aria-label="Toggle travel mode"
-                />
+                <button type="button" role="switch" aria-checked={travelMode} aria-label="Travel mode" disabled={setTravelMode.isPending} onClick={() => handleToggleTravel(!travelMode)} style={{ flex: "none", width: 64, height: 36, borderRadius: 999, border: `2px solid ${C.ink}`, background: travelMode ? C.purple : C.border, cursor: "pointer", padding: 0, position: "relative" }}>
+                  <span style={{ position: "absolute", top: 3, left: travelMode ? 31 : 3, width: 26, height: 26, borderRadius: 999, background: "#FFFFFF", border: `2px solid ${C.ink}`, boxSizing: "border-box", transition: "left 0.15s" }} />
+                </button>
               </section>
-              <div className={showIf("training")}>
-                <WeekPlanCard
-                  plan={plan}
-                  onReorder={travelMode ? undefined : handleReorderDays}
-                  travelMode={travelMode}
-                  onSetUpAgain={setup.restartWizard}
-                />
-              </div>
 
-              {/* Body cards, moved here to balance the wide right column. */}
-              <div className={showIf("body")}>
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {/* Strength Levels reference card */}
-                  <motion.section
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="rounded-2xl border-2 border-border bg-card p-4"
-                  >
-                    <div className="mb-3">
-                      <h3 className="font-display text-lg text-foreground">Your Strength Levels</h3>
-                      <p className="text-[11px] font-bold text-muted-foreground">
-                        {bw
-                          ? `Based on your body weight (${bw} kg)`
-                          : "Locked until you set your body weight"}
-                      </p>
+              {/* Settings rows */}
+              <section style={{ ...card, overflow: "hidden" }}>
+                <div>
+                  <button type="button" onClick={() => setWeightExpanded((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 24px", width: "100%", textAlign: "left", background: "transparent", border: 0, borderBottom: `1px solid ${C.rowBorder}`, cursor: "pointer" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.sub }}>Body weight</p>
+                      <p style={{ margin: 0, fontWeight: 800, fontSize: 17, color: C.ink }}>{bw ? `${bw} kg` : "Not set"}</p>
                     </div>
-                    {bw ? (
-                      <>
-                        <div className="space-y-2">
-                          {STRENGTH_LEVELS.map((level, idx) => {
-                            const val = Math.round(STRENGTH_RATIOS[idx] * bw);
-                            const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
-                            const range =
-                              idx === 0
-                                ? `< ${val} kg`
-                                : idx === STRENGTH_LEVELS.length - 1
-                                ? `≥ ${val} kg`
-                                : `${prevVal}–${val} kg`;
-                            return (
-                              <div key={level.label} className="flex items-center gap-3">
-                                <span className="text-xl w-6 text-center shrink-0">{level.icon}</span>
-                                <span className="text-sm font-bold text-foreground flex-1 truncate">
-                                  {level.label}
-                                </span>
-                                <span className="text-sm font-bold text-muted-foreground tabular-nums shrink-0">
-                                  {range}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleUpdateWeight}
-                          className="mt-3 flex items-center gap-1.5 text-xs font-extrabold text-primary hover:underline"
-                        >
-                          <Scale className="w-3.5 h-3.5" /> Update weight
-                        </button>
-                      </>
-                    ) : (
-                      <LockedStrengthLevelsNote />
-                    )}
-                  </motion.section>
-
-                  {/* Weekly progression summary */}
-                  {showProgressionSummary && (
-                    <motion.section
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      className="rounded-2xl border-2 border-border bg-card p-4"
-                    >
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-primary shrink-0" />
-                        <h3 className="font-display text-lg text-foreground">Weekly progression</h3>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: C.pink }}>{weightExpanded ? "Close" : "Update"}</span>
+                  </button>
+                  {weightExpanded && (
+                    <div style={{ padding: "0 24px 18px" }}>
+                      <Input type="number" placeholder={bw ? String(bw) : "kg"} value={bodyWeight} onChange={(e) => handleWeightChange(e.target.value)} className="h-10 border-2 border-border" />
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 16, marginTop: 6 }}>
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.sub }}>Saves automatically</p>
+                        <SavedIndicator show={weightSaved} />
                       </div>
-                      <p className="mt-1.5 text-sm font-bold text-foreground">
-                        +{progressionKg} kg added per week
-                      </p>
-                      <p className="text-[11px] font-semibold text-muted-foreground">
-                        In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.
-                      </p>
-                    </motion.section>
+                    </div>
                   )}
                 </div>
-              </div>
+                <SettingRow label="Weekly progression" value={<>+{progressionKg} kg per week <span style={{ fontWeight: 600, fontSize: 14, color: C.body }}>· about +{progressionKg * PROJECTION_WEEKS} kg in {PROJECTION_WEEKS} weeks</span></>} action="Change" onClick={openProgressionEdit} />
+                <SettingRow label="Profile name" value={displayName || "—"} action="Edit" onClick={handleStartEditName} />
+                <button type="button" onClick={() => setPasswordOpen(true)} style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 24px", width: "100%", textAlign: "left", background: "transparent", border: 0, cursor: "pointer" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.sub }}>Security</p>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: 17, color: C.ink }}>Password</p>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: C.pink }}>Change</span>
+                </button>
+              </section>
 
-              {isAdmin && (
-                <div className={showIf("training")}>
-                  <AdminApiUsage />
-                </div>
+              {isAdmin && <AdminApiUsage />}
+            </div>
+
+            {/* RIGHT */}
+            <div style={{ flex: "2 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+              <section style={{ ...card, padding: 24 }}>
+                <h2 style={{ margin: 0, ...bangers, fontSize: 32, letterSpacing: 1 }}>Strength levels</h2>
+                <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.body }}>
+                  {bw ? `Based on your body weight (${bw} kg).` : "Locked until you set your body weight."}
+                </p>
+                {bw ? (
+                  <>
+                    <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {STRENGTH_LEVELS.map((level, idx) => {
+                        const val = Math.round(STRENGTH_RATIOS[idx] * bw);
+                        const prevVal = idx > 0 ? Math.round(STRENGTH_RATIOS[idx - 1] * bw) : 0;
+                        const range = idx === 0 ? `< ${val} kg` : idx === STRENGTH_LEVELS.length - 1 ? `≥ ${val} kg` : `${prevVal}–${val} kg`;
+                        return (
+                          <div key={level.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: "#FFFFFF", border: `2px solid ${C.rowBorder}` }}>
+                            <span style={{ fontSize: 20, width: 24, textAlign: "center", flex: "none" }}>{level.icon}</span>
+                            <span style={{ flex: 1, fontWeight: 800 }}>{level.label}</span>
+                            <span style={{ fontWeight: 700, color: C.body, fontSize: 15 }}>{range}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button type="button" onClick={handleUpdateWeight} style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: 0 }}>Update weight</button>
+                  </>
+                ) : (
+                  <div style={{ marginTop: 12 }}><LockedStrengthLevelsNote /></div>
+                )}
+              </section>
+
+              {showProgressionSummary && (
+                <section style={{ ...card, padding: 24 }}>
+                  <h3 style={{ margin: 0, ...bangers, fontSize: 24, letterSpacing: 0.5 }}>Weekly progression</h3>
+                  <p style={{ margin: "6px 0 0", fontWeight: 800, color: C.ink }}>+{progressionKg} kg added per week</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 14, color: C.body }}>In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.</p>
+                </section>
               )}
-            </>
-          )}
-        </main>
+
+              <button type="button" onClick={signOut} style={{ minHeight: 52, border: `2px solid #A3165E`, borderRadius: 14, background: "#FFFFFF", color: "#A3165E", fontWeight: 800, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" /></svg>
+                Sign out
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Standalone progression edit (from "More settings") */}
-      <Dialog
-        open={progressionEditOpen}
-        onOpenChange={(open) => setProgressionEditOpen(open)}
-      >
+      {/* Standalone progression edit */}
+      <Dialog open={progressionEditOpen} onOpenChange={(open) => setProgressionEditOpen(open)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-foreground">Progression</DialogTitle>
@@ -792,16 +462,10 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Plan generator (own + generate) */}
-      <PlanGeneratorModal
-        open={generatorOpen}
-        onOpenChange={setGeneratorOpen}
-        days={setup.state.daysPerWeek ?? 5}
-        kgPerWeek={setup.state.kgPerWeek}
-        onGenerated={() => navigate("/week")}
-      />
+      {/* Plan generator */}
+      <PlanGeneratorModal open={generatorOpen} onOpenChange={setGeneratorOpen} days={setup.state.daysPerWeek ?? 5} kgPerWeek={setup.state.kgPerWeek} onGenerated={() => navigate("/week")} />
 
-      {/* Import a plan (own + import), reachable through the setup wizard */}
+      {/* Import a plan */}
       <ImportWorkoutPlanModal
         open={importOpen}
         onOpenChange={setImportOpen}
@@ -809,79 +473,23 @@ const Profile = () => {
         days={selectedPlanDays}
         onImport={async (dayIndex, exercises) => {
           const target = mergedPlan[dayIndex];
-          await savePersonalDay.mutateAsync({
-            dayIndex,
-            exercises,
-            label: target?.label,
-            emoji: target?.emoji,
-            isRest: false,
-            isRecovery: target?.isRecovery,
-            restNote: target?.restNote,
-          });
+          await savePersonalDay.mutateAsync({ dayIndex, exercises, label: target?.label, emoji: target?.emoji, isRest: false, isRecovery: target?.isRecovery, restNote: target?.restNote });
           navigate("/week");
         }}
       />
 
       {/* Password modal */}
-      <Dialog
-        open={passwordOpen}
-        onOpenChange={(open) => {
-          setPasswordOpen(open);
-          if (!open) resetPasswordFields();
-        }}
-      >
+      <Dialog open={passwordOpen} onOpenChange={(open) => { setPasswordOpen(open); if (!open) resetPasswordFields(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-foreground">Change Password</DialogTitle>
           </DialogHeader>
-          <form
-            className="flex flex-col gap-3 mt-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleChangePassword();
-            }}
-          >
-            <input
-              type="email"
-              name="username"
-              autoComplete="username"
-              value={user?.email ?? ""}
-              readOnly
-              hidden
-              tabIndex={-1}
-            />
-            <PasswordField
-              id="current-password"
-              label="Current Password"
-              autoComplete="current-password"
-              value={currentPassword}
-              onChange={setCurrentPassword}
-              show={showCurrent}
-              onToggleShow={() => setShowCurrent((v) => !v)}
-            />
-            <PasswordField
-              id="new-password"
-              label="New Password"
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={setNewPassword}
-              show={showNew}
-              onToggleShow={() => setShowNew((v) => !v)}
-            />
-            <PasswordField
-              id="confirm-password"
-              label="Confirm New Password"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              show={showConfirm}
-              onToggleShow={() => setShowConfirm((v) => !v)}
-            />
-            <Button
-              type="submit"
-              disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
-              className="h-11 mt-1 gradient-primary text-primary-foreground font-bold"
-            >
+          <form className="flex flex-col gap-3 mt-2" onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }}>
+            <input type="email" name="username" autoComplete="username" value={user?.email ?? ""} readOnly hidden tabIndex={-1} />
+            <PasswordField id="current-password" label="Current Password" autoComplete="current-password" value={currentPassword} onChange={setCurrentPassword} show={showCurrent} onToggleShow={() => setShowCurrent((v) => !v)} />
+            <PasswordField id="new-password" label="New Password" autoComplete="new-password" value={newPassword} onChange={setNewPassword} show={showNew} onToggleShow={() => setShowNew((v) => !v)} />
+            <PasswordField id="confirm-password" label="Confirm New Password" autoComplete="new-password" value={confirmPassword} onChange={setConfirmPassword} show={showConfirm} onToggleShow={() => setShowConfirm((v) => !v)} />
+            <Button type="submit" disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword} className="h-11 mt-1 gradient-primary text-primary-foreground font-bold">
               {changingPassword ? "Updating…" : "Update Password"}
             </Button>
           </form>
