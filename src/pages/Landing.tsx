@@ -89,7 +89,7 @@ const philosophy = [
   {
     icon: <Icon d={<path d="M3 17l6-6 4 4 8-8M15 7h6v6" />} />,
     title: "Lift heavy",
-    body: <>Find your starting weight, then add 1 kg every week. Every set should feel like a challenge.</>,
+    body: <>Find your starting weight, then add 1–2 kg every week. Every set should feel like a challenge.</>,
   },
   {
     icon: <Icon d={<><rect x="2" y="7" width="17" height="10" rx="2" /><path d="M22 11v2M6 10v4M10 10v4" /></>} />,
