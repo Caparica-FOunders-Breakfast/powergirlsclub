@@ -28,13 +28,13 @@ const planSig = (plan: WorkoutDay[]) =>
   plan.map((d) => `${d.label}|${d.emoji}|${d.isRest ? "r" : "t"}`).join(",");
 
 /**
- * Read-only "Your week" plan display for the completed Profile — mirrors the
+ * Read-only "Your week" plan display for the completed Profile, mirrors the
  * Klarita split preview from the setup wizard. It is driven by the *same*
  * `plan` array the weekly view uses (defaults + custom overrides, masked to
  * the user's chosen training days), so the two screens can never disagree.
  *
  * When `onReorder` is provided, the workout tiles can be dragged to rearrange
- * which weekday each workout falls on — the other tiles make room as you drag
+ * which weekday each workout falls on, the other tiles make room as you drag
  * (framer-motion Reorder). Weekday labels (M/T/W…) stay fixed in a header row;
  * only the workout tiles move.
  */
@@ -81,7 +81,7 @@ export function WeekPlanCard({
     try {
       await onReorder(current.map((t) => t.day), changed);
     } catch {
-      // Persist failed — slide the tiles back to where they were.
+      // Persist failed, slide the tiles back to where they were.
       setOrder(before);
     }
   };
@@ -116,7 +116,7 @@ export function WeekPlanCard({
         Your {trainingCount}-day week
       </p>
 
-      {/* Fixed weekday labels — these never move. */}
+      {/* Fixed weekday labels, these never move. */}
       <div className="mt-3 flex gap-1.5">
         {DAY_LETTERS.map((letter, i) => (
           <span
@@ -128,7 +128,7 @@ export function WeekPlanCard({
         ))}
       </div>
 
-      {/* Workout tiles — drag to rearrange; the others make room. */}
+      {/* Workout tiles, drag to rearrange; the others make room. */}
       <Reorder.Group
         as="div"
         axis="x"
@@ -192,10 +192,10 @@ export function WeekPlanCard({
 
       <p className="mt-3 text-[11px] font-semibold text-muted-foreground">
         {travelMode
-          ? "Travel mode is on — these days show bodyweight workouts. Switch it off to get your normal plan back."
+          ? "Travel mode is on, these days show bodyweight workouts. Switch it off to get your normal plan back."
           : draggable
             ? "Drag a workout onto another day to rearrange your week. Bigger changes? Tap “Set up again”."
-            : "You can move training days anytime — tap “Set up again” to change your plan."}
+            : "You can move training days anytime, tap “Set up again” to change your plan."}
       </p>
     </section>
   );

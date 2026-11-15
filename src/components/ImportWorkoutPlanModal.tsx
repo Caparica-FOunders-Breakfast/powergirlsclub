@@ -65,7 +65,7 @@ const draftToExercise = (d: DraftExercise): Exercise => {
   };
 };
 
-// Read a File as base64 (data URL — the edge function strips the prefix).
+// Read a File as base64 (data URL, the edge function strips the prefix).
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -148,7 +148,7 @@ const ImportWorkoutPlanModal = ({
             if (parsed?.error) message = parsed.error;
           }
         } catch {
-          // Ignore parse failure — keep the generic message.
+          // Ignore parse failure, keep the generic message.
         }
         setPhotoError(message);
         // Graceful degradation: drop the user into the JSON tab with a hint.
@@ -162,7 +162,7 @@ const ImportWorkoutPlanModal = ({
       }
       const exercises: RawExercise[] = Array.isArray(data?.exercises) ? data.exercises : [];
       if (exercises.length === 0) {
-        setPhotoError("No exercises detected — try a clearer photo.");
+        setPhotoError("No exercises detected, try a clearer photo.");
         return;
       }
       setDraft(exercises.map(toDraft));
@@ -339,7 +339,7 @@ const ImportWorkoutPlanModal = ({
               <div className="grid grid-cols-2 gap-1.5 mt-1.5">
                 {days.length === 0 ? (
                   <p className="col-span-2 text-xs italic text-muted-foreground">
-                    No training days selected yet — pick days in the form above first.
+                    No training days selected yet, pick days in the form above first.
                   </p>
                 ) : (
                   days.map(({ idx, day }) => (

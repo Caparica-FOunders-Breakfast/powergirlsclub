@@ -5,7 +5,7 @@ const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
 /**
  * Preview of Klarita's split for a given days/week. There are no separate
- * 3/4-day definitions — the split is the 5-day `weeklyPlan` filtered to the
+ * 3/4-day definitions, the split is the 5-day `weeklyPlan` filtered to the
  * training days for that frequency (the same subset the app trains on).
  */
 export function KlaritaSplitPreview({ daysPerWeek }: { daysPerWeek: number }) {

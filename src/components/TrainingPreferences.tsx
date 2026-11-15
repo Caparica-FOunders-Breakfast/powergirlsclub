@@ -56,7 +56,7 @@ const daysUntil = (key: string): number => {
 
 const TrainingPreferences = () => {
   // Render the form with defaults immediately; React Query fills `saved` in the background.
-  // This intentionally does not check `isLoading` — the UI is visible from the first paint.
+  // This intentionally does not check `isLoading`, the UI is visible from the first paint.
   const { data: saved, isSuccess: prefsLoaded } = useUserPreferences();
   const saveMutation = useSaveUserPreferences();
   const { toast } = useToast();
@@ -83,11 +83,11 @@ const TrainingPreferences = () => {
       .filter((entry): entry is { idx: number; day: NonNullable<typeof entry.day> } => !!entry.day);
   }, [trainingDays, mergedPlan]);
 
-  // Hydrate from saved preferences exactly once — after that, user edits and post-save
+  // Hydrate from saved preferences exactly once, after that, user edits and post-save
   // refetches don't clobber local state, so the update is silent and won't fight typing.
   // Important: even when `saved` is null (brand-new user with no row yet) we still
   // mark hydration complete so the autosave effect below can fire the first time
-  // the user picks an option — otherwise their choice is never persisted.
+  // the user picks an option, otherwise their choice is never persisted.
   const hydratedRef = useRef(false);
   useEffect(() => {
     if (hydratedRef.current) return;
@@ -145,7 +145,7 @@ const TrainingPreferences = () => {
       frequency,
       training_days: [...trainingDays].sort((a, b) => a - b),
       start_date: startDate,
-      // Progression lives in the setup wizard / More settings now — preserve
+      // Progression lives in the setup wizard / More settings now, preserve
       // the saved values here so a schedule autosave doesn't clobber them.
       progress_goal: saved?.progress_goal ?? "healthy",
       progression_kg_per_week: saved?.progression_kg_per_week ?? PROGRESSION_DEFAULT,

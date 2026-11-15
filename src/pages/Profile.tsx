@@ -237,7 +237,7 @@ const Profile = () => {
       await setTravelMode.mutateAsync(on);
       toast(
         on
-          ? { title: "Travel mode on ✈️", description: "Bodyweight workouts — your plan is saved." }
+          ? { title: "Travel mode on ✈️", description: "Bodyweight workouts, your plan is saved." }
           : { title: "Welcome back 💪", description: "Your normal plan is restored." },
       );
     } catch (e) {
@@ -570,7 +570,7 @@ const Profile = () => {
               )}
             </div>
 
-            {/* Progression — opens step 3 standalone */}
+            {/* Progression, opens step 3 standalone */}
             <button
               onClick={openProgressionEdit}
               className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
@@ -587,7 +587,7 @@ const Profile = () => {
               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
             </button>
 
-            {/* Change password — opens modal */}
+            {/* Change password, opens modal */}
             <button
               onClick={() => setPasswordOpen(true)}
               className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
@@ -602,7 +602,7 @@ const Profile = () => {
               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
             </button>
 
-            {/* Edit profile name — triggers inline edit on Identity card */}
+            {/* Edit profile name, triggers inline edit on Identity card */}
             <button
               onClick={handleStartEditName}
               className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
@@ -639,7 +639,7 @@ const Profile = () => {
           </Button>
         </aside>
 
-        {/* Right column — setup wizard (incomplete) or training + body cards */}
+        {/* Right column, setup wizard (incomplete) or training + body cards */}
         <main className="space-y-4">
           {!setup.ready ? null : wizardActive ? (
             <div className={showIf("training")}>
@@ -692,7 +692,7 @@ const Profile = () => {
                 />
               </div>
 
-              {/* Body cards — moved here to balance the wide right column. */}
+              {/* Body cards, moved here to balance the wide right column. */}
               <div className={showIf("body")}>
                 <div className="grid gap-4 lg:grid-cols-2">
                   {/* Strength Levels reference card */}
@@ -801,7 +801,7 @@ const Profile = () => {
         onGenerated={() => navigate("/week")}
       />
 
-      {/* Import a plan (own + import) — reachable through the setup wizard */}
+      {/* Import a plan (own + import), reachable through the setup wizard */}
       <ImportWorkoutPlanModal
         open={importOpen}
         onOpenChange={setImportOpen}

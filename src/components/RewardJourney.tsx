@@ -163,8 +163,8 @@ const RewardWeekItem = ({
                       <p className="text-[10px] font-bold text-secondary flex items-center gap-1">
                         <Trophy className="w-3 h-3" />
                         {isTiedReward
-                          ? `Shared Reward Week — all ${winnerIds?.length} tied winners can pick!`
-                          : "You're the winner — pick the reward!"}
+                          ? `Shared Reward Week, all ${winnerIds?.length} tied winners can pick!`
+                          : "You're the winner, pick the reward!"}
                       </p>
                       <Input
                         value={rewardInput}
@@ -188,7 +188,7 @@ const RewardWeekItem = ({
                     </p>
                   ) : (
                     <p className="text-xs font-bold text-muted-foreground italic">
-                      No scores yet — complete workouts to become the winner! 💪
+                      No scores yet, complete workouts to become the winner! 💪
                     </p>
                   )}
                 </>

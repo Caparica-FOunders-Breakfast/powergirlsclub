@@ -64,7 +64,7 @@ export function VocabLibrary({ languageCode, languageName, flag }: VocabLibraryP
         <p className="text-4xl mb-3">📖</p>
         <h3 className="text-lg font-display text-foreground">No words yet</h3>
         <p className="text-muted-foreground font-semibold mt-1 text-sm px-6">
-          Add words from your daily tasks — they'll appear here
+          Add words from your daily tasks, they'll appear here
         </p>
       </motion.div>
     );

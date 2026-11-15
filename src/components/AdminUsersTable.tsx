@@ -77,7 +77,7 @@ const formatSupabaseError = (err: unknown): string => {
   if (typeof err === "object") {
     const e = err as { message?: string; details?: string; hint?: string; code?: string };
     const parts = [e.message, e.details, e.hint, e.code ? `(code ${e.code})` : null].filter(Boolean);
-    if (parts.length > 0) return parts.join(" — ");
+    if (parts.length > 0) return parts.join(", ");
     try {
       return JSON.stringify(err);
     } catch {
@@ -110,7 +110,7 @@ const AdminUsersTable = () => {
       if (profilesRes.error || !profilesRes.data) {
         console.error("[AdminUsersTable] profiles query failed:", profilesRes.error);
 
-        // Fallback: still surface something — fetch just the signed-in admin's
+        // Fallback: still surface something, fetch just the signed-in admin's
         // own row so the page isn't blank while RLS gets fixed.
         if (user) {
           const selfRes = await supabase
@@ -149,7 +149,7 @@ const AdminUsersTable = () => {
       }
 
       // Step 2: best-effort sidecar tables. Any of these can be silently
-      // empty without breaking the page — they just degrade the column data.
+      // empty without breaking the page, they just degrade the column data.
       const [prefsRes, logsRes] = await Promise.all([
         supabase
           .from("user_preferences" as never)
@@ -275,7 +275,7 @@ const AdminUsersTable = () => {
 
       {data?.fallback === "self-only" && (
         <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 break-words">
-          Showing only your own profile — couldn't load all users. Check the console for details.
+          Showing only your own profile, couldn't load all users. Check the console for details.
         </p>
       )}
       {data?.warnings && data.warnings.length > 0 && (

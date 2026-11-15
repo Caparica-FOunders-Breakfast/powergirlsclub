@@ -58,7 +58,7 @@ export function VocabSection({ languageCode, languageName, dayIndex, weekStart }
       translations = data?.translations ?? {};
     } catch (e) {
       console.error("Translation failed:", e);
-      toast({ description: "Auto-translate failed — saving word without translations.", variant: "destructive", duration: 3000 });
+      toast({ description: "Auto-translate failed, saving word without translations.", variant: "destructive", duration: 3000 });
     }
 
     // Find the English translation

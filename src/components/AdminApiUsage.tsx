@@ -235,7 +235,7 @@ const AdminApiUsage = () => {
         </div>
         {overBudget && (
           <p className="text-[10px] font-bold text-destructive mt-1">
-            Over budget — consider disabling AI import.
+            Over budget, consider disabling AI import.
           </p>
         )}
       </div>

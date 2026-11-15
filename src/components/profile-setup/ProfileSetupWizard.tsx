@@ -264,7 +264,7 @@ function StepPlan({ setup }: { setup: UseProfileSetup }) {
           title="Klarita's plan"
           badge="Recommended ⭐"
           badgeClass="bg-primary/10 text-primary"
-          copy="The proven Power Club split. Just pick how many days — the rest is done for you."
+          copy="The proven Power Club split. Just pick how many days, the rest is done for you."
         />
         <BranchCard
           active={state.planType === "own"}
@@ -301,7 +301,7 @@ function StepPlan({ setup }: { setup: UseProfileSetup }) {
               title="📥 Import my plan"
               badge="Bring your own"
               badgeClass="bg-secondary/15 text-secondary"
-              copy="Paste or upload your program — we'll structure it into your week."
+              copy="Paste or upload your program, we'll structure it into your week."
             />
             <BranchCard
               active={state.planSource === "generate"}
@@ -413,9 +413,9 @@ export function StepProgression({
           📈 How hard do you want to push?
         </h2>
         <p className="mt-1 text-sm font-semibold text-muted-foreground">
-          Muscles grow through progressive overload — adding a little weight every week.
+          Muscles grow through progressive overload, adding a little weight every week.
           Pick how much we add to your working weights each week. This applies to every
-          plan — Klarita's, imported or generated. We'll bump your targets automatically
+          plan, Klarita's, imported or generated. We'll bump your targets automatically
           and back off if you miss reps.
         </p>
       </div>
@@ -475,7 +475,7 @@ export function StepProgression({
         <div className="flex items-start gap-2 rounded-2xl border-2 border-accent/50 bg-accent/10 p-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" />
           <p className="text-[13px] font-semibold text-foreground">
-            ⚠️ +{state.kgPerWeek} kg/week is a lot — make sure sleep and food keep up, or
+            ⚠️ +{state.kgPerWeek} kg/week is a lot, make sure sleep and food keep up, or
             you'll stall in a few weeks.
           </p>
         </div>

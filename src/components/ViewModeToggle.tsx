@@ -34,7 +34,7 @@ const ViewModeToggle = () => {
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-[220px] text-center">
           Switch between the full <strong>Admin</strong> app and the <strong>User</strong> view
-          your members see. It only changes what you see — your admin access stays.
+          your members see. It only changes what you see, your admin access stays.
         </TooltipContent>
       </Tooltip>
       <div

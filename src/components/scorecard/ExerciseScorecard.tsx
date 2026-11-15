@@ -55,7 +55,7 @@ const FailBadge = ({ count }: { count: number }) => (
       </span>
     </TooltipTrigger>
     <TooltipContent side="top" className="max-w-[220px] text-center">
-      {count} failed attempt{count > 1 ? "s" : ""} — week{count > 1 ? "s" : ""} you logged
+      {count} failed attempt{count > 1 ? "s" : ""}, week{count > 1 ? "s" : ""} you logged
       an “F” because you couldn’t finish the set at that weight.
     </TooltipContent>
   </Tooltip>
@@ -211,7 +211,7 @@ export function ExerciseScorecard() {
         else if (isSameDay(day, now)) { bg = C.pink; ring = `2px solid ${C.ink}`; }
         else if (future) { bg = "#FFFFFF"; ring = "1px solid #EFE6F1"; }
         else { bg = count === 0 ? HEAT_COLORS[0] : count === 1 ? HEAT_COLORS[1] : count <= 3 ? HEAT_COLORS[2] : HEAT_COLORS[3]; }
-        days.push({ bg, ring, title: inYear ? `${format(day, "MMM d, yyyy")} — ${count} exercise${count === 1 ? "" : "s"}` : "" });
+        days.push({ bg, ring, title: inYear ? `${format(day, "MMM d, yyyy")}, ${count} exercise${count === 1 ? "" : "s"}` : "" });
       }
       cols.push({ days });
       cursor = addDays(cursor, 7);
@@ -264,7 +264,7 @@ export function ExerciseScorecard() {
           <Label>CURRENT STREAK</Label>
           <p style={{ margin: "4px 0 0", ...bangers, fontSize: 56, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
           <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
-            {streaks.current > 0 ? "Keep it going — train again today." : "Train today to start a new streak."}
+            {streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
             <span style={{ color: C.purple }}> · Best streak {streaks.longest} days</span>
           </p>
         </div>

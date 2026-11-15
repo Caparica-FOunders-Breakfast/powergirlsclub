@@ -53,7 +53,7 @@ export default function LearnLanguage() {
     );
   }
 
-  // No languages yet — onboarding
+  // No languages yet, onboarding
   if (languages.length === 0 && !previewLang) {
     return (
       <div className="p-4 pb-24 max-w-lg mx-auto space-y-6 lg:max-w-5xl lg:px-8 lg:pb-8">
@@ -118,7 +118,7 @@ export default function LearnLanguage() {
         </motion.div>
       )}
 
-      {/* removed single-language header — now handled by the unified chip row */}
+      {/* removed single-language header, now handled by the unified chip row */}
 
       {/* Tab switcher */}
       {activeLang && (

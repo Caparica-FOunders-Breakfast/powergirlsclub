@@ -3,7 +3,7 @@ import LegalPage from "./LegalPage";
 const Privacy = () => (
   <LegalPage title="Privacy Policy">
     <p className="text-xs uppercase tracking-wide font-bold text-muted-foreground/70">
-      Placeholder — to be reviewed before launch.
+      Placeholder, to be reviewed before launch.
     </p>
     <p>
       Power Club respects your privacy. This page explains, in plain language, what information we
