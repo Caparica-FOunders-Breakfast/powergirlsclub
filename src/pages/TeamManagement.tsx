@@ -372,77 +372,116 @@ const TeamManagement = () => {
     </motion.div>
   );
 
-  if (!team) {
-    return (
-      <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-5xl lg:px-8 lg:pb-8">
-        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-8">
-          <h1 className="text-4xl font-display text-foreground">
-            <Users className="inline w-8 h-8 text-primary mr-2" />
-            Join a Team
-          </h1>
-          <p className="text-sm font-bold text-muted-foreground mt-2">Create your squad or join one with a code!</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="mb-4 p-5 rounded-2xl comic-border bg-gradient-to-br from-primary/10 via-card to-accent/10"
-        >
-          <p className="font-display text-lg text-foreground mb-3">
-            <Plus className="inline w-5 h-5 mr-1" /> Create a New Team
-          </p>
-          <div className="flex gap-2">
-            <Input placeholder="Team name" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} className="border-2 border-primary/20" />
-            <Button onClick={handleCreateTeam} disabled={createTeam.isPending} className="gradient-primary text-primary-foreground font-bold px-6">Create</Button>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6 p-5 rounded-2xl comic-border bg-card"
-        >
-          <p className="font-display text-lg text-foreground mb-3">
-            <UserPlus className="inline w-5 h-5 mr-1" /> Join with Team Code
-          </p>
-          <div className="flex gap-2">
-            <Input placeholder="Enter team code" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} className="border-2 border-primary/20 uppercase tracking-widest font-mono" />
-            <Button onClick={handleJoinTeam} disabled={joinTeam.isPending} variant="outline" className="font-bold px-6">Join</Button>
-          </div>
-        </motion.div>
-
-        <ChallengeSection />
-      </div>
-    );
-  }
+  const teamCode = (team as { team_code?: string } | null)?.team_code ?? "";
+  const myId = profile?.user_id;
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-5xl lg:px-8 lg:pb-8">
+    <div style={{ background: "#FBF9FB", minHeight: "100%", color: "#2B1736", fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", flexDirection: "column", gap: 28 }}>
+        {/* HERO */}
+        <section style={{ background: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)", color: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 24, boxShadow: "6px 6px 0 #2B1736", padding: "36px 36px 32px" }}>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>4-WEEK TEAM CHALLENGE</p>
+          <h1 style={{ margin: "6px 0 0", fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: "clamp(48px, 6vw, 72px)", letterSpacing: 1.5, lineHeight: 0.95 }}>
+            Train with friends.<span style={{ display: "block", color: "#FFD6EA" }}>Win the week.</span>
+          </h1>
+          <p style={{ margin: "16px 0 0", maxWidth: 560, fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>Start a team or join one with a code. Every workout you finish earns points for your team.</p>
+          <ol style={{ margin: "28px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
+            {[
+              ["Make your team", "Create one or join with a friend's code."],
+              ["Train your plan", "Everyone follows their own weekly plan."],
+              ["Earn points", "Each finished workout scores for you."],
+              ["Win the week", "A winner every week, rewards as you go."],
+            ].map(([t, d], i) => (
+              <li key={t} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 16, padding: 16 }}>
+                <span style={{ display: "inline-flex", width: 32, height: 32, borderRadius: 999, background: "#FFFFFF", color: "#2B1736", fontWeight: 800, alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                <p style={{ margin: "10px 0 0", fontWeight: 800 }}>{t}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 14, color: "rgba(255,255,255,0.9)" }}>{d}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-      {/* Challenge section */}
-      <ChallengeSection />
-
-      {isAdmin && (
-        <>
-          <h2 className="font-display text-2xl text-foreground mb-3">
-            <UserPlus className="inline w-6 h-6 mr-1" /> Admin: Assign Members
-          </h2>
-          {profiles && teams && (
-            <div className="space-y-2">
-              {profiles.map((profile: any) => (
-                <div key={profile.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-display text-primary-foreground shrink-0"
-                    style={{ backgroundColor: profile.avatar_color || "#FF2D87" }}
-                  >
-                    {profile.display_name?.[0]?.toUpperCase() || "?"}
+        {/* TEAM: your team + board, or create/join */}
+        {team ? (
+          <>
+            <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: 28 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>{team.name}</h2>
+                {teamCode && (
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontFamily: "Bangers, cursive", fontSize: 32, letterSpacing: 4, color: "#C21C70" }}>{teamCode.toUpperCase()}</span>
+                    <button type="button" onClick={copyTeamCode} style={{ minHeight: 44, padding: "0 16px", border: "2px solid #2B1736", borderRadius: 12, background: "#FFFFFF", color: "#2B1736", fontWeight: 800, cursor: "pointer" }}>{copied ? "Copied ✓" : "Copy code"}</button>
                   </div>
-                  <p className="flex-1 font-bold text-sm text-foreground truncate">{profile.display_name}</p>
-                  <Select
-                    value={profile.team_id || "none"}
-                    onValueChange={(val) => assignTeam.mutateAsync({ userId: profile.user_id, teamId: val === "none" ? null : val })}
-                  >
+                )}
+              </div>
+              <p style={{ margin: "8px 0 0", color: "#5E4E66" }}>Share your code so friends can join your team.</p>
+            </section>
+
+            <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, padding: 28 }}>
+              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>Team board</h2>
+              <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+                {scores && scores.length > 0 ? (
+                  scores.map((s, i) => {
+                    const isYou = s.user_id === myId;
+                    const name = isYou ? "You" : s.profile?.display_name ?? "Member";
+                    const count = s.powerData?.[6] ?? (s as { points?: number }).points ?? 0;
+                    return (
+                      <div key={s.user_id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14, background: isYou ? "#FFF5FA" : "#F6F1F7", border: isYou ? "2px solid #E8308C" : "none" }}>
+                        <span style={{ width: 32, fontFamily: "Bangers, cursive", fontSize: 26, color: i === 0 ? "#C21C70" : "#5E4E66" }}>{i + 1}</span>
+                        <span style={{ width: 40, height: 40, borderRadius: 999, background: s.profile?.avatar_color ?? "#E8308C", color: "#FFFFFF", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{(name[0] ?? "?").toUpperCase()}</span>
+                        <span style={{ flex: 1, fontWeight: 800 }}>{name}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#5E4E66" }}>{count} {count === 1 ? "workout" : "workouts"}</span>
+                        {i === 0 && <span style={{ padding: "4px 10px", borderRadius: 999, background: "#FFE14D", border: "1.5px solid #2B1736", fontSize: 12, fontWeight: 800 }}>Leading</span>}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p style={{ margin: 0, color: "#5E4E66", fontWeight: 600 }}>No scores yet this week. Complete a workout to get on the board.</p>
+                )}
+              </div>
+            </section>
+          </>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+            {/* Start a team */}
+            <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: 28 }}>
+              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>Start a team</h2>
+              <p style={{ margin: "10px 0 0", color: "#5E4E66" }}>You'll get a code to share with your friends.</p>
+              <label htmlFor="team" style={{ display: "block", marginTop: 20, fontWeight: 800, fontSize: 15 }}>Team name</label>
+              <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 10 }}>
+                <input id="team" type="text" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} placeholder="e.g. Caparica Lifters" style={{ flex: "1 1 200px", minWidth: 0, height: 52, padding: "0 16px", border: "2px solid #2B1736", borderRadius: 12, fontSize: 16, color: "#2B1736", boxSizing: "border-box" }} />
+                <button type="button" onClick={handleCreateTeam} disabled={createTeam.isPending} style={{ flex: "none", height: 52, padding: "0 24px", background: "#C21C70", color: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 12, boxShadow: "3px 3px 0 #2B1736", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>Create team</button>
+              </div>
+            </section>
+
+            {/* Join a team */}
+            <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #6B2FB3", padding: 28 }}>
+              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>Join a team</h2>
+              <p style={{ margin: "10px 0 0", color: "#5E4E66" }}>Got a code from a friend? Pop it in here.</p>
+              <label htmlFor="code" style={{ display: "block", marginTop: 20, fontWeight: 800, fontSize: 15 }}>Team code</label>
+              <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 10 }}>
+                <input id="code" type="text" maxLength={6} value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="ABC123" style={{ flex: "1 1 200px", minWidth: 0, height: 52, padding: "0 16px", border: "2px solid #2B1736", borderRadius: 12, fontSize: 20, fontWeight: 800, letterSpacing: 4, color: "#2B1736", boxSizing: "border-box", textTransform: "uppercase" }} />
+                <button type="button" onClick={handleJoinTeam} disabled={joinTeam.isPending} style={{ flex: "none", height: 52, padding: "0 28px", background: "#6B2FB3", color: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 12, boxShadow: "3px 3px 0 #2B1736", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>Join</button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* Challenge CRUD (kept) */}
+        <ChallengeSection />
+
+        {/* Admin: assign members (kept) */}
+        {isAdmin && profiles && teams && (
+          <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, padding: 24 }}>
+            <h2 style={{ margin: "0 0 12px", fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 28, letterSpacing: 1 }}>Admin: assign members</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {profiles.map((p: { id: string; user_id: string; display_name?: string; avatar_color?: string; team_id?: string | null }) => (
+                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-display text-primary-foreground shrink-0" style={{ backgroundColor: p.avatar_color || "#FF2D87" }}>
+                    {p.display_name?.[0]?.toUpperCase() || "?"}
+                  </div>
+                  <p className="flex-1 font-bold text-sm text-foreground truncate">{p.display_name}</p>
+                  <Select value={p.team_id || "none"} onValueChange={(val) => assignTeam.mutateAsync({ userId: p.user_id, teamId: val === "none" ? null : val })}>
                     <SelectTrigger className="w-32 h-8 text-xs">
                       <SelectValue placeholder="No team" />
                     </SelectTrigger>
@@ -456,9 +495,9 @@ const TeamManagement = () => {
                 </div>
               ))}
             </div>
-          )}
-        </>
-      )}
+          </section>
+        )}
+      </div>
     </div>
   );
 };

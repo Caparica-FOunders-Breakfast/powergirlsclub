@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-11-15 — Profile + Challenge redesign (`feat/profile-challenge-redesign`)
+
+Rebuilt the Profile and Challenge (Teams) pages to the new design, **keeping every
+existing feature** (chosen over matching the mockups exactly). Behind auth —
+verified by build/typecheck/code-review, not a logged-in click-through.
+
+### Profile (`src/pages/Profile.tsx`)
+- Gradient header card (avatar + name + email + Workouts / Best streak / Weeks won
+  stats, with a "join a challenge" link). Left: training week (`WeekPlanCard`),
+  travel-mode toggle, settings rows (body weight / progression / name / password).
+  Right: strength-levels table, sign out.
+- **All logic preserved**: body-weight debounced autosave, name blur-save,
+  progression dialog, password modal (re-auth + update), travel toggle, drag
+  reorder, and the setup wizard / plan generator / import modals / admin API panel.
+
+### Challenge / Teams (`src/pages/TeamManagement.tsx`)
+- Hero ("4-week team challenge") + 4-step how-it-works, Start-a-team / Join-a-team
+  cards, and a **team board** now wired to the real leaderboard (`useLeaderboard`),
+  plus a "your team + code (copy)" card once you're on a team.
+- **Kept**: the challenge create/join/leave/delete flow (`ChallengeSection`) and the
+  admin "assign members" panel.
+
+
 ## 2026-11-15 — Drop Show Up Guarantee; flat €5/month (`feat/member-area-redesign`)
 
 Pricing pivot: a flat **€5/month**, no "Show Up Guarantee" / free-month mechanic.
