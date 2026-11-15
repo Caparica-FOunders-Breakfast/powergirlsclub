@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-15 — Homepage redesign (`feat/homepage-redesign`)
+
+Rebuilt the public landing page ([src/pages/Landing.tsx](src/pages/Landing.tsx)) to
+match the approved design canvas (the "Harley" palette).
+
+- New look: off-white `#FBF9FB` ground, deep-purple `#2B1736` ink/borders with hard
+  `4px/8px` offset shadows, a pink→purple gradient hero, yellow CTA, lilac chips.
+- New hero **product card** ("Leg day" with per-exercise weight progressions + streak).
+- "Our philosophy" (6 cards incl. **Train by readiness** — Ready / So-so / Not ready),
+  "Who it's for" chips, "What you get inside" (5 cards), "Stronger together" band,
+  pricing, FAQ (`<details>`), dark footer.
+- **Pricing model change (from the design):** dropped the "2-week free trial" framing
+  in favour of **€10/month + a "Show Up Guarantee"** (train 3×/week for 4 weeks → next
+  month free). CTAs now read "Join for €10" and point to `/auth?mode=signup`;
+  "Log in" → `/auth?mode=login`; footer Privacy/Terms → their routes. No payment flow
+  added — price is still display-only.
+- Updated `index.html` meta/OG description to drop "2 weeks free"; hid the native
+  `<summary>` disclosure marker in `index.css` for the FAQ.
+- Verified desktop + mobile in preview; FAQ toggles; console clean; `tsc`/build pass.
+
 ## 2026-10-15 — Data backfill: normalize malformed plan rows (`fix/normalize-plan-exercise-rows`)
 
 Follow-up to bug #3. The structured editor fixed *new* edits, but existing

@@ -109,6 +109,14 @@
       min-width: 44px;
     }
   }
+  /* Landing-page FAQ uses <details>/<summary> — drop the default disclosure
+     triangle so the summary styles cleanly (matches the homepage design). */
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
 }
 
 @layer utilities {
