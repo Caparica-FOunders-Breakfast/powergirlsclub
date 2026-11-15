@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-15 — Flat €5/month, drop Show Up Guarantee (`fix/flat-5-pricing`)
+
+Pricing pivot on the public pages: a flat **€5/month**, no "Show Up Guarantee" /
+free-month mechanic.
+
+- Homepage: pricing is €5/month ("flat monthly price · cancel anytime"); removed
+  the Show Up Guarantee box and its FAQ; all "Join for €10" CTAs → €5.
+- Login: tracker "guarantee" row → current-streak chip; join CTA + subtext → €5 /
+  cancel anytime.
+- Terms + meta description → €5/month.
+
+(The member-area pages carry the matching removal in the separate
+`feat/member-area-redesign` PR.)
+
 ## 2026-11-15 — Homepage + login redesign (`feat/homepage-redesign`)
 
 Rebuilt the public landing page ([src/pages/Landing.tsx](src/pages/Landing.tsx)) and the
