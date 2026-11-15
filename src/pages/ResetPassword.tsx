@@ -25,7 +25,7 @@ const fieldStyle: React.CSSProperties = {
 };
 const labelStyle: React.CSSProperties = { fontWeight: 800, fontSize: 15 };
 
-// Snapshot the URL synchronously at module load — before React mounts and
+// Snapshot the URL synchronously at module load, before React mounts and
 // before Supabase's detectSessionInUrl clears the hash/query.
 const initialUrlSnapshot = (() => {
   if (typeof window === "undefined") return { hasRecoveryParams: false, errorDescription: null as string | null };

@@ -217,7 +217,7 @@ const CurrentWeek = () => {
       saveExercise(dayIdx, i, ex.name, localWeights[key] || "", false);
     });
     setLocalCompleted((prev) => ({ ...prev, ...updates }));
-    toast({ title: "Workout reopened — you can edit now ✏️" });
+    toast({ title: "Workout reopened, you can edit now ✏️" });
   };
 
   const toggleRestDone = (dayIdx: number, day: WorkoutDay) => {
@@ -450,7 +450,7 @@ const CurrentWeek = () => {
 
             <section style={{ background: C.lilac, border: `2px solid ${C.ink}`, borderRadius: 22, padding: 22 }}>
               <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>Tip for today</p>
-              <p style={{ margin: "6px 0 0", fontSize: 15, color: C.body }}>Not feeling it? Pick “Not ready” and do the light version. A short session still counts — showing up is what builds the habit.</p>
+              <p style={{ margin: "6px 0 0", fontSize: 15, color: C.body }}>Not feeling it? Pick “Not ready” and do the light version. A short session still counts, showing up is what builds the habit.</p>
             </section>
           </aside>
         </div>

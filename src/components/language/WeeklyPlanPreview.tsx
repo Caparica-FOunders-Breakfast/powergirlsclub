@@ -18,7 +18,7 @@ export function WeeklyPlanPreview({ language, onStart }: WeeklyPlanPreviewProps)
       <div className="text-center space-y-1">
         <p className="text-3xl">{language.flag}</p>
         <h3 className="text-lg font-display text-foreground">Your weekly rhythm</h3>
-        <p className="text-xs font-bold text-muted-foreground">{language.name} — 5 days of focused practice</p>
+        <p className="text-xs font-bold text-muted-foreground">{language.name}, 5 days of focused practice</p>
       </div>
 
       <div className="space-y-2">
@@ -32,7 +32,7 @@ export function WeeklyPlanPreview({ language, onStart }: WeeklyPlanPreviewProps)
           >
             <span className="text-lg">{day.emoji}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-extrabold text-foreground">{day.day} — {day.focus}</p>
+              <p className="text-xs font-extrabold text-foreground">{day.day}, {day.focus}</p>
               <p className="text-[10px] font-bold text-muted-foreground italic">"{day.title}"</p>
             </div>
           </motion.div>

@@ -172,7 +172,7 @@ const Auth = () => {
             Log in to see this week's workouts, your streak and your progress over time.
           </p>
 
-          {/* Preview card — static illustration */}
+          {/* Preview card, static illustration */}
           <div style={{ marginTop: 36, maxWidth: 440, background: "#FFFFFF", color: C.ink, border: `2px solid ${C.ink}`, borderRadius: 20, boxShadow: `6px 6px 0 ${C.ink}`, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
               <p style={{ margin: 0, ...bangers, fontSize: 26, letterSpacing: 0.5 }}>This week</p>

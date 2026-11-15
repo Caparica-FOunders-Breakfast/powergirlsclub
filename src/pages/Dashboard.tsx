@@ -43,7 +43,7 @@ const MONTHLY_BUDGET_USD = 10;
 
 // Calls Anthropic returning a 429 (daily-limit error). The edge function
 // doesn't tag rows that hit the rate limit, so this is the closest signal
-// we can show without schema changes — count is always 0 for now and the
+// we can show without schema changes, count is always 0 for now and the
 // card explains that. Keeping the placeholder here makes the future wiring
 // obvious without breaking the layout today.
 const RATE_LIMIT_HITS_PLACEHOLDER = 0;
@@ -223,7 +223,7 @@ const Dashboard = () => {
       count: dayBuckets[idx].size,
     }));
 
-    // Most active users this month — count distinct workout days, not raw rows.
+    // Most active users this month, count distinct workout days, not raw rows.
     const perUser = new Map<string, Set<string>>();
     for (const log of monthLogs) {
       const completedAt = log.completed_at ?? log.created_at;

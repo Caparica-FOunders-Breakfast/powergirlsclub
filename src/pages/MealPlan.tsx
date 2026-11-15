@@ -151,7 +151,7 @@ function EmptyWeeklyPlan() {
       <p className="text-4xl mb-3">📋</p>
       <h2 className="text-xl font-display text-foreground">No Plan Yet</h2>
       <p className="text-sm font-bold text-muted-foreground mt-2 px-6">
-        Generate a Power Routine first — your 7-day plan will be built from it automatically.
+        Generate a Power Routine first, your 7-day plan will be built from it automatically.
       </p>
     </motion.div>
   );
@@ -239,7 +239,7 @@ function PowerRoutine() {
             <Progress value={proteinPct} className="h-2" />
             {proteinEst < proteinTarget && (
               <p className="text-[10px] font-bold text-muted-foreground mt-1">
-                💡 Add {proteinTarget - proteinEst}g more — try an extra scoop or Greek yogurt
+                💡 Add {proteinTarget - proteinEst}g more, try an extra scoop or Greek yogurt
               </p>
             )}
           </div>

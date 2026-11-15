@@ -256,7 +256,7 @@ const TeamManagement = () => {
             <p className="text-xs font-bold text-foreground">How a challenge works 💜</p>
             <ul className="text-[11px] font-semibold text-muted-foreground space-y-1 list-disc pl-4">
               <li>A challenge runs for <strong>4 weeks</strong> with your friends or team.</li>
-              <li>Everyone trains their weekly plan — each completed workout earns points.</li>
+              <li>Everyone trains their weekly plan, each completed workout earns points.</li>
               <li>There's a <strong>weekly winner</strong>, and you unlock rewards as you go.</li>
               <li>Start your own and share the code, or join one with a friend's code.</li>
             </ul>

@@ -3,7 +3,7 @@ import LegalPage from "./LegalPage";
 const Terms = () => (
   <LegalPage title="Terms of Service">
     <p className="text-xs uppercase tracking-wide font-bold text-muted-foreground/70">
-      Placeholder — to be reviewed before launch.
+      Placeholder, to be reviewed before launch.
     </p>
     <p>
       These terms govern your use of Power Club. By creating an account you agree to them. We will

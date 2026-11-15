@@ -31,7 +31,7 @@ import {
 
 type NavItem = { path: string; icon: typeof Trophy; label: string; emoji: string };
 
-// Meals is intentionally omitted until the feature is ready — it can be
+// Meals is intentionally omitted until the feature is ready, it can be
 // re-added here once meals_enabled is flipped on for real. Admins can still
 // reach /meals directly by URL.
 const adminSidebarTabs: NavItem[] = [
@@ -269,7 +269,7 @@ export function AppHeader() {
           <ViewModeToggle />
         </div>
       </header>
-      {/* Desktop header — only renders the toggle, no logo (the sidebar carries the branding). */}
+      {/* Desktop header, only renders the toggle, no logo (the sidebar carries the branding). */}
       <div className="hidden lg:flex sticky top-0 z-40 h-12 items-center justify-end px-6 bg-transparent">
         <ViewModeToggle />
       </div>

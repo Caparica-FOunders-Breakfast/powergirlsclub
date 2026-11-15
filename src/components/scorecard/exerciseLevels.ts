@@ -17,7 +17,7 @@ export const NON_KG_THRESHOLDS: Record<string, number[]> = {
 // Thresholds are assistance kg values going DOWN: [Beginner+, Early Int, Int, Int+, Advanced, Goal]
 export const ASSISTED_EXERCISE_THRESHOLDS: Record<string, { thresholds: number[]; labels: string[]; icons: string[] }> = {
   "Pull Ups": {
-    // thresholds: assistance weight boundaries (descending — lower is better)
+    // thresholds: assistance weight boundaries (descending, lower is better)
     thresholds: [60, 50, 40, 30, 15, 0],
     labels: ["🌱 Beginner", "🌿 Beginner+", "🌼 Early Intermediate", "🌻 Intermediate", "🔥 Intermediate+", "⚡ Advanced", "👑 Goal"],
     icons: ["🌱", "🌿", "🌼", "🌻", "🔥", "⚡", "👑"],
@@ -28,7 +28,7 @@ export function getAssistedLevel(name: string, assistanceKg: number) {
   const config = ASSISTED_EXERCISE_THRESHOLDS[name];
   if (!config) return LEVEL_DEFS[0];
   const { thresholds, labels, icons } = config;
-  // Walk thresholds descending — first one the value is <= determines level
+  // Walk thresholds descending, first one the value is <= determines level
   for (let i = thresholds.length - 1; i >= 0; i--) {
     if (assistanceKg <= thresholds[i]) {
       return { label: labels[i + 1] || labels[labels.length - 1], icon: icons[i + 1] || icons[icons.length - 1], index: i + 1 };

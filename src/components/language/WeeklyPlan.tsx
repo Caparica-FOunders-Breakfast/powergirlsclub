@@ -244,7 +244,7 @@ export function WeeklyPlan({ language }: WeeklyPlanProps) {
                     />
                   ) : (
                     <>
-                      {/* Edit tasks — right-aligned */}
+                      {/* Edit tasks, right-aligned */}
                       <div className="flex justify-end">
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingDay(dayIdx); }}
