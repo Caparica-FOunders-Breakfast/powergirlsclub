@@ -28,6 +28,7 @@ import {
 } from "@/components/profile-setup/ProfileSetupWizard";
 import { PlanGeneratorModal } from "@/components/profile-setup/PlanGeneratorModal";
 import { WeekPlanCard } from "@/components/profile-setup/WeekPlanCard";
+import { TrainingPlanCard } from "@/components/profile-plan/TrainingPlanCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { Button } from "@/components/ui/button";
@@ -377,13 +378,11 @@ const Profile = () => {
           </div>
         </section>
 
-        {!setup.ready ? null : wizardActive ? (
-          <ProfileSetupWizard setup={setup} onGoToWeek={() => navigate("/week")} onImport={() => setImportOpen(true)} onGenerate={() => setGeneratorOpen(true)} />
-        ) : (
+        {!setup.ready ? null : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* LEFT */}
             <div style={{ flex: "3 1 520px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
-              <WeekPlanCard plan={plan} onReorder={travelMode ? undefined : handleReorderDays} travelMode={travelMode} onSetUpAgain={setup.restartWizard} />
+              <TrainingPlanCard plan={plan} isMobile={isMobile} onSetUp={() => navigate("/plan-setup")} />
 
               {/* Travel mode */}
               <section style={{ background: travelMode ? C.lilac : "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, padding: "22px 24px", display: "flex", alignItems: "center", gap: 18 }}>

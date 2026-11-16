@@ -38,13 +38,15 @@ export function getLevel(ratio: number): { label: ExerciseLevel; icon: string; i
 }
 
 export function getLevelProgress(ratio: number): number {
-  const thresholds = [0, 0.35, 0.6, 0.85, 1.2, 1.6];
+  // Very strong starts at 1.2 x bodyweight and is the top level, so reaching
+  // 1.2 is a full bar (no phantom 1.6 / "101 kg at 63 kg" target).
+  const thresholds = [0, 0.35, 0.6, 0.85, 1.2];
+  const segments = thresholds.length - 1;
+  if (ratio >= thresholds[segments]) return 100;
   for (let i = 1; i < thresholds.length; i++) {
     if (ratio < thresholds[i]) {
-      const segmentStart = thresholds[i - 1];
-      const segmentEnd = thresholds[i];
-      const segmentProgress = (ratio - segmentStart) / (segmentEnd - segmentStart);
-      return ((i - 1) / (thresholds.length - 2)) * 100 + (segmentProgress / (thresholds.length - 2)) * 100;
+      const segmentProgress = (ratio - thresholds[i - 1]) / (thresholds[i] - thresholds[i - 1]);
+      return ((i - 1 + segmentProgress) / segments) * 100;
     }
   }
   return 100;

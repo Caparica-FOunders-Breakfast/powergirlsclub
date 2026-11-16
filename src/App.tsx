@@ -24,6 +24,7 @@ const More = lazy(() => import("@/pages/More"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Users = lazy(() => import("@/pages/Users"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const PlanSetup = lazy(() => import("@/pages/PlanSetup"));
 const Landing = lazy(() => import("@/pages/Landing"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
 const Terms = lazy(() => import("@/pages/Terms"));
@@ -56,6 +57,7 @@ const AppLoading = () => (
 // App routes that require auth — used to send logged-out visitors to login
 // (rather than a 404) when they hit a real app URL directly.
 const PROTECTED_PATHS = [
+  "/plan-setup",
   "/week",
   "/learn",
   "/meals",
@@ -149,8 +151,12 @@ const AppRoutes = () => {
         /* Only the auth-dependent routes wait for the session to resolve. */
         <Route path="*" element={<AppLoading />} />
       ) : user ? (
-        /* Logged in: everything (including "/") runs inside the app shell. */
-        <Route path="/*" element={<ProtectedLayout />} />
+        <>
+          {/* Full-page plan setup — standalone (its own header, no sidebar). */}
+          <Route path="/plan-setup" element={<PlanSetup />} />
+          {/* Logged in: everything else (including "/") runs inside the app shell. */}
+          <Route path="/*" element={<ProtectedLayout />} />
+        </>
       ) : (
         <>
           {/* Logged out: public landing page at "/". */}
