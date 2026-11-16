@@ -38,6 +38,9 @@ function toYouTubeEmbedUrl(url: string | undefined): string | null {
   return null;
 }
 
+/** Bodyweight moves have no input box, so ticking them off needs no value. */
+const needsValue = (ex: { isBodyweight?: boolean; isTimeBased?: boolean }) => !(ex.isBodyweight && !ex.isTimeBased);
+
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 const C = {
@@ -198,10 +201,10 @@ const CurrentWeek = () => {
     [saveLog],
   );
 
-  const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string) => {
+  const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string, requiresValue = true) => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
-    if (newVal && !localWeights[key]?.trim()) {
+    if (newVal && requiresValue && !localWeights[key]?.trim()) {
       toast({ title: "Enter a value first", description: "Add weight, reps or time, or F for failed." });
       return;
     }
@@ -219,7 +222,7 @@ const CurrentWeek = () => {
   };
 
   const handleCompleteDay = (dayIdx: number, day: WorkoutDay) => {
-    const missing = day.exercises.filter((_, i) => !localWeights[getExKey(dayIdx, i)]?.trim());
+    const missing = day.exercises.filter((ex, i) => needsValue(ex) && !localWeights[getExKey(dayIdx, i)]?.trim());
     if (missing.length > 0) {
       toast({ title: "Fill in all values first", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight, reps or time (or F for failed).` });
       return;
@@ -548,7 +551,7 @@ const CurrentWeek = () => {
                         prevPrevWeekWeight={prevPrevWeightMap[looseExerciseKey(ex.name)]}
                         onWeightChange={(v) => handleWeightChange(selectedDayIndex, i, v)}
                         onWeightBlur={() => handleWeightBlur(selectedDayIndex, i, ex.name)}
-                        onToggle={() => toggleExercise(selectedDayIndex, i, ex.name)}
+                        onToggle={() => toggleExercise(selectedDayIndex, i, ex.name, needsValue(ex))}
                         onVideoClick={(url) => setVideoModal({ name: ex.name, url })}
                       />
                     );

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-16 — Bodyweight exercises can be ticked off
+
+- This Week: bodyweight moves (e.g. Jump squats) show a "Bodyweight" pill with
+  no input box, but ticking them demanded a value first ("Enter a value
+  first"), so they could never be completed. They now complete without a
+  value, and "Complete day" no longer counts them as missing.
+
 ## 2026-11-16 — Power exercises shown in blue
 
 - This Week: power exercises (library type "power") get a blue card
