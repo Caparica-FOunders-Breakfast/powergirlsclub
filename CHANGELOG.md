@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-16 — Applied plan-normalization migration to production
+
+Ran `supabase/migrations/20261014120000_normalize_plan_exercise_rows.sql` in
+the Supabase dashboard SQL editor (CLI login lacks push privileges for this
+project). Dry-run showed 1 affected row (a Goblet Squats day with empty `reps`,
+which rendered as "3 ×"); after applying, the verification query returned 0
+rows with empty reps. Fixes QA bug #3; the backfill is idempotent.
+
+
 ## 2026-11-16 — Mobile breakpoint (follow the mobile design mockups)
 
 Make the member area match the six mobile mockups (390px frame) below `lg`.
