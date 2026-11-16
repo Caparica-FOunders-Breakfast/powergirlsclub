@@ -15,6 +15,7 @@ import confetti from "canvas-confetti";
 import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
@@ -59,6 +60,13 @@ const dayDotColor = (label: string) => {
   if (l.includes("core")) return C.ink;
   return C.magenta;
 };
+// Matching light tint for a training day's tile.
+const dayTint = (label: string) => {
+  const l = label.toLowerCase();
+  if (l.includes("upper")) return "#F4EDFE";
+  if (l.includes("core")) return "#F3EEF4";
+  return "#FFF0F7";
+};
 
 type Mood = "Ready" | "So-so" | "Not ready";
 const MOODS: { label: Mood; hint: string }[] = [
@@ -91,6 +99,7 @@ const CurrentWeek = () => {
   const resetTravelDay = useResetTravelDay();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const now = new Date();
   const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
@@ -186,7 +195,7 @@ const CurrentWeek = () => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
     if (newVal && !localWeights[key]?.trim()) {
-      toast({ title: "Enter a value first! ⚖️", description: "Add weight/reps/time or F for failed." });
+      toast({ title: "Enter a value first", description: "Add weight, reps or time, or F for failed." });
       return;
     }
     setLocalCompleted((prev) => ({ ...prev, [key]: newVal }));
@@ -205,7 +214,7 @@ const CurrentWeek = () => {
   const handleCompleteDay = (dayIdx: number, day: WorkoutDay) => {
     const missing = day.exercises.filter((_, i) => !localWeights[getExKey(dayIdx, i)]?.trim());
     if (missing.length > 0) {
-      toast({ title: "Fill in all values first! ⚖️", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight/reps/time (or F for failed).` });
+      toast({ title: "Fill in all values first", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight, reps or time (or F for failed).` });
       return;
     }
     const updates: Record<string, boolean> = {};
@@ -216,7 +225,7 @@ const CurrentWeek = () => {
     });
     setLocalCompleted((prev) => ({ ...prev, ...updates }));
     confetti({ particleCount: 120, spread: 80, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.6 } });
-    toast({ title: "Workout complete! 💪🔥" });
+    toast({ title: "Workout complete!" });
   };
 
   const handleUndoDay = (dayIdx: number, day: WorkoutDay) => {
@@ -227,7 +236,7 @@ const CurrentWeek = () => {
       saveExercise(dayIdx, i, ex.name, localWeights[key] || "", false);
     });
     setLocalCompleted((prev) => ({ ...prev, ...updates }));
-    toast({ title: "Workout reopened, you can edit now ✏️" });
+    toast({ title: "Workout reopened, you can edit now" });
   };
 
   const toggleRestDone = (dayIdx: number, day: WorkoutDay) => {
@@ -237,7 +246,7 @@ const CurrentWeek = () => {
     saveExercise(dayIdx, 0, day.isRecovery ? "Recovery Day" : "Rest Day", "", newVal);
     if (newVal) {
       confetti({ particleCount: 40, spread: 60, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.7 }, gravity: 1.2 });
-      toast({ title: day.isRecovery ? "Recovery done! 🌿" : "Rest day logged! 😴" });
+      toast({ title: day.isRecovery ? "Recovery done!" : "Rest day logged!" });
     }
   };
 
@@ -315,7 +324,13 @@ const CurrentWeek = () => {
     .map((d, i) => ({ d, i }))
     .filter(({ d }) => !d.isRest && !d.isRecovery && d.exercises.length > 0);
   const plannedCount = plannedWorkouts.length;
-  const leftCount = plannedWorkouts.filter(({ d, i }) => getDayCompletion(i, d) < 100).length;
+  const doneWorkouts = plannedWorkouts.filter(({ d, i }) => getDayCompletion(i, d) === 100).length;
+  // "Left this week" = planned workouts still ahead (today onward) and not done.
+  // Missed past days aren't "left", so Sunday no longer reports the whole week;
+  // past weeks have nothing left, future weeks have everything left.
+  const leftCount = weekOffset < 0
+    ? 0
+    : plannedWorkouts.filter(({ d, i }) => getDayCompletion(i, d) < 100 && (weekOffset > 0 || i >= todayIndex)).length;
 
   return (
     <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
@@ -384,7 +399,7 @@ const CurrentWeek = () => {
               ))}
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 10, padding: 18, overflowX: "auto" }}>
+          <div style={{ display: "flex", gap: 10, padding: "18px 18px 22px", overflowX: "auto" }}>
             {weeklyPlan.map((d, i) => {
               const isSel = i === selectedDayIndex;
               const isToday = isCurrentWeek && i === todayIndex;
@@ -392,37 +407,44 @@ const CurrentWeek = () => {
               const total = d.exercises.length;
               const done = d.exercises.filter((_, k) => localCompleted[getExKey(i, k)]).length;
               const fullyDone = total > 0 ? done === total : getDayCompletion(i, d) === 100;
-              const dashCount = total > 0 ? total : 5;
               const status = isToday
-                ? isRest ? "Today · recover" : `Today · ${done} of ${total}`
+                ? isRest ? "Today · recover" : fullyDone ? "Done" : `Today · ${done} of ${total}`
                 : isRest ? "Recover"
-                : fullyDone ? "Done ✓"
+                : fullyDone ? "Done"
                 : done > 0 ? `${done} of ${total}`
                 : "Not logged";
-              const bg = isToday ? C.grad : isRest ? C.tile : "#FFF6FB";
-              const fg = isToday ? "#FFFFFF" : C.ink;
+              const accent = dayDotColor(d.label);
+              const bg = isToday ? C.grad : isRest ? C.bg : dayTint(d.label);
+              const fg = isToday ? "#FFFFFF" : isRest ? C.body : C.ink;
               const dateFg = isToday ? "rgba(255,255,255,0.82)" : C.sub;
-              const border = isToday ? C.ink : isSel ? C.magenta : C.border;
+              const border = isToday ? C.ink : isSel ? C.magenta : isRest ? "#EFE6F1" : C.border;
+              // Today is the widest tile, training days next, rest days narrowest.
+              const flex = isToday ? "1.6 1 0" : isRest ? "1 1 0" : "1.4 1 0";
+              const minW = isToday ? 150 : isRest ? 92 : 136;
               return (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setSelectedDayIndex(i)}
-                  style={{ minWidth: 128, textAlign: "left", background: bg, color: fg, border: `2px solid ${border}`, borderRadius: 18, padding: "14px 14px 12px", cursor: "pointer", display: "flex", flexDirection: "column", gap: 10, boxShadow: isToday ? `4px 4px 0 ${C.ink}` : isSel ? `3px 3px 0 ${C.magenta}` : "none" }}
+                  style={{ flex, minWidth: minW, minHeight: 132, textAlign: "left", background: bg, color: fg, border: `2px solid ${border}`, borderRadius: 18, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 10, boxShadow: isToday ? `4px 4px 0 ${C.ink}` : isSel ? `3px 3px 0 ${C.magenta}` : "none" }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6 }}>
                     <span style={{ fontWeight: 800, fontSize: 15 }}>{d.day.slice(0, 3)}</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: dateFg }}>{format(addDays(selectedWeekDate, i), "MMM d")}</span>
                   </div>
-                  <p style={{ margin: 0, fontWeight: 800, fontSize: 15, lineHeight: 1.2, minHeight: 36 }}>{isRest ? (d.isRecovery ? "Recovery" : "Rest") : d.label}</p>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {Array.from({ length: dashCount }).map((_, k) => {
-                      const filled = total > 0 && localCompleted[getExKey(i, k)];
-                      const dashBg = isToday ? (filled ? "#FFFFFF" : "rgba(255,255,255,0.4)") : filled ? C.magenta : "#E7DCEA";
-                      return <span key={k} style={{ flex: 1, height: 6, borderRadius: 999, background: dashBg }} />;
-                    })}
+                  <p style={{ margin: 0, fontWeight: 800, fontSize: 16, lineHeight: 1.2 }}>{isRest ? (d.isRecovery ? "Recovery" : "Rest") : d.label}</p>
+                  <div style={{ marginTop: "auto" }}>
+                    {!isRest && total > 0 && (
+                      <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+                        {Array.from({ length: total }).map((_, k) => {
+                          const filled = !!localCompleted[getExKey(i, k)];
+                          const dashBg = isToday ? (filled ? "#FFFFFF" : "rgba(255,255,255,0.3)") : filled ? accent : C.border;
+                          return <span key={k} style={{ flex: 1, height: 8, borderRadius: 999, background: dashBg }} />;
+                        })}
+                      </div>
+                    )}
+                    <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap", background: isToday ? "#FFFFFF" : isRest ? "#EFE6F1" : fullyDone ? accent : "#FFFFFF", color: isToday ? C.ink : isRest ? C.body : fullyDone ? "#FFFFFF" : C.body }}>{status}</span>
                   </div>
-                  <span style={{ alignSelf: "flex-start", marginTop: 2, padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap", background: isToday ? "rgba(43,23,54,0.55)" : isRest ? "#FFFFFF" : fullyDone ? C.magenta : "#F3EDF4", color: isToday ? "#FFFFFF" : isRest ? C.sub : fullyDone ? "#FFFFFF" : C.body, border: isRest && !isToday ? `1px solid ${C.border}` : "none" }}>{status}</span>
                 </button>
               );
             })}
@@ -435,11 +457,13 @@ const CurrentWeek = () => {
           <section style={{ flex: "2 1 560px", minWidth: 0, ...card, boxShadow: `6px 6px 0 ${C.magenta}`, overflow: "hidden" }}>
             {(selectedDay.isRest || selectedDay.isRecovery) && total === 0 ? (
               <div style={{ padding: 40, textAlign: "center" }}>
-                <p style={{ fontSize: 40, margin: 0 }}>{selectedDay.isRecovery ? "🌿" : "😴"}</p>
+                <span style={{ margin: "0 auto", width: 64, height: 64, borderRadius: 999, background: C.lilac, border: `2px solid ${C.ink}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={C.purple} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>
+                </span>
                 <h2 style={{ margin: "8px 0 0", ...bangers, fontSize: 36, letterSpacing: 1 }}>{selectedDay.isRecovery ? "Recovery day" : "Rest day"}</h2>
                 {selectedDay.restNote && <p style={{ margin: "8px 0 0", color: C.body, fontWeight: 700 }}>{selectedDay.restNote}</p>}
                 <button type="button" onClick={() => toggleRestDone(selectedDayIndex, selectedDay)} style={{ marginTop: 20, minHeight: 52, padding: "0 28px", background: selDone ? "#FFF5FA" : C.pink, color: selDone ? C.ink : "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 17, cursor: "pointer" }}>
-                  {selDone ? "Done ✓" : "Mark as done"}
+                  {selDone ? "Done" : "Mark as done"}
                 </button>
               </div>
             ) : (
@@ -495,7 +519,8 @@ const CurrentWeek = () => {
                 <div style={{ padding: isMobile ? "14px 18px 8px" : "16px 28px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>EXERCISES</p>
                   <button type="button" onClick={() => setEditingDay(selectedDayIndex)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 14, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: "8px 0" }}>
-                    ✎ Edit exercises
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /></svg>
+                    Edit exercises
                   </button>
                 </div>
                 <div style={{ padding: isMobile ? "0 18px" : "0 28px", display: "flex", flexDirection: "column", gap: isMobile ? 8 : 10 }}>
@@ -536,9 +561,29 @@ const CurrentWeek = () => {
 
           {/* Right column */}
           <aside style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
-            {nextUp.length > 0 && (
+            {/* Your week: progress counted against the planned training days, not 7. */}
+            {plannedCount > 0 && (
               <section style={{ ...card, padding: 22 }}>
-                <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>NEXT UP</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>YOUR WEEK</p>
+                <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 30 : 34, letterSpacing: 0.5, lineHeight: 1.1 }}>{doneWorkouts} of {plannedCount} workouts</p>
+                <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
+                  {Array.from({ length: plannedCount }).map((_, k) => (
+                    <span key={k} style={{ flex: 1, height: 12, borderRadius: 999, background: k < doneWorkouts ? C.magenta : "#FFFFFF", border: `2px solid ${C.ink}` }} />
+                  ))}
+                </div>
+                <p style={{ margin: "10px 0 0", fontSize: 15, fontWeight: 600, color: C.body }}>
+                  {doneWorkouts >= plannedCount
+                    ? "Week complete. Nice work."
+                    : leftCount === 0
+                      ? "Nothing left this week. Next week is a fresh start."
+                      : `${leftCount} to go this week. Every session counts.`}
+                </p>
+              </section>
+            )}
+
+            <section style={{ ...card, padding: 22 }}>
+              <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>NEXT UP</p>
+              {nextUp.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {nextUp.map((n) => (
                     <button key={n.index} type="button" onClick={() => setSelectedDayIndex(n.index)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 12, background: C.tile, border: 0, cursor: "pointer", textAlign: "left", width: "100%" }}>
@@ -550,8 +595,11 @@ const CurrentWeek = () => {
                     </button>
                   ))}
                 </div>
-              </section>
-            )}
+              ) : (
+                <p style={{ margin: 0, fontSize: 14, color: C.body }}>No more workouts this week.</p>
+              )}
+              <button type="button" onClick={() => navigate("/plan-setup")} style={{ marginTop: 14, padding: "6px 0", border: 0, background: "transparent", color: C.pink, fontWeight: 800, fontSize: 14, cursor: "pointer" }}>Change my training days</button>
+            </section>
 
             <section style={{ background: C.lilac, border: `2px solid ${C.ink}`, borderRadius: 22, padding: 22 }}>
               <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>Tip for today</p>
@@ -632,7 +680,7 @@ function FocusedExerciseRow({
         <p style={{ margin: 0, fontWeight: 800, fontSize: compact ? 15 : 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
           {exercise.name}
           {videoUrl && (
-            <button type="button" onClick={() => onVideoClick(videoUrl)} aria-label={`Watch tutorial for ${exercise.name}`} style={{ flex: "none", width: 24, height: 24, borderRadius: 999, border: 0, background: "rgba(194,28,112,0.1)", color: C.pink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>▶</button>
+            <button type="button" onClick={() => onVideoClick(videoUrl)} aria-label={`Watch tutorial for ${exercise.name}`} style={{ flex: "none", width: 24, height: 24, borderRadius: 999, border: 0, background: "rgba(194,28,112,0.1)", color: C.pink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z" /></svg></button>
           )}
         </p>
         <p style={{ margin: "2px 0 0", fontSize: compact ? 12 : 14, fontWeight: 700, color: C.body }}>
