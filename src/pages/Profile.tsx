@@ -336,9 +336,9 @@ const Profile = () => {
   const showProgressionSummary = !wizardActive || setup.state.step === 4;
 
   const headerStat = (value: string, label: React.ReactNode) => (
-    <div style={{ background: "rgba(255,255,255,0.16)", borderRadius: 16, padding: "14px 16px" }}>
-      <p style={{ margin: 0, ...bangers, fontSize: 40, lineHeight: 1 }}>{value}</p>
-      <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 800 }}>{label}</p>
+    <div style={{ background: "rgba(255,255,255,0.16)", borderRadius: 16, padding: isMobile ? "10px 12px" : "14px 16px" }}>
+      <p style={{ margin: 0, ...bangers, fontSize: isMobile ? 28 : 40, lineHeight: 1 }}>{value}</p>
+      <p style={{ margin: "4px 0 0", fontSize: isMobile ? 12 : 14, fontWeight: 800 }}>{label}</p>
     </div>
   );
 
@@ -372,8 +372,8 @@ const Profile = () => {
           </div>
           <div style={{ flex: "2 1 380px", minWidth: 0, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
             {headerStat(String(stats.workouts), "Workouts")}
-            {headerStat(`${stats.bestStreak} days`, "Best streak")}
-            {headerStat("—", <>Weeks won · <a href="/teams" onClick={(e) => { e.preventDefault(); navigate("/teams"); }} style={{ color: "#FFFFFF" }}>join a challenge</a></>)}
+            {headerStat(String(stats.bestStreak), "Best streak")}
+            {headerStat("—", isMobile ? "Weeks won" : <>Weeks won · <a href="/teams" onClick={(e) => { e.preventDefault(); navigate("/teams"); }} style={{ color: "#FFFFFF" }}>join a challenge</a></>)}
           </div>
         </section>
 

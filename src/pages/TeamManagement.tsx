@@ -387,19 +387,26 @@ const TeamManagement = () => {
             Train with friends.<span style={{ display: "block", color: "#FFD6EA" }}>Win the week.</span>
           </h1>
           <p style={{ margin: "16px 0 0", maxWidth: 560, fontSize: isMobile ? 15 : 18, fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>Start a team or join one with a code. Every workout you finish earns points for your team.</p>
-          <ol style={{ margin: isMobile ? "16px 0 0" : "28px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(190px, 1fr))", gap: isMobile ? 8 : 12 }}>
+          <ol style={{ margin: isMobile ? "16px 0 0" : "28px 0 0", padding: 0, listStyle: "none", display: isMobile ? "flex" : "grid", flexDirection: isMobile ? "column" : undefined, gridTemplateColumns: isMobile ? undefined : "repeat(auto-fit, minmax(190px, 1fr))", gap: isMobile ? 8 : 12 }}>
             {[
-              ["Make your team", "Create one or join with a friend's code."],
-              ["Train your plan", "Everyone follows their own weekly plan."],
-              ["Earn points", "Each finished workout scores for you."],
-              ["Win the week", "A winner every week, rewards as you go."],
-            ].map(([t, d], i) => (
-              <li key={t} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 16, padding: 16 }}>
-                <span style={{ display: "inline-flex", width: 32, height: 32, borderRadius: 999, background: "#FFFFFF", color: "#2B1736", fontWeight: 800, alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-                <p style={{ margin: "10px 0 0", fontWeight: 800 }}>{t}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 14, color: "rgba(255,255,255,0.9)" }}>{d}</p>
-              </li>
-            ))}
+              ["Make your team", "Create one or join with a friend's code.", "Make your team or join with a code"],
+              ["Train your plan", "Everyone follows their own weekly plan.", "Everyone trains their own plan"],
+              ["Earn points", "Each finished workout scores for you.", "Each finished workout earns points"],
+              ["Win the week", "A winner every week, rewards as you go.", "A winner every week, rewards as you go"],
+            ].map(([t, d, mobileLine], i) =>
+              isMobile ? (
+                <li key={t} style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: 14 }}>
+                  <span style={{ flex: "none", width: 26, height: 26, borderRadius: 999, background: "#FFFFFF", color: "#2B1736", fontWeight: 800, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                  {mobileLine}
+                </li>
+              ) : (
+                <li key={t} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 16, padding: 16 }}>
+                  <span style={{ display: "inline-flex", width: 32, height: 32, borderRadius: 999, background: "#FFFFFF", color: "#2B1736", fontWeight: 800, alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                  <p style={{ margin: "10px 0 0", fontWeight: 800 }}>{t}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 14, color: "rgba(255,255,255,0.9)" }}>{d}</p>
+                </li>
+              )
+            )}
           </ol>
         </section>
 

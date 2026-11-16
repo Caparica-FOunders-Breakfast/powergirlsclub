@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-16 — Match mobile mockups: Edit type picker, Challenge steps, Profile stats
+
+- **Edit exercises** (`ExerciseEditor.tsx`): removed the **Rounds** type (now
+  Weights / Bodyweight / Time / Assisted) and replaced the wrapping pill row
+  with the mockup's segmented 4-up control (tile background, equal columns);
+  short labels (Body / Assist) on mobile so four fit. Existing rounds-based
+  exercises now read as Weights/Bodyweight and clear the flag when re-saved.
+- **Challenge** (`TeamManagement.tsx`): on mobile the how-it-works steps are now
+  compact one-line rows (number + short line) instead of tall cards, matching
+  the hero in the mockup.
+- **Profile** (`Profile.tsx`): header stat tiles no longer overflow on mobile —
+  number-only values (dropped "days" from the streak), smaller value/label type,
+  and the third tile's label is just "Weeks won" (the "join a challenge" link
+  stays desktop-only).
+
+
 ## 2026-11-16 — Fix This week exercise rows wrapping on mobile
 
 On a phone each exercise's weight box wrapped onto a second line under the
