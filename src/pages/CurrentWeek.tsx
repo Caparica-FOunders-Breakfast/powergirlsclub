@@ -624,11 +624,11 @@ function FocusedExerciseRow({
   const lastLabel = lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : "#FFFFFF" }}>
+    <div style={{ display: "flex", flexWrap: compact ? "nowrap" : "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : "#FFFFFF" }}>
       <button type="button" onClick={onToggle} aria-pressed={isDone} aria-label={`${isDone ? "Mark not done" : "Mark done"}: ${exercise.name}`} style={{ flex: "none", width: 44, height: 44, borderRadius: 999, border: `2px solid ${C.ink}`, background: isDone ? C.magenta : "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#FFFFFF" : C.border} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
       </button>
-      <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+      <div style={{ flex: compact ? "1 1 0%" : "1 1 200px", minWidth: 0 }}>
         <p style={{ margin: 0, fontWeight: 800, fontSize: compact ? 15 : 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
           {exercise.name}
           {videoUrl && (
@@ -640,7 +640,7 @@ function FocusedExerciseRow({
         </p>
       </div>
       {isBodyweight ? (
-        <span style={{ padding: "4px 10px", borderRadius: 999, background: C.tile, color: C.body, fontSize: 12, fontWeight: 800 }}>Bodyweight</span>
+        <span style={{ flex: "none", padding: "4px 10px", borderRadius: 999, background: C.tile, color: C.body, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>Bodyweight</span>
       ) : (
         <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10 }}>
           {!compact && <span style={{ padding: "4px 10px", borderRadius: 999, background: tag.bg, color: tag.fg, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>{tag.text}</span>}
@@ -654,9 +654,9 @@ function FocusedExerciseRow({
               disabled={isDone}
               onChange={(e) => { const v = e.target.value; if (v === "" || /^[Ff]$/.test(v) || /^\d*\.?\d*$/.test(v)) onWeightChange(v.toUpperCase()); }}
               onBlur={onWeightBlur}
-              style={{ width: 56, height: "100%", border: 0, padding: "0 8px", textAlign: "right", fontWeight: 800, fontSize: 17, color: weight === "F" ? "#C0244E" : C.ink, background: "transparent" }}
+              style={{ width: compact ? 44 : 56, height: "100%", border: 0, padding: compact ? "0 6px" : "0 8px", textAlign: "right", fontWeight: 800, fontSize: compact ? 16 : 17, color: weight === "F" ? "#C0244E" : C.ink, background: "transparent" }}
             />
-            <span style={{ padding: "0 12px 0 4px", fontSize: 14, fontWeight: 700, color: C.sub }}>{unit}</span>
+            <span style={{ padding: compact ? "0 8px 0 2px" : "0 12px 0 4px", fontSize: compact ? 13 : 14, fontWeight: 700, color: C.sub }}>{unit}</span>
           </label>
         </div>
       )}
