@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-16 — "Why this exercise" info in Your training plan
+
+- Profile → Your training plan: each exercise has a small info icon. It opens
+  a short note on why the exercise is good for your body (hover with a mouse,
+  tap on a phone). Notes for all 22 library exercises live in
+  `src/lib/exerciseBenefits.ts`, matched loosely by name so imported plan
+  names (e.g. "Goblet Squats") still find theirs. No note, no icon.
+- Why in code, not the database: no migration to run, and the notes ship and
+  can be edited with a normal PR. Can move to an `exercises.benefit` column
+  later if admins want to edit them in the app.
+
 ## 2026-11-16 — "Workout complete!" without "Reopen to edit"
 
 - This Week: once every exercise is ticked, the bottom bar now reads

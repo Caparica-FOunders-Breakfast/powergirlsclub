@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import type { WorkoutDay, Exercise } from "@/data/workoutPlan";
 import { useMemberPlan, useExerciseLibrary } from "@/hooks/usePlan";
 import { makeLibraryLookup, POWER_COLORS } from "@/lib/plan";
+import { ExerciseInfo } from "./ExerciseInfo";
 
 const C = {
   ink: "#2B1736", sub: "#77677E", body: "#5E4E66", pink: "#C21C70", magenta: "#E8308C",
@@ -84,7 +85,7 @@ export function TrainingPlanCard({ plan, isMobile = false, onSetUp }: {
                   <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 10, background: POWER_COLORS.bg, border: `2px solid ${POWER_COLORS.border}` }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: 1, color: POWER_COLORS.label }}>POWER START</p>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>{power.name} <span style={{ fontWeight: 700, color: C.body }}>· {setsLabel(power)}</span></p>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>{power.name}<ExerciseInfo name={power.name} color={POWER_COLORS.label} /> <span style={{ fontWeight: 700, color: C.body }}>· {setsLabel(power)}</span></p>
                     </div>
                     {(power.videoUrl || findInLibrary(power.name)?.video_url) && (
                       <a href={power.videoUrl || findInLibrary(power.name)?.video_url || "#"} target="_blank" rel="noopener noreferrer" aria-label={`Watch how to do ${power.name}`} style={{ flex: "none", width: 36, height: 36, borderRadius: 999, background: "#FFFFFF", border: `2px solid ${POWER_COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}><PlayIcon color={POWER_COLORS.border} /></a>
@@ -96,7 +97,7 @@ export function TrainingPlanCard({ plan, isMobile = false, onSetUp }: {
                   return (
                     <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderBottom: `1px solid ${C.tile}` }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>{e.name}</p>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>{e.name}<ExerciseInfo name={e.name} /></p>
                         <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.sub }}>{setsLabel(e)}</p>
                       </div>
                       {video && <a href={video} target="_blank" rel="noopener noreferrer" aria-label={`Watch how to do ${e.name}`} style={{ flex: "none", width: 36, height: 36, borderRadius: 999, background: "#FCE4F0", display: "flex", alignItems: "center", justifyContent: "center" }}><PlayIcon /></a>}
