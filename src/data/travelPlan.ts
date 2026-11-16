@@ -1,4 +1,5 @@
 import { type Exercise } from "@/data/workoutPlan";
+import { looseExerciseKey } from "@/lib/plan";
 
 /**
  * Travel-mode workouts: bodyweight / calisthenics-park routines used to overlay
@@ -9,6 +10,47 @@ import { type Exercise } from "@/data/workoutPlan";
  * Every move is a simple bodyweight 3 × 10 so there's no weight to track.
  */
 
+const yt = (id: string) => `https://www.youtube.com/watch?v=${id}`;
+
+/**
+ * Short "how to" demo for every travel move (checked to exist and allow
+ * embedding). Keyed by the exact names below; `travelVideoFor` also matches
+ * loosely, so a member's saved travel edits keep their videos.
+ */
+const TRAVEL_VIDEOS: Record<string, string> = {
+  "Bodyweight Squats": yt("l83R5PblSMA"), // PureGym
+  "Reverse Lunges": yt("xrPteyQLGAo"), // PureGym
+  "Glute Bridges": yt("tqp5XQPpTxY"), // PureGym
+  "Bulgarian Split Squats": yt("Ozv-OPuVw6A"), // same as the library
+  "Calf Raises": yt("Km0QS46bTEA"), // Balance In Motion
+  "Squat Pulses": yt("QV0KBKANprw"), // PureGym
+  "Push Ups": yt("WDIpL0pjun0"), // NASM, same as the library
+  "Pike Push Ups": yt("XckEEwa1BPI"), // NASM
+  "Bench / Park Dips": yt("0326dy_-CzM"), // LIVESTRONG
+  "Park Dips": yt("0326dy_-CzM"),
+  "Pull Ups (park bar)": yt("6zyx46Vpato"), // nourishmovelove, first pull up
+  "Inverted Rows (low bar)": yt("9fItzuh9Iok"), // The Active Life
+  "Superman": yt("J9zXkxUAfUA"), // Children's Hospital Colorado
+  "Crunches": yt("Xyd_fa5zoEU"), // LIVESTRONG
+  "Leg Raises": yt("Zr-PtqcpeWM"), // Nuffield Health
+  "Dead Bug": yt("bxn9FBrt4-A"), // NASM, same as the library
+  "Bicycle Crunches": yt("eqg47ZuGZXQ"), // UCLA Health
+  "Russian Twists": yt("99T1EfpMwPA"), // PureGym
+  "Sit Ups": yt("pCX65Mtc_Kk"), // Detroit Medical Center
+  "Burpees": yt("NCqbpkoiyXE"), // Nuffield Health
+  "Jump Squats": yt("JwCaCql7VpQ"), // Onnit, same as the library
+  "Mountain Climbers": yt("cnyTQDSE884"), // Well+Good
+  "High Knees": yt("sTvekaq6vOU"), // PureGym
+  "Plank to Push Up": yt("56vUOad6Irs"), // PureGym
+  "Squat Thrusts": yt("Ny8JWqh4lNg"), // NASM
+};
+
+const VIDEO_BY_KEY = new Map(Object.entries(TRAVEL_VIDEOS).map(([n, url]) => [looseExerciseKey(n), url]));
+
+/** Demo video for a travel move, matched loosely by name. */
+export const travelVideoFor = (name: string | undefined): string | undefined =>
+  name ? TRAVEL_VIDEOS[name] ?? VIDEO_BY_KEY.get(looseExerciseKey(name)) : undefined;
+
 const bw = (name: string): Exercise => ({
   name,
   sets: 3,
@@ -16,6 +58,7 @@ const bw = (name: string): Exercise => ({
   suggestedWeight: "Bodyweight",
   progression: "Add reps or slow the tempo",
   isBodyweight: true,
+  videoUrl: TRAVEL_VIDEOS[name],
 });
 
 const LOWER: Exercise[] = [

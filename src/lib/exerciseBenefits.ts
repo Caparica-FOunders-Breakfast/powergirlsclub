@@ -33,10 +33,38 @@ const BENEFITS: Record<string, string> = {
   "Plank": "Builds a strong, stable core that protects your lower back. Teaches your body to stay steady while your arms and legs do the work.",
   "Dead bug": "Trains your deep core muscles to keep your lower back steady while your arms and legs move. Gentle on the back and great for posture and pelvic floor support.",
   "Copenhagen plank": "Strengthens your inner thighs and the sides of your core. Helps protect your groin and knees and keeps your hips stable.",
+  // Travel mode (bodyweight). Push ups, Dead bug, Jump squats and Bulgarian
+  // split squat above already cover their travel versions.
+  "Bodyweight Squats": "Keeps your legs and glutes strong with no equipment. The basic move behind sitting, standing and lifting, so it keeps everyday life easy.",
+  "Reverse Lunges": "Works one leg at a time for strong thighs and glutes and better balance. Stepping back is kinder on the knees than a forward lunge.",
+  "Glute Bridges": "Wakes up and strengthens your glutes, which support your lower back and knees. A great antidote to long flights and hours of sitting.",
+  "Calf Raises": "Strengthens your calves and ankles for walking, running and stairs. Strong calves also help blood flow back up from your legs after travel.",
+  "Squat Pulses": "Keeps your thighs and glutes working under constant tension, so you feel the burn without any weights. Builds muscular endurance.",
+  "Pike Push Ups": "A bodyweight shoulder press. Builds strong shoulders and arms for lifting things overhead, with just the floor.",
+  "Bench / Park Dips": "Targets the backs of your arms (triceps) and your chest. Any bench, step or park bar works, so you keep your pushing strength on the road.",
+  "Park Dips": "Targets the backs of your arms (triceps) and your chest. Any bench, step or park bar works, so you keep your pushing strength on the road.",
+  "Pull Ups (park bar)": "Builds your back and arms and improves posture. Hanging from a bar also strengthens your grip and decompresses your spine.",
+  "Inverted Rows (low bar)": "An easier pull up that strengthens your upper back and arms. Pulls your shoulders back, undoing hours hunched over phones and desks.",
+  "Superman": "Strengthens the muscles along your spine and your glutes. Helps posture and protects your lower back, with zero equipment.",
+  "Crunches": "Trains the front of your core (your abs). Strong abs support your back and help you move with control.",
+  "Leg Raises": "Works your lower abs and hip flexors. Builds the core control that keeps your pelvis and lower back steady.",
+  "Bicycle Crunches": "Works your abs and the sides of your waist together. Twisting with control trains the core for turning and reaching in daily life.",
+  "Russian Twists": "Strengthens the sides of your core (obliques) by rotating with control. Helps with any twisting movement, from sports to lifting a bag.",
+  "Sit Ups": "Builds core strength through a full range of motion. Helps the everyday move of getting up off the floor or out of bed.",
+  "Burpees": "A full-body move that gets your heart pounding in seconds. Builds strength and fitness at the same time, anywhere.",
+  "Mountain Climbers": "A moving plank that works your core, shoulders and legs while raising your heart rate. Great for fitness when you have no equipment.",
+  "High Knees": "Running on the spot that boosts your heart rate and warms you up fast. Builds leg speed and coordination.",
+  "Plank to Push Up": "Moves from forearms to hands and back, working your core, shoulders and arms together. Builds strong, stable shoulders.",
+  "Squat Thrusts": "A burpee without the jump. Works legs, core and shoulders and raises your heart rate, with less impact.",
 };
 
-const BY_KEY = new Map(Object.entries(BENEFITS).map(([name, text]) => [looseExerciseKey(name), text]));
+// First entry wins on a loose-key clash, so library notes take priority.
+const BY_KEY = new Map<string, string>();
+for (const [name, text] of Object.entries(BENEFITS)) {
+  const key = looseExerciseKey(name);
+  if (!BY_KEY.has(key)) BY_KEY.set(key, text);
+}
 
 /** The "why" note for an exercise, or undefined if we don't have one. */
 export const exerciseBenefit = (name: string | undefined): string | undefined =>
-  name ? BY_KEY.get(looseExerciseKey(name)) : undefined;
+  name ? BENEFITS[name] ?? BY_KEY.get(looseExerciseKey(name)) : undefined;

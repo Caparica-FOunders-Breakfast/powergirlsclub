@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-16 — Travel mode: videos and info for every move
+
+- Every travel-mode move (25 bodyweight moves) now has a short demo video,
+  so the play button shows on This Week in travel mode. Videos come from
+  trusted channels (PureGym, NASM, Nuffield Health, UCLA Health, LIVESTRONG
+  and others); each was checked to exist and allow embedding. Saved travel
+  edits keep their videos too (`travelVideoFor`, loose name match).
+- Every travel move also has a "why it's good for you" note. The info icon now
+  shows next to exercise names on This Week (normal and travel mode), not
+  only in Profile → Your training plan.
+- Notes match exact names first, then loosely; on a loose clash the library
+  note wins (e.g. Assisted pull ups vs Pull Ups (park bar)).
+
 ## 2026-11-16 — "Why this exercise" info in Your training plan
 
 - Profile → Your training plan: each exercise has a small info icon. It opens
