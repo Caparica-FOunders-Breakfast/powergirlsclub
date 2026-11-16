@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-11-16 — Training plan feature, step 2 (This Week + exercise editor)
+
+Matches `this-week.dc.html` and `edit-exercises.dc.html` from the brief.
+
+- **This Week** (`CurrentWeek.tsx`):
+  - New **"Your week"** card: "N of M workouts" with one goal dot per
+    *planned* training day (not out of 7).
+  - **"Left this week" bug fixed**: it counted every incomplete planned
+    workout, so on a Sunday it reported missed earlier days as "left". It now
+    counts only today onward (past weeks: 0, future weeks: all).
+  - Week strip: today is the widest tile, training days are tinted by body part
+    (lower / upper / core) with dashes in that colour, rest days are narrow
+    "Recover" tiles.
+  - "Next up" always shows, with a **Change my training days** link to
+    `/plan-setup`.
+  - No emojis: toasts are plain copy; the rest-day, edit and video icons are
+    inline SVGs.
+- **Exercise editor** (`ExerciseEditor.tsx`):
+  - **Drag to reorder** with a grip handle (framer-motion; only the handle
+    drags, so typing in the fields never moves a card).
+  - Type picker: pills on desktop (per the desktop mockup), segmented control
+    on mobile.
+  - SVG icons for remove, video, add and reset (replacing 🗑 ▶ ＋ ↺).
+  - Progression unit still follows the type, so bodyweight never shows kg.
+
+Not runtime-verified: the member area is behind login.
+
+
 ## 2026-11-16 — Training plan feature, step 1 (Profile plan + setup flow)
 
 New training-plan system from the `power-club-design` brief. Step 1 only:

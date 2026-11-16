@@ -45,6 +45,27 @@ export interface PlanDayDraft {
   items: PlanItemDraft[];
 }
 
+/**
+ * First number in a free-text value: "14–20 kg" -> "14", "+2 to 2.5 kg/week"
+ * -> "2", "10 kg dumbbells" -> "10". Stripping every non-digit instead glued
+ * ranges together ("30–40" -> "3040"), so we store one starting weight.
+ */
+export const firstNumber = (s?: string | null): string => {
+  const text = s ?? "";
+  // "2 × 10 kg" (two 10 kg dumbbells) means 10 kg per hand, not 2.
+  const pair = text.match(/\d+\s*[×x]\s*(\d+(?:[.,]\d+)?)\s*kg/i);
+  if (pair) return pair[1].replace(",", ".");
+  const m = text.match(/\d+(?:[.,]\d+)?/);
+  return m ? m[0].replace(",", ".") : "";
+};
+
+/**
+ * Sanitise what's typed into a weight/progression field: keep the leading
+ * number only, so pasting "30-40" gives "30" while "30." stays typeable.
+ */
+export const typedNumber = (v: string): string =>
+  (v.match(/^\s*(\d*(?:[.,]\d*)?)/)?.[1] ?? "").replace(",", ".");
+
 export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
 export const WEEKDAY_FULL: Record<Weekday, string> = {
