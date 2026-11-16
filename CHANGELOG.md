@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-11-16 — Training plan feature, step 6 (homepage + login)
+
+The mockup changes were the €5 pricing switch, already shipped in #15/#16,
+plus the brief's billing wording. Verified in the browser (public pages).
+
+- **Billing wording**: "€5 a month, paid at the end of the month" in the
+  landing hero, pricing card and FAQ, under the login page's join button, and in
+  the meta/OG/Twitter descriptions. No Show Up Guarantee or free-month copy
+  remains anywhere.
+- **Login sample card** to the mockup: "2 of 4 done", pink done days, and a
+  "Best streak / 11 days" row (replacing "Current streak 3 days" with an emoji).
+- **iOS status bar on public pages**: the app uses the `black-translucent`
+  status bar, which draws a white clock over the page. The member area has a
+  dark header behind it, but the landing, login, legal and 404 pages have light
+  tops, so in the home-screen app the clock was white-on-white. New
+  `StatusBarBackdrop` puts a fixed plum band behind the status bar plus a
+  matching spacer; it is 0px tall in a normal browser tab. The legal pages'
+  sticky header now sticks below the band.
+- **No emoji**: SVG heart instead of the emoji on the legal pages and 404; the
+  sign-up toast loses its emoji. The 404 heart is kept on the same line as
+  "day" (Tailwind's base styles make every SVG `display: block`).
+
+
 ## 2026-11-16 — Training plan feature, step 5 (mobile layouts)
 
 The brief's six `mobile-*.dc.html` mockups are byte-identical to the ones

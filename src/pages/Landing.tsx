@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { StatusBarBackdrop } from "@/components/StatusBarBackdrop";
 
 // Palette ported from the "Harley" design (claude.ai design canvas). Kept as a
 // single constant rather than inline hexes so the whole page stays consistent.
@@ -153,7 +154,7 @@ const faqs = [
   ["Do I need experience?", "No. Power Club works from whatever your starting point is."],
   ["How much time does it take?", "30 to 40 minutes per session."],
   ["Can I train at home?", "Yes. Travel mode switches you to bodyweight and calisthenics workouts."],
-  ["How much does it cost?", "€5 a month, flat. Cancel anytime."],
+  ["How much does it cost?", "€5 a month, paid at the end of the month. Cancel anytime."],
   ["Can I cancel anytime?", "Yes, anytime."],
 ];
 
@@ -165,6 +166,8 @@ const check = (
 
 const Landing = () => {
   return (
+    <>
+    <StatusBarBackdrop />
     <div style={{ width: "100%", background: C.bg, color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 17, lineHeight: 1.55 }}>
       {/* NAV */}
       <header style={{ background: C.bg, borderBottom: `2px solid ${C.ink}` }}>
@@ -194,7 +197,7 @@ const Landing = () => {
             <p style={{ margin: "28px 0 0", maxWidth: 520, fontSize: 19, color: C.heroSub }}>Five exercises, three rounds of ten reps, a little more weight every week. No endless hours at the gym.</p>
             <div style={{ marginTop: 36, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 18 }}>
               <Link to={SIGNUP} style={{ background: C.cta, color: C.ctaText, fontWeight: 800, fontSize: 18, textDecoration: "none", padding: "16px 28px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}` }}>Join Power Club for €5</Link>
-              <span style={{ color: C.heroSub, fontSize: 15, fontWeight: 600 }}>€5/month. Cancel anytime.</span>
+              <span style={{ color: C.heroSub, fontSize: 15, fontWeight: 600 }}>€5 a month, paid at the end of the month.</span>
             </div>
           </div>
 
@@ -286,7 +289,7 @@ const Landing = () => {
           <p style={{ margin: 0, ...bangers, fontSize: 88, lineHeight: 1, color: C.pinkText }}>
             €5<span style={{ fontFamily: "Nunito, sans-serif", fontSize: 20, fontWeight: 700, color: C.sub }}> /month</span>
           </p>
-          <p style={{ margin: "10px 0 0", fontWeight: 700, color: C.body }}>Flat monthly price · Cancel anytime</p>
+          <p style={{ margin: "10px 0 0", fontWeight: 700, color: C.body }}>Paid at the end of the month · Cancel anytime</p>
           <ul style={{ margin: "28px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
             {["Your weekly 4-day plan", "Progressive overload tracking", "Scorecard, streaks and records", "Travel mode and team challenges"].map((item) => (
               <li key={item} style={{ display: "flex", gap: 12, alignItems: "center", fontWeight: 600 }}>{check}{item}</li>
@@ -329,6 +332,7 @@ const Landing = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 
