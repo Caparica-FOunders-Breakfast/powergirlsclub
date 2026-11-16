@@ -269,19 +269,23 @@ export function AppHeader() {
   return (
     <>
       {/* Mobile/tablet (below lg): dark bar with the pink logo + avatar, matching
-          the mobile design. Navigation lives in the bottom tab bar. */}
-      <header className="sticky top-0 z-40 h-[60px] flex items-center justify-between gap-3 px-4 bg-[#2B1736] lg:hidden">
-        <Link to="/" className="font-display text-[28px] tracking-wider text-[#FF8AC4] leading-none">Power Club</Link>
-        <div className="flex items-center gap-2">
-          {isAdmin && <ViewModeToggle />}
-          <Link
-            to="/profile"
-            aria-label="Your profile"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-extrabold text-white shrink-0"
-            style={{ backgroundColor: avatarColor }}
-          >
-            {initials}
-          </Link>
+          the mobile design. Navigation lives in the bottom tab bar. The dark
+          background fills the iOS status-bar area (safe-area inset) so the logo
+          never collides with the clock/battery under a notch. */}
+      <header className="sticky top-0 z-40 bg-[#2B1736] lg:hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+        <div className="h-[60px] flex items-center justify-between gap-3 px-4">
+          <Link to="/" className="font-display text-[28px] tracking-wider text-[#FF8AC4] leading-none">Power Club</Link>
+          <div className="flex items-center gap-2">
+            {isAdmin && <ViewModeToggle />}
+            <Link
+              to="/profile"
+              aria-label="Your profile"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-extrabold text-white shrink-0"
+              style={{ backgroundColor: avatarColor }}
+            >
+              {initials}
+            </Link>
+          </div>
         </div>
       </header>
       {/* Desktop header (lg+): just the view toggle (the sidebar carries branding). */}
