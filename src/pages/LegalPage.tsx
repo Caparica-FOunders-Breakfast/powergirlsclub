@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
+import { StatusBarBackdrop } from "@/components/StatusBarBackdrop";
 
 interface LegalPageProps {
   title: string;
@@ -9,12 +10,14 @@ interface LegalPageProps {
 /** Simple, branded shell for static legal pages (Privacy, Terms). */
 const LegalPage = ({ title, children }: LegalPageProps) => {
   return (
+    <>
+    <StatusBarBackdrop />
     <div className="min-h-screen bg-background text-foreground font-body">
-      <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md border-b-2 border-border">
+      <header className="sticky z-40 bg-background/85 backdrop-blur-md border-b-2 border-border" style={{ top: "env(safe-area-inset-top)" }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <span className="text-2xl font-display text-primary tracking-wider">Power Club</span>
-            <span aria-hidden>💜</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#8B5CF6" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z" /></svg>
           </Link>
           <Link to="/" className="text-sm font-bold text-foreground hover:text-primary">
             ← Back home
@@ -28,6 +31,7 @@ const LegalPage = ({ title, children }: LegalPageProps) => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

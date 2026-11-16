@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setKeepLoggedIn } from "@/integrations/supabase/authStorage";
 import { useToast } from "@/hooks/use-toast";
 import { useFeatureFlags } from "@/hooks/useAppSettings";
+import { StatusBarBackdrop } from "@/components/StatusBarBackdrop";
 
 // Palette ported from the "Harley" login design (claude.ai design canvas).
 const C = {
@@ -98,7 +99,7 @@ const Auth = () => {
       });
       if (error) throw error;
       toast({
-        title: "Check your email! 📧",
+        title: "Check your email!",
         description: "We sent you a link to reset your password.",
       });
       setIsForgotPassword(false);
@@ -149,6 +150,8 @@ const Auth = () => {
         : "Join for €5/month";
 
   return (
+    <>
+    <StatusBarBackdrop />
     <div
       className="pc-auth min-h-screen flex flex-col-reverse lg:flex-row"
       style={{ background: C.bg, color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 17, lineHeight: 1.5 }}
@@ -169,20 +172,20 @@ const Auth = () => {
             <span style={{ display: "block", color: C.hl }}>Let's lift.</span>
           </h1>
           <p style={{ margin: "20px 0 0", maxWidth: 440, fontSize: 19, color: "rgba(255,255,255,0.92)" }}>
-            Log in to see this week's workouts, your streak and your progress over time.
+            Log in to see this week's workouts, your streak and your progress.
           </p>
 
           {/* Preview card, static illustration */}
           <div style={{ marginTop: 36, maxWidth: 440, background: "#FFFFFF", color: C.ink, border: `2px solid ${C.ink}`, borderRadius: 20, boxShadow: `6px 6px 0 ${C.ink}`, padding: 22 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
               <p style={{ margin: 0, ...bangers, fontSize: 26, letterSpacing: 0.5 }}>This week</p>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.sub }}>2 workouts this week</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.sub }}>2 of 4 done</p>
             </div>
             <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 8, textAlign: "center", fontSize: 13, fontWeight: 800 }}>
               {weekDays.map((d, i) => {
                 const box =
                   d.state === "done"
-                    ? { background: C.tile, border: `2px solid ${C.ink}` }
+                    ? { background: "#E8308C", border: `2px solid ${C.ink}` }
                     : d.state === "today"
                       ? { background: "#FFFFFF", border: `2px dashed ${C.purple}` }
                       : { background: C.rowBg, border: `2px solid ${C.rowBorder}` };
@@ -196,8 +199,8 @@ const Auth = () => {
               })}
             </div>
             <div style={{ marginTop: 16, padding: "12px 14px", borderRadius: 12, background: C.lilac, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, fontSize: 14, fontWeight: 700 }}>
-              <span>Current streak</span>
-              <span style={{ color: C.purple }}>3 days 🔥</span>
+              <span>Best streak</span>
+              <span style={{ color: C.purple }}>11 days</span>
             </div>
           </div>
         </div>
@@ -341,10 +344,10 @@ const Auth = () => {
                         onClick={() => setIsLogin(false)}
                         style={{ marginTop: 20, display: "block", width: "100%", textAlign: "center", padding: "14px 20px", border: `2px solid ${C.ink}`, borderRadius: 14, background: C.lilac, color: C.ink, fontWeight: 800, font: "inherit", cursor: "pointer" }}
                       >
-                        Join the club for €5/month
+                        Join the club for €5
                       </button>
                       <p style={{ margin: "10px 0 0", textAlign: "center", fontSize: 14, color: C.sub }}>
-                        Flat €5/month. Cancel anytime.
+                        €5 a month, paid at the end of the month.
                       </p>
                     </>
                   ) : (
@@ -373,6 +376,7 @@ const Auth = () => {
         </nav>
       </section>
     </div>
+    </>
   );
 };
 
