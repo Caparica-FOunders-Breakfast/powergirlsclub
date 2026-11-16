@@ -238,17 +238,6 @@ const CurrentWeek = () => {
     toast({ title: "Workout complete!" });
   };
 
-  const handleUndoDay = (dayIdx: number, day: WorkoutDay) => {
-    const updates: Record<string, boolean> = {};
-    day.exercises.forEach((ex, i) => {
-      const key = getExKey(dayIdx, i);
-      updates[key] = false;
-      saveExercise(dayIdx, i, ex.name, localWeights[key] || "", false);
-    });
-    setLocalCompleted((prev) => ({ ...prev, ...updates }));
-    toast({ title: "Workout reopened, you can edit now" });
-  };
-
   const toggleRestDone = (dayIdx: number, day: WorkoutDay) => {
     const restKey = getExKey(dayIdx, 0);
     const newVal = !localCompleted[restKey];
@@ -559,9 +548,10 @@ const CurrentWeek = () => {
                 </div>
                 <div style={{ padding: isMobile ? "16px 18px 20px" : "20px 28px 28px" }}>
                   {allDone ? (
-                    <button type="button" onClick={() => handleUndoDay(selectedDayIndex, selectedDay)} style={{ width: "100%", minHeight: 56, background: "#FFF5FA", color: C.ink, border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
-                      Workout complete! Reopen to edit
-                    </button>
+                    <div role="status" style={{ width: "100%", minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: C.pink, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "inline-block" }}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                      Workout complete!
+                    </div>
                   ) : (
                     <button type="button" onClick={() => handleCompleteDay(selectedDayIndex, selectedDay)} style={{ width: "100%", minHeight: 56, background: C.pink, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
                       Finish workout
