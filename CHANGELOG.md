@@ -1,5 +1,43 @@
 # Changelog
 
+## 2026-11-16 — Bodyweight exercises can be ticked off
+
+- This Week: bodyweight moves (e.g. Jump squats) show a "Bodyweight" pill with
+  no input box, but ticking them demanded a value first ("Enter a value
+  first"), so they could never be completed. They now complete without a
+  value, and "Complete day" no longer counts them as missing.
+
+## 2026-11-16 — Power exercises shown in blue
+
+- This Week: power exercises (library type "power") get a blue card
+  (`#E3F0FF` background, `#2563EB` border) with a POWER label above the name.
+  Done rows keep the pink done style.
+- Profile plan card and plan setup: the POWER START block uses the same blue
+  instead of lilac. Colours live in `POWER_COLORS` (`src/lib/plan.ts`).
+- Why blue: requested by the owner ("real blue", not the lilac/purple
+  family), so power work stands apart from the pink/purple brand colours.
+
+## 2026-11-16 — Plan setup save can't hang; "Last time" by exercise; videos from the library
+
+Reported: plan setup stuck on "Saving...", new exercises not showing, missing
+video links, and wrong "Last time" weights when switching weeks.
+
+- **Plan setup save** (`useSaveMemberPlan`): every request now has a 20s limit
+  and its result is checked, so a stalled request (e.g. the auth lock after an
+  iPhone home-screen app resumes) shows an error naming the step instead of
+  "Saving..." forever. Order changed: new days are upserted *before* old ones
+  are deleted, and the plan header is written last, so a failure part-way can no
+  longer leave a member with no plan days (the old order deleted first).
+- **"Last time" weights** (`usePriorExerciseWeights`): looked up by *exercise
+  name* across all earlier weeks, newest first, instead of by day/slot position.
+  Position keys showed another exercise's weight (or "First time") after any
+  plan change, reorder or training-day change.
+- **How-to videos**: This Week and the Profile plan card fall back to the
+  exercise library's video when the plan row has none (older and custom plans
+  rarely stored links). Names match loosely (`makeLibraryLookup`):
+  "Goblet Squats" = "Goblet squat", "Pull Ups" = "Assisted pull ups",
+  "Romanian deadlift" = "Dumbbell Romanian deadlift".
+
 ## 2026-11-16 — "Viewing as" toggle matches the design and moves onto the title row
 
 - **`ViewModeToggle`** rebuilt to the mockups' segmented control: "Viewing as"

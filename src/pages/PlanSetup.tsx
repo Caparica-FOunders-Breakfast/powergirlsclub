@@ -16,6 +16,7 @@ import {
   weekdayIndex,
   firstNumber,
   typedNumber,
+  POWER_COLORS,
 } from "@/lib/plan";
 
 const C = {
@@ -251,12 +252,12 @@ function DayCard({ day, tint, dayLabel, onSwap, onRemove }: {
         {day.items.length === 0 && <p style={{ margin: "6px 2px", fontSize: 13, color: C.sub }}>No exercises yet.</p>}
         {day.items.map((e, i) =>
           e.isPower ? (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 10, background: C.lilac }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 10, background: POWER_COLORS.bg, border: `2px solid ${POWER_COLORS.border}` }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: 1, color: C.purpleText }}>POWER START</p>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: 1, color: POWER_COLORS.label }}>POWER START</p>
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>{e.name} <span style={{ fontWeight: 700, color: C.body }}>· {e.sets} × {e.repsOrTime}</span></p>
               </div>
-              {e.videoUrl && <a href={youTube(e.videoUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Watch how to do ${e.name}`} style={{ flex: "none", width: 36, height: 36, borderRadius: 999, background: "#FFFFFF", border: `2px solid ${C.purple}`, display: "flex", alignItems: "center", justifyContent: "center" }}><PlayIcon color={C.purple} /></a>}
+              {e.videoUrl && <a href={youTube(e.videoUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Watch how to do ${e.name}`} style={{ flex: "none", width: 36, height: 36, borderRadius: 999, background: "#FFFFFF", border: `2px solid ${POWER_COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}><PlayIcon color={POWER_COLORS.border} /></a>}
             </div>
           ) : (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderBottom: `1px solid ${C.tile}` }}>

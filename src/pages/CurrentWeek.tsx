@@ -17,7 +17,8 @@ import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { PageViewToggle } from "@/components/ViewModeToggle";
-import { firstNumber } from "@/lib/plan";
+import { firstNumber, makeLibraryLookup, looseExerciseKey, POWER_COLORS } from "@/lib/plan";
+import { useExerciseLibrary } from "@/hooks/usePlan";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
@@ -36,6 +37,9 @@ function toYouTubeEmbedUrl(url: string | undefined): string | null {
   }
   return null;
 }
+
+/** Bodyweight moves have no input box, so ticking them off needs no value. */
+const needsValue = (ex: { isBodyweight?: boolean; isTimeBased?: boolean }) => !(ex.isBodyweight && !ex.isTimeBased);
 
 const getWeekStart = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
@@ -102,6 +106,10 @@ const CurrentWeek = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  // How-to videos come from the exercise library when the plan row has none
+  // (older and custom plans rarely stored links).
+  const { data: library } = useExerciseLibrary();
+  const findInLibrary = useMemo(() => makeLibraryLookup(library), [library]);
 
   const now = new Date();
   const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
@@ -193,10 +201,10 @@ const CurrentWeek = () => {
     [saveLog],
   );
 
-  const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string) => {
+  const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string, requiresValue = true) => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
-    if (newVal && !localWeights[key]?.trim()) {
+    if (newVal && requiresValue && !localWeights[key]?.trim()) {
       toast({ title: "Enter a value first", description: "Add weight, reps or time, or F for failed." });
       return;
     }
@@ -214,7 +222,7 @@ const CurrentWeek = () => {
   };
 
   const handleCompleteDay = (dayIdx: number, day: WorkoutDay) => {
-    const missing = day.exercises.filter((_, i) => !localWeights[getExKey(dayIdx, i)]?.trim());
+    const missing = day.exercises.filter((ex, i) => needsValue(ex) && !localWeights[getExKey(dayIdx, i)]?.trim());
     if (missing.length > 0) {
       toast({ title: "Fill in all values first", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight, reps or time (or F for failed).` });
       return;
@@ -535,13 +543,15 @@ const CurrentWeek = () => {
                         exercise={ex}
                         mood={mood}
                         compact={isMobile}
+                        fallbackVideoUrl={findInLibrary(ex.name)?.video_url ?? undefined}
+                        isPower={findInLibrary(ex.name)?.type === "power"}
                         isDone={!!localCompleted[key]}
                         weight={localWeights[key] || ""}
-                        lastWeekWeight={prevWeightMap[key]}
-                        prevPrevWeekWeight={prevPrevWeightMap[key]}
+                        lastWeekWeight={prevWeightMap[looseExerciseKey(ex.name)]}
+                        prevPrevWeekWeight={prevPrevWeightMap[looseExerciseKey(ex.name)]}
                         onWeightChange={(v) => handleWeightChange(selectedDayIndex, i, v)}
                         onWeightBlur={() => handleWeightBlur(selectedDayIndex, i, ex.name)}
-                        onToggle={() => toggleExercise(selectedDayIndex, i, ex.name)}
+                        onToggle={() => toggleExercise(selectedDayIndex, i, ex.name, needsValue(ex))}
                         onVideoClick={(url) => setVideoModal({ name: ex.name, url })}
                       />
                     );
@@ -632,12 +642,15 @@ const CurrentWeek = () => {
 
 // ── Per-exercise row inside the focused day card ──
 function FocusedExerciseRow({
-  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false,
+  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false, fallbackVideoUrl, isPower = false,
   onWeightChange, onWeightBlur, onToggle, onVideoClick,
 }: {
   exercise: Exercise;
   mood: Mood;
   compact?: boolean;
+  fallbackVideoUrl?: string;
+  /** Power exercise (library type "power"): blue card with a POWER label. */
+  isPower?: boolean;
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
@@ -647,7 +660,7 @@ function FocusedExerciseRow({
   onToggle: () => void;
   onVideoClick: (url: string) => void;
 }) {
-  const videoUrl = exercise.videoUrl?.trim();
+  const videoUrl = exercise.videoUrl?.trim() || fallbackVideoUrl;
   const isRounds = exercise.isRoundsBased;
   const isTime = exercise.isTimeBased;
   const isAssisted = exercise.isAssisted;
@@ -677,11 +690,12 @@ function FocusedExerciseRow({
   const lastLabel = lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
 
   return (
-    <div style={{ display: "flex", flexWrap: compact ? "nowrap" : "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : "#FFFFFF" }}>
+    <div style={{ display: "flex", flexWrap: compact ? "nowrap" : "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : isPower ? POWER_COLORS.border : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : isPower ? POWER_COLORS.bg : "#FFFFFF" }}>
       <button type="button" onClick={onToggle} aria-pressed={isDone} aria-label={`${isDone ? "Mark not done" : "Mark done"}: ${exercise.name}`} style={{ flex: "none", width: 44, height: 44, borderRadius: 999, border: `2px solid ${C.ink}`, background: isDone ? C.magenta : "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#FFFFFF" : C.border} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
       </button>
       <div style={{ flex: compact ? "1 1 0%" : "1 1 200px", minWidth: 0 }}>
+        {isPower && <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 800, letterSpacing: 1, color: POWER_COLORS.label }}>POWER</p>}
         <p style={{ margin: 0, fontWeight: 800, fontSize: compact ? 15 : 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
           {exercise.name}
           {videoUrl && (
