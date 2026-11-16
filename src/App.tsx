@@ -121,14 +121,11 @@ const ProtectedLayout = () => {
 const AppRoutes = () => {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
+  // Don't block the whole app behind the Supabase session check. Public pages
+  // (/auth, /privacy, /terms, /reset-password) render immediately, so the login
+  // screen and marketing/legal pages paint without waiting on the auth
+  // round-trip. Only the auth-dependent routes below show a fallback while the
+  // session resolves, since "/" and the protected paths need to know `user`.
   return (
     <Suspense fallback={<PageFallback />}>
     <Routes>
@@ -137,7 +134,10 @@ const AppRoutes = () => {
       {/* Public static pages — reachable whether or not you're logged in. */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
-      {user ? (
+      {loading ? (
+        /* Only the auth-dependent routes wait for the session to resolve. */
+        <Route path="*" element={<PageFallback />} />
+      ) : user ? (
         /* Logged in: everything (including "/") runs inside the app shell. */
         <Route path="/*" element={<ProtectedLayout />} />
       ) : (

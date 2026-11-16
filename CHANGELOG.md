@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-16 — Faster load: preconnect Supabase + don't block public pages on auth
+
+Two load-time fixes (the slow "sometimes" was the Supabase session check
+blocking first paint, plus a token refresh when the stored token is stale).
+
+- **Preconnect to Supabase** (`index.html`): added `preconnect`/`dns-prefetch`
+  to the Supabase origin so the on-load auth/session request skips DNS + TLS
+  setup.
+- **Public pages no longer wait on the session check** (`App.tsx`): removed the
+  global `loading` spinner gate. `/auth`, `/privacy`, `/terms` and
+  `/reset-password` now render immediately; only the auth-dependent routes
+  ("/" and the protected paths) show a fallback while the session resolves.
+
+
 ## 2026-11-16 — Match mobile mockups: Edit type picker, Challenge steps, Profile stats
 
 - **Edit exercises** (`ExerciseEditor.tsx`): removed the **Rounds** type (now
