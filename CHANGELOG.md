@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-16 — Fix mobile header under the iOS status bar
+
+The dark mobile top bar had no top safe-area inset, so on a notched iPhone
+(standalone, `viewport-fit=cover` + `black-translucent` status bar) the
+"Power Club" logo collided with the clock/battery. Added
+`padding-top: env(safe-area-inset-top)` to the header so its dark background
+fills the status-bar area and the logo/avatar row sits below it.
+
+
 ## 2026-11-16 — Applied plan-normalization migration to production
 
 Ran `supabase/migrations/20261014120000_normalize_plan_exercise_rows.sql` in
