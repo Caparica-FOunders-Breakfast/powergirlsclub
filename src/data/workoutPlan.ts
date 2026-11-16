@@ -12,6 +12,11 @@ export interface Exercise {
   levelThresholds?: number[];
   /** YouTube URL for a tutorial video. Accepted formats: watch?v=, youtu.be/, or /embed/. */
   videoUrl?: string;
+  /** Starting weight (kg) set in the week 1 "Find your base" session from how
+   *  the test weight felt (used +/- 2.5 kg). Week 2 progresses from this. */
+  baseWeight?: number;
+  /** week_start (yyyy-MM-dd) of the session that set `baseWeight`. */
+  baseWeek?: string;
 }
 
 export interface WorkoutDay {

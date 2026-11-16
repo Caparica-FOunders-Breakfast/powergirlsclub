@@ -12,12 +12,51 @@ export const useProfile = () => {
         .from("profiles")
         .select("*")
         .eq("user_id", user!.id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data;
+      if (data) return data;
+
+      // No profile row yet (the sign-up trigger didn't create one, or hasn't
+      // yet). `.single()` used to 406 here, and the app fell back to "Power
+      // Girl" and initials from the email. Create it with the first name typed
+      // at sign-up (stored in the auth user's metadata).
+      const { data: created, error: insertError } = await supabase
+        .from("profiles")
+        .upsert({ user_id: user!.id, display_name: signUpFirstName(user) } as any, { onConflict: "user_id", ignoreDuplicates: true })
+        .select("*")
+        .maybeSingle();
+      if (insertError) throw insertError;
+      if (created) return created;
+      // Lost a race with the trigger: read the row it made.
+      const { data: again, error: againError } = await supabase.from("profiles").select("*").eq("user_id", user!.id).maybeSingle();
+      if (againError) throw againError;
+      return again;
     },
     enabled: !!user,
   });
+};
+
+/** Placeholder names the DB trigger used before we had the real first name. */
+const PLACEHOLDER_NAMES = new Set(["", "new member", "power girl"]);
+export const isPlaceholderName = (name: string | null | undefined) => PLACEHOLDER_NAMES.has((name ?? "").trim().toLowerCase());
+
+/**
+ * The member's own first name and avatar initial. Uses the profile name, or
+ * the first name typed at sign-up when the profile has none (or a
+ * placeholder). Never "Power Girl", never letters from the email.
+ */
+export const useMemberName = (): { firstName: string; initial: string } => {
+  const { user } = useAuth();
+  const { data: profile } = useProfile();
+  const fromProfile = profile?.display_name?.trim() ?? "";
+  const firstName = isPlaceholderName(fromProfile) ? signUpFirstName(user) : fromProfile;
+  return { firstName, initial: firstName ? firstName[0].toUpperCase() : "" };
+};
+
+/** The first name typed at sign-up (auth metadata), trimmed; "" if none. */
+export const signUpFirstName = (user: { user_metadata?: Record<string, unknown> } | null | undefined): string => {
+  const raw = user?.user_metadata?.display_name ?? user?.user_metadata?.first_name;
+  return typeof raw === "string" ? raw.trim() : "";
 };
 
 export const useAllProfiles = () => {

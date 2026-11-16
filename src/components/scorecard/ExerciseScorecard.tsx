@@ -5,6 +5,8 @@ import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
 import { useActivityData } from "@/hooks/useActivityData";
 import { useStreaks } from "@/hooks/useActivityData";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { computeMemberMonth } from "@/lib/memberMonth";
 import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
 import { Button } from "@/components/ui/button";
 import { ExerciseDetail } from "./ExerciseDetail";
@@ -18,8 +20,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  startOfMonth,
-  endOfMonth,
   startOfWeek,
   endOfWeek,
   addDays,
@@ -31,6 +31,7 @@ import {
 } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PageViewToggle } from "@/components/ViewModeToggle";
+import { BodyWeightBox } from "@/components/BodyWeightBox";
 import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 
 // ── Palette (ported from the "Harley" scorecard design) ──
@@ -118,6 +119,7 @@ export function ExerciseScorecard() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { plan } = usePersonalWorkoutPlan();
+  const { user } = useAuth();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [filter, setFilter] = useState<string>("All");
@@ -230,42 +232,19 @@ export function ExerciseScorecard() {
   // Targets come from the live plan's training weekdays, clipped to days inside
   // the month, so a partial first/last week never asks for impossible sessions.
   // Rest/recovery check-ins are logged as exercises too, so they don't count.
+  // First month counts from the join date (weeks 1 to 5 from that day); never
+  // count weeks before the member joined. See lib/memberMonth.
   const month = useMemo(() => {
-    const now = new Date();
     const trainingIdx = (plan ?? [])
       .map((d, i) => (!d.isRest && !d.isRecovery && d.exercises.length > 0 ? i : -1))
       .filter((i) => i >= 0);
-    const workoutDays = new Set(
+    const workoutDates = new Set(
       (activityEntries ?? [])
         .filter((e) => !/^(rest|recovery) day$/i.test(e.exerciseName.trim()))
         .map((e) => e.date),
     );
-    const mStart = startOfMonth(now);
-    const mEnd = endOfMonth(now);
-    const weeks: { label: string; planned: number; done: number; status: string }[] = [];
-    let monthDone = 0, monthTarget = 0, leftThisWeek = 0;
-    for (let wk = startOfWeek(mStart, { weekStartsOn: 1 }); wk <= mEnd; wk = addDays(wk, 7)) {
-      let planned = 0, done = 0, fullPlanned = 0, fullDone = 0;
-      for (let i = 0; i < 7; i++) {
-        const day = addDays(wk, i);
-        const inMonth = day >= mStart && day <= mEnd;
-        const isTraining = trainingIdx.includes(i); // day_index 0 = Monday
-        const did = workoutDays.has(format(day, "yyyy-MM-dd"));
-        if (isTraining) fullPlanned++;
-        if (did) fullDone++;
-        if (inMonth && isTraining) planned++;
-        if (inMonth && did) done++;
-      }
-      const isThisWeek = wk <= now && now < addDays(wk, 7);
-      if (isThisWeek) leftThisWeek = Math.max(0, fullPlanned - fullDone);
-      monthDone += done;
-      monthTarget += planned;
-      if (planned === 0 && done === 0) continue; // a sliver of a week with no training days
-      const status = wk > now ? "Coming up" : isThisWeek ? `${done} of ${planned}, this week` : `${done} of ${planned}`;
-      weeks.push({ label: `Week ${weeks.length + 1}`, planned, done, status });
-    }
-    return { name: format(now, "MMMM").toUpperCase(), weeks, monthDone, monthTarget, leftThisWeek, hasPlan: trainingIdx.length > 0 };
-  }, [plan, activityEntries]);
+    return computeMemberMonth({ now: new Date(), joined: user?.created_at ? new Date(user.created_at) : null, trainingIdx, workoutDates });
+  }, [plan, activityEntries, user?.created_at]);
 
   if (isLoading) {
     return (
@@ -293,6 +272,11 @@ export function ExerciseScorecard() {
   }
 
   const hasData = grouped && grouped.size > 0;
+  const noStreakYet = streaks.current === 0 && streaks.longest === 0;
+  // Empty exercise progress lists what's coming up in the member's plan.
+  const comingUp = Array.from(
+    new Set((plan ?? []).filter((d) => !d.isRest && !d.isRecovery).flatMap((d) => d.exercises.map((e) => e.name))),
+  ).slice(0, 12);
   const filtered = exercises.filter((e) => filter === "All" || e.group === filter);
   const sorted = [...filtered].sort((a, b) => {
     if (sort === "Sessions") return b.sessions - a.sessions;
@@ -314,13 +298,15 @@ export function ExerciseScorecard() {
         <section style={{ flex: "2 1 520px", minWidth: 0, background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, boxShadow: isMobile ? `4px 4px 0 ${C.ink}` : `6px 6px 0 ${C.ink}`, padding: isMobile ? 18 : 28 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
             <div>
-              <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>THIS MONTH · {month.name}</p>
+              <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>{month.title}</p>
               <h2 style={{ margin: "6px 0 0", ...bangers, fontSize: isMobile ? 34 : 40, letterSpacing: 1, lineHeight: 1 }}>
                 {month.hasPlan ? `${month.monthDone} of ${month.monthTarget} workouts` : `${month.monthDone} ${month.monthDone === 1 ? "workout" : "workouts"}`}
               </h2>
               <p style={{ margin: "8px 0 0", fontSize: isMobile ? 14 : 16, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>
                 {!month.hasPlan
                   ? "Set up your plan to track each week."
+                  : month.firstMonth && month.monthDone === 0
+                    ? `${month.perWeek} a week, counted from the day you joined.`
                   : month.leftThisWeek > 0
                     ? `${month.leftThisWeek} more this week to stay on plan.`
                     : "You're on plan this week. Nice work."}
@@ -334,8 +320,9 @@ export function ExerciseScorecard() {
           {!isMobile && month.hasPlan && month.weeks.length > 0 && (
             <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: `repeat(${month.weeks.length}, minmax(0, 1fr))`, gap: 12 }}>
               {month.weeks.map((wk) => (
-                <div key={wk.label} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 14, padding: "12px 14px" }}>
+                <div key={wk.label} style={{ background: wk.current ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.12)", border: `2px solid ${wk.current ? "#FFFFFF" : "transparent"}`, borderRadius: 14, padding: "10px 12px" }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>{wk.label}</p>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, opacity: 0.9 }}>{wk.dates}</p>
                   <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
                     {Array.from({ length: Math.max(wk.planned, wk.done) }).map((_, k) => (
                       <span key={k} style={{ flex: 1, height: 10, borderRadius: 999, background: k < wk.done ? "#FFFFFF" : "rgba(255,255,255,0.28)" }} />
@@ -351,14 +338,19 @@ export function ExerciseScorecard() {
         <section style={{ flex: "1 1 260px", minWidth: 0, ...card, padding: isMobile ? 18 : 24, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16 }}>
           <div>
             <Label>CURRENT STREAK</Label>
-            <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 48 : 64, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
+            {/* New member (no streak ever yet): "Starts today". */}
+            <p style={{ margin: "4px 0 0", ...bangers, fontSize: noStreakYet ? (isMobile ? 36 : 40) : isMobile ? 48 : 64, letterSpacing: noStreakYet ? 1 : undefined, lineHeight: 1, color: C.pink }}>
+              {noStreakYet ? "Starts today" : `${streaks.current} ${streaks.current === 1 ? "day" : "days"}`}
+            </p>
             <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
-              {streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
+              {noStreakYet
+                ? "Finish today's workout and your first streak begins. Rest days don't break it."
+                : streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
             </p>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 12, background: C.lilac, fontWeight: 800 }}>
             <span>Best streak</span>
-            <span style={{ color: C.purple }}>{streaks.longest} {streaks.longest === 1 ? "day" : "days"}</span>
+            <span style={{ color: C.purple }}>{noStreakYet ? "Not yet" : `${streaks.longest} ${streaks.longest === 1 ? "day" : "days"}`}</span>
           </div>
         </section>
       </div>
@@ -434,7 +426,15 @@ export function ExerciseScorecard() {
 
           <div style={{ ...card, padding: isMobile ? 18 : 24 }}>
             <Label>STRENGTH LEVELS</Label>
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+            {!bw && (
+              <p style={{ margin: "8px 0 0", display: "flex", alignItems: "center", gap: 8, fontWeight: 800, color: C.purple }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "inline-block" }}><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                Locked until you add your body weight
+              </p>
+            )}
+            {/* Missing body weight: the "What's your body weight?" box; set: an editable row. */}
+            <BodyWeightBox />
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10, opacity: bw ? 1 : 0.45 }}>
               {["Very strong", "Advanced", "Strong", "Leveling up", "Beginner"].map((name, i) => (
                 <div key={name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ display: "flex", gap: 3, width: 80 }}>
@@ -451,11 +451,32 @@ export function ExerciseScorecard() {
         <section style={{ flex: "2 1 520px", minWidth: 0, ...card, padding: isMobile ? 18 : 24 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Exercise progress</h2>
+            {hasData && (
             <button type="button" onClick={() => setAddModalOpen(true)} disabled={!hasHidden} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: `2px solid ${C.ink}`, borderRadius: 12, background: hasHidden ? C.pink : "#EDE7EF", color: hasHidden ? "#FFFFFF" : C.sub, fontWeight: 800, fontSize: 15, cursor: hasHidden ? "pointer" : "not-allowed" }}>
               <Plus className="w-4 h-4" /> Add exercise
             </button>
+            )}
           </div>
 
+          {!hasData ? (
+            <>
+              <div style={{ marginTop: 16, padding: 22, border: "2px dashed #E4DAE7", borderRadius: 16, textAlign: "center" }}>
+                <p style={{ margin: 0, fontWeight: 800, fontSize: 18 }}>Nothing logged yet</p>
+                <p style={{ margin: "6px auto 0", maxWidth: 420, fontSize: 15, color: C.body }}>After your first workout, every exercise you log shows up here with your weights over time.</p>
+              </div>
+              {comingUp.length > 0 && (
+                <>
+                  <p style={{ margin: "18px 0 8px", fontSize: 12, fontWeight: 800, letterSpacing: 1, color: C.body }}>COMING UP IN YOUR PLAN</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {comingUp.map((name) => (
+                      <span key={name} style={{ padding: "6px 12px", borderRadius: 999, background: "#F3EEF4", color: C.body, fontSize: 14, fontWeight: 700 }}>{name}</span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+          <>
           <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {FILTERS.map((f) => (
@@ -504,6 +525,8 @@ export function ExerciseScorecard() {
             <button type="button" onClick={() => setShowAll((v) => !v)} style={{ marginTop: 8, width: "100%", minHeight: 48, border: "2px dashed #B79BF2", borderRadius: 14, background: "#FBF9FB", color: C.purple, fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
               {showAll ? "Show fewer" : `Show all ${sorted.length} exercises`}
             </button>
+          )}
+          </>
           )}
         </section>
       </div>

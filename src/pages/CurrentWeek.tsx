@@ -18,7 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { PageViewToggle } from "@/components/ViewModeToggle";
 import { firstNumber, makeLibraryLookup, looseExerciseKey, POWER_COLORS } from "@/lib/plan";
-import { useExerciseLibrary } from "@/hooks/usePlan";
+import { useExerciseLibrary, useMemberPlan } from "@/hooks/usePlan";
 import { ExerciseInfo } from "@/components/profile-plan/ExerciseInfo";
 import { travelVideoFor } from "@/data/travelPlan";
 
@@ -77,6 +77,17 @@ const dayTint = (label: string) => {
 };
 
 type Mood = "Ready" | "So-so" | "Not ready";
+
+// Week 1 "Find your base": after a test set the member says how it felt and we
+// set the starting weight from what they used.
+type Feel = "light" | "right" | "heavy";
+const FEELS: { k: Feel; label: string; adj: number }[] = [
+  { k: "light", label: "Too light", adj: 2.5 },
+  { k: "right", label: "Just right", adj: 0 },
+  { k: "heavy", label: "Too heavy", adj: -2.5 },
+];
+/** Exercises tested for a starting weight in kg (not bodyweight, time, rounds or assisted). */
+const isKgTested = (ex: Exercise) => !ex.isBodyweight && !ex.isTimeBased && !ex.isRoundsBased && !ex.isAssisted;
 const MOODS: { label: Mood; hint: string }[] = [
   { label: "Ready", hint: "Push hard, go heavier" },
   { label: "So-so", hint: "Same weight as last time" },
@@ -135,6 +146,8 @@ const CurrentWeek = () => {
   const [initialized, setInitialized] = useState(false);
   const [videoModal, setVideoModal] = useState<{ name: string; url: string } | null>(null);
   const [moodByDay, setMoodByDay] = useState<Record<number, Mood>>(() => readMoods(weekStart));
+  const [feelByKey, setFeelByKey] = useState<Record<string, Feel>>({});
+  const { data: memberPlan } = useMemberPlan();
   const embedUrl = toYouTubeEmbedUrl(videoModal?.url);
 
   // Reset state when the week changes.
@@ -144,6 +157,7 @@ const CurrentWeek = () => {
     setLocalCompleted({});
     setEditingDay(null);
     setMoodByDay(readMoods(weekStart));
+    setFeelByKey({});
     // Focus today on the current week, else the first workout day.
     const firstWorkout = weeklyPlan.findIndex((d) => !d.isRest && !d.isRecovery);
     setSelectedDayIndex(isCurrentWeek ? todayIndex : firstWorkout >= 0 ? firstWorkout : 0);
@@ -169,12 +183,12 @@ const CurrentWeek = () => {
 
   const prevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
-    if (priorWeights) Object.entries(priorWeights).forEach(([key, weights]) => { if (weights.length > 0) map[key] = weights[0]; });
+    if (priorWeights) Object.entries(priorWeights.weights).forEach(([key, weights]) => { if (weights.length > 0) map[key] = weights[0]; });
     return map;
   }, [priorWeights]);
   const prevPrevWeightMap = useMemo(() => {
     const map: Record<string, number> = {};
-    if (priorWeights) Object.entries(priorWeights).forEach(([key, weights]) => { if (weights.length > 1) map[key] = weights[1]; });
+    if (priorWeights) Object.entries(priorWeights.weights).forEach(([key, weights]) => { if (weights.length > 1) map[key] = weights[1]; });
     return map;
   }, [priorWeights]);
 
@@ -213,6 +227,21 @@ const CurrentWeek = () => {
     setLocalCompleted((prev) => ({ ...prev, [key]: newVal }));
     saveExercise(dayIdx, exIdx, exerciseName, localWeights[key] || "", newVal);
     if (newVal) confetti({ particleCount: 30, spread: 50, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.8 }, gravity: 1.2 });
+  };
+
+  // Week 1: save the starting weight from how the test weight felt.
+  const chooseFeel = (dayIdx: number, exIdx: number, day: WorkoutDay, feel: Feel) => {
+    const key = getExKey(dayIdx, exIdx);
+    const used = parseFloat(localWeights[key] ?? "");
+    if (!Number.isFinite(used)) return;
+    const adj = FEELS.find((f) => f.k === feel)!.adj;
+    const base = Math.max(0, Math.round((used + adj) * 2) / 2);
+    setFeelByKey((prev) => ({ ...prev, [key]: feel }));
+    const exercises = day.exercises.map((e, i) => (i === exIdx ? { ...e, baseWeight: base, baseWeek: weekStart } : e));
+    savePersonalDay.mutate(
+      { dayIndex: dayIdx, exercises, label: day.label, emoji: day.emoji, isRest: day.isRest, isRecovery: day.isRecovery, restNote: day.restNote },
+      { onError: () => toast({ title: "Couldn't save your starting weight", description: "Check your connection and pick again.", variant: "destructive" }) },
+    );
   };
 
   const handleWeightChange = (dayIdx: number, exIdx: number, value: string) => {
@@ -313,6 +342,17 @@ const CurrentWeek = () => {
   const allDone = total > 0 && doneCount === total;
   const mood: Mood = moodByDay[selectedDayIndex] ?? "Ready";
   const isTodayFocused = isCurrentWeek && selectedDayIndex === todayIndex;
+  // Week 1 "Find your base": the first session of a training day, i.e. none of
+  // its kg exercises has a logged weight before this week. No readiness check,
+  // no "Go heavier"; each tested exercise asks how it felt. Members who typed
+  // their own starting weights ("I know my weights") skip it, as does travel mode.
+  const kgTested = selectedDay.exercises.filter(isKgTested);
+  const isBaseSession =
+    priorWeights !== undefined && // don't flash week 1 while history loads
+    !travelMode &&
+    memberPlan?.base_mode !== "manual" &&
+    kgTested.length > 0 &&
+    kgTested.every((ex) => prevWeightMap[looseExerciseKey(ex.name)] === undefined);
 
   // Next up: upcoming workout days after the focused one.
   const nextUp = weeklyPlan
@@ -473,9 +513,9 @@ const CurrentWeek = () => {
                 <div style={{ background: C.grad, color: "#FFFFFF", padding: isMobile ? "18px" : "24px 28px", borderBottom: `2px solid ${C.ink}` }}>
                   <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
                     <div>
-                      <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>{isTodayFocused ? "TODAY · " : ""}{selectedDay.day.toUpperCase()}</p>
-                      <h2 style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 34 : 44, letterSpacing: 1, lineHeight: 1 }}>{selectedDay.label}</h2>
-                      <p style={{ margin: "6px 0 0", fontSize: isMobile ? 14 : 16, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{total} exercises{isMobile ? "" : " · 3 rounds"} · about 30 min{isMobile ? "" : "utes"}</p>
+                      <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>{isTodayFocused ? "TODAY · " : ""}{selectedDay.day.toUpperCase()}{isBaseSession ? " · WEEK 1" : ""}</p>
+                      <h2 style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 34 : 44, letterSpacing: 1, lineHeight: 1 }}>{isBaseSession ? "Find your base" : selectedDay.label}</h2>
+                      <p style={{ margin: "6px 0 0", fontSize: isMobile ? 14 : 16, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{isBaseSession ? `${selectedDay.label} · ` : ""}{total} exercises{isMobile || isBaseSession ? "" : " · 3 rounds"} · about 30 min{isMobile ? "" : "utes"}</p>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <p style={{ margin: 0, ...bangers, fontSize: isMobile ? 34 : 40, lineHeight: 1 }}>{doneCount}/{total}</p>
@@ -487,7 +527,21 @@ const CurrentWeek = () => {
                   </div>
                 </div>
 
-                {/* Readiness */}
+                {/* Week 1: how finding your base works (replaces the readiness check). */}
+                {isBaseSession ? (
+                  <div style={{ padding: isMobile ? "18px 18px 6px" : "22px 28px 6px" }}>
+                    <div style={{ padding: "16px 18px", borderRadius: 16, background: "#F4EDFE" }}>
+                      <p style={{ margin: 0, fontWeight: 800 }}>How week 1 works</p>
+                      <ol style={{ margin: "8px 0 0", paddingLeft: 20, display: "flex", flexDirection: "column", gap: 4, fontSize: 15, listStyle: "decimal" }}>
+                        <li>Start light: an empty bar or light dumbbells.</li>
+                        <li>Do the sets. Stop if your form breaks.</li>
+                        <li>Tell us how it felt. We set your starting weight.</li>
+                      </ol>
+                      <p style={{ margin: "10px 0 0", fontSize: 14, color: C.body }}>The readiness check (Ready, So-so, Not ready) starts in week 2, once we know your base.</p>
+                    </div>
+                  </div>
+                ) : (
+                <>
                 <div style={{ padding: isMobile ? "18px 18px 6px" : "22px 28px 6px" }}>
                   <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>How do you feel today?</p>
                   {isMobile ? (
@@ -517,6 +571,9 @@ const CurrentWeek = () => {
                   )}
                 </div>
 
+                </>
+                )}
+
                 {/* Exercises */}
                 <div style={{ padding: isMobile ? "14px 18px 8px" : "16px 28px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>EXERCISES</p>
@@ -533,6 +590,10 @@ const CurrentWeek = () => {
                         key={i}
                         exercise={ex}
                         mood={mood}
+                        baseSession={isBaseSession}
+                        feel={feelByKey[key]}
+                        onFeel={(f) => chooseFeel(selectedDayIndex, i, selectedDay, f)}
+                        lastLogWeek={priorWeights?.lastWeek[looseExerciseKey(ex.name)]}
                         compact={isMobile}
                         fallbackVideoUrl={findInLibrary(ex.name)?.video_url ?? travelVideoFor(ex.name)}
                         isPower={findInLibrary(ex.name)?.type === "power"}
@@ -635,9 +696,16 @@ const CurrentWeek = () => {
 // ── Per-exercise row inside the focused day card ──
 function FocusedExerciseRow({
   exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false, fallbackVideoUrl, isPower = false,
+  baseSession = false, feel, onFeel, lastLogWeek,
   onWeightChange, onWeightBlur, onToggle, onVideoClick,
 }: {
   exercise: Exercise;
+  /** Week 1 "Find your base" session: no readiness tag, ask how it felt. */
+  baseSession?: boolean;
+  feel?: Feel;
+  onFeel?: (feel: Feel) => void;
+  /** week_start of the last logged weight (matches `exercise.baseWeek`). */
+  lastLogWeek?: string;
   mood: Mood;
   compact?: boolean;
   fallbackVideoUrl?: string;
@@ -665,9 +733,14 @@ function FocusedExerciseRow({
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
 
   const lastWeekFailed = lastWeekWeight === -1;
-  const effectiveLast = lastWeekFailed
-    ? (prevPrevWeekWeight != null && prevPrevWeekWeight !== -1 ? prevPrevWeekWeight : null)
-    : (lastWeekWeight != null ? lastWeekWeight : null);
+  // After week 1 the starting weight (set from "how did it feel") replaces the
+  // test weight that was logged, so week 2 progresses from the right base.
+  const fromBase = exercise.baseWeight != null && !!exercise.baseWeek && lastLogWeek === exercise.baseWeek;
+  const effectiveLast = fromBase
+    ? exercise.baseWeight!
+    : lastWeekFailed
+      ? (prevPrevWeekWeight != null && prevPrevWeekWeight !== -1 ? prevPrevWeekWeight : null)
+      : (lastWeekWeight != null ? lastWeekWeight : null);
 
   // Readiness adjusts the SUGGESTED target (shown as placeholder/hint). The
   // input still starts empty and only persists what the user enters, so no
@@ -679,10 +752,24 @@ function FocusedExerciseRow({
     else target = isAssisted ? Math.round(effectiveLast * 1.2 * 2) / 2 : unit === "reps" ? Math.max(1, effectiveLast - 4) : Math.round(effectiveLast * 0.8 * 2) / 2;
   }
   const tag = MOOD_TAG[mood];
-  const lastLabel = lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
+  const lastLabel = baseSession
+    ? isKgTested(exercise) ? "Start light" : "First time"
+    : fromBase ? `Starting weight ${effectiveLast} ${unit}`
+    : lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
+  // Placeholder: today's target, else a typed starting weight. Never the unit
+  // itself (that showed "kg kg" next to the unit label).
+  const startHint = firstNumber(exercise.suggestedWeight);
+  const placeholder = target != null ? String(target) : startHint || "";
+  // Week 1: once a tested exercise is ticked off, ask how the weight felt.
+  const usedNum = parseFloat(weight);
+  const askFeel = baseSession && isDone && isKgTested(exercise) && Number.isFinite(usedNum);
+  const savedBase = feel
+    ? Math.max(0, Math.round((usedNum + FEELS.find((f) => f.k === feel)!.adj) * 2) / 2)
+    : exercise.baseWeight;
 
   return (
-    <div style={{ display: "flex", flexWrap: compact ? "nowrap" : "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : isPower ? POWER_COLORS.border : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : isPower ? POWER_COLORS.bg : "#FFFFFF" }}>
+    <div style={{ padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : isPower ? POWER_COLORS.border : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : isPower ? POWER_COLORS.bg : "#FFFFFF" }}>
+    <div style={{ display: "flex", flexWrap: compact ? "nowrap" : "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px" }}>
       <button type="button" onClick={onToggle} aria-pressed={isDone} aria-label={`${isDone ? "Mark not done" : "Mark done"}: ${exercise.name}`} style={{ flex: "none", width: 44, height: 44, borderRadius: 999, border: `2px solid ${C.ink}`, background: isDone ? C.magenta : "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#FFFFFF" : C.border} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
       </button>
@@ -703,13 +790,13 @@ function FocusedExerciseRow({
         <span style={{ flex: "none", padding: "4px 10px", borderRadius: 999, background: C.tile, color: C.body, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>Bodyweight</span>
       ) : (
         <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10 }}>
-          {!compact && <span style={{ padding: "4px 10px", borderRadius: 999, background: tag.bg, color: tag.fg, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>{tag.text}</span>}
+          {!compact && !baseSession && <span style={{ padding: "4px 10px", borderRadius: 999, background: tag.bg, color: tag.fg, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>{tag.text}</span>}
           <label style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${weight === "F" ? "#C0244E" : C.ink}`, borderRadius: 12, background: "#FFFFFF", overflow: "hidden", opacity: isDone ? 0.5 : 1 }}>
             <input
               type="text"
               inputMode="text"
-              aria-label={`${exercise.name} today`}
-              placeholder={target != null ? String(target) : unit}
+              aria-label={`Weight used for ${exercise.name} in ${unit}`}
+              placeholder={placeholder}
               value={weight}
               disabled={isDone}
               onChange={(e) => { const v = e.target.value; if (v === "" || /^[Ff]$/.test(v) || /^\d*\.?\d*$/.test(v)) onWeightChange(v.toUpperCase()); }}
@@ -720,6 +807,23 @@ function FocusedExerciseRow({
           </label>
         </div>
       )}
+    </div>
+    {askFeel && (
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `2px dashed ${C.border}`, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+        <span style={{ fontWeight: 800, fontSize: 14, marginRight: 4 }}>How did it feel?</span>
+        {FEELS.map((f) => {
+          const on = feel === f.k;
+          return (
+            <button key={f.k} type="button" aria-pressed={on} onClick={() => onFeel?.(f.k)} style={{ minHeight: 40, padding: "0 14px", border: `2px solid ${C.ink}`, borderRadius: 12, background: on ? C.ink : "#FFFFFF", color: on ? "#FFFFFF" : C.ink, fontWeight: 800, fontSize: 14, cursor: "pointer" }}>{f.label}</button>
+          );
+        })}
+      </div>
+    )}
+    {askFeel && savedBase != null && (feel || exercise.baseWeight != null) && (
+      <p role="status" style={{ margin: "10px 0 0", padding: "10px 12px", borderRadius: 12, background: "#FFF0F7", fontSize: 14, fontWeight: 700 }}>
+        {feel === "right" || !feel ? `Starting weight saved: ${savedBase} kg.` : `Got it. Your starting weight is ${savedBase} kg.`} Next week adds {Math.abs(increment)} kg.
+      </p>
+    )}
     </div>
   );
 }

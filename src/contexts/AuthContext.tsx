@@ -9,7 +9,10 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  /** Creates the account. `metadata` (sign-up answers) is stored on the auth
+   *  user. Resolves with whether a session started right away (false when the
+   *  project requires email confirmation first). */
+  signUp: (email: string, password: string, displayName: string, metadata?: Record<string, unknown>) => Promise<{ hasSession: boolean }>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -39,16 +42,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, displayName: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, displayName: string, metadata: Record<string, unknown> = {}) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { display_name: displayName },
+        data: { ...metadata, display_name: displayName, first_name: displayName },
         emailRedirectTo: window.location.origin,
       },
     });
     if (error) throw error;
+    return { hasSession: !!data.session };
   };
 
   const signIn = async (email: string, password: string) => {

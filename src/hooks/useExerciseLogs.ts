@@ -58,14 +58,17 @@ export const usePriorExerciseWeights = (weekStart: string) => {
         .order("day_index", { ascending: false });
       if (error) throw error;
 
-      const map: Record<string, number[]> = {};
+      // Newest first. `weights[key][0]` is the last logged weight; `lastWeek`
+      // says which week it came from (to match a week 1 starting weight).
+      const weights: Record<string, number[]> = {};
+      const lastWeek: Record<string, string> = {};
       data.forEach((log) => {
         if (log.weight_used == null || !log.exercise_name) return;
         const key = looseExerciseKey(log.exercise_name);
-        if (!map[key]) map[key] = [];
-        map[key].push(Number(log.weight_used));
+        if (!weights[key]) { weights[key] = []; lastWeek[key] = log.week_start; }
+        weights[key].push(Number(log.weight_used));
       });
-      return map;
+      return { weights, lastWeek };
     },
     enabled: !!user && !!weekStart,
   });

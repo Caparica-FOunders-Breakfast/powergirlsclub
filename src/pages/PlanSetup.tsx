@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useExerciseLibrary, useRecommendedPlan, useSaveMemberPlan } from "@/hooks/usePlan";
+import { useAuth } from "@/contexts/AuthContext";
+import { readOnboarding } from "@/lib/onboarding";
 import {
   type PlanDayDraft,
   type PlanItemDraft,
@@ -65,12 +67,16 @@ export default function PlanSetup() {
   const { data: library = [] } = useExerciseLibrary();
   const saveMemberPlan = useSaveMemberPlan();
 
+  // A new member arrives with their sign-up answers (days, plan source): start
+  // from those instead of the defaults.
+  const { user } = useAuth();
+  const answers = readOnboarding(user);
   const [step, setStep] = useState(1);
-  const [count, setCount] = useState(3);
+  const [count, setCount] = useState<number>(answers?.days_per_week ?? 3);
   const [days, setDays] = useState<Record<string, boolean>>(() =>
-    DEFAULT_TRAINING_DAYS[3].reduce((o, d) => ({ ...o, [d]: true }), {}),
+    (answers?.training_days ?? DEFAULT_TRAINING_DAYS[3]).reduce((o, d) => ({ ...o, [d]: true }), {}),
   );
-  const [source, setSource] = useState<PlanSource>("recommended");
+  const [source, setSource] = useState<PlanSource>(answers?.plan_source ?? "recommended");
   const [baseMode, setBaseMode] = useState<BaseMode>("auto");
   const [planDays, setPlanDays] = useState<PlanDayDraft[]>([]);
 

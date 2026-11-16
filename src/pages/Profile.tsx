@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
-import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useProfile, useUpdateProfile, useMemberName } from "@/hooks/useProfile";
+import { BodyWeightBox } from "@/components/BodyWeightBox";
+import { addDays, format } from "date-fns";
+import { firstMonthRange } from "@/lib/memberMonth";
 import {
   PROGRESSION_DEFAULT,
   useUserPreferences,
@@ -25,7 +28,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SavedIndicator } from "@/components/ui/SavedIndicator";
 import { useToast } from "@/hooks/use-toast";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 const C = {
   bg: "#FBF9FB",
@@ -117,7 +119,6 @@ const Profile = () => {
   const [name, setName] = useState("");
 
   const [weightExpanded, setWeightExpanded] = useState(false);
-  const [bodyWeight, setBodyWeight] = useState("");
   const [weightSaved, setWeightSaved] = useState(false);
   const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -151,8 +152,14 @@ const Profile = () => {
   }, [grouped, bw]);
 
   const progressionKg = prefs?.progression_kg_per_week ?? PROGRESSION_DEFAULT;
-  const displayName = profile?.display_name ?? "";
-  const initials = (displayName[0] ?? "?").toUpperCase();
+  // First €5 is due at the end of the first month (counted from the join date).
+  const firstMonthEnd = user?.created_at ? firstMonthRange(new Date(user.created_at)).end : null;
+  const membershipNote = firstMonthEnd && new Date() <= addDays(firstMonthEnd, 1)
+    ? `Nothing to pay yet. Your first €5 is due on ${format(firstMonthEnd, "MMM d")}.`
+    : "Paid at the end of each month. Cancel anytime.";
+  // First name typed at sign-up; never "Power Girl" or letters from the email.
+  const { firstName: displayName, initial } = useMemberName();
+  const initials = initial || "?";
 
   const stats = useMemo(() => {
     if (!activity || activity.length === 0) return { workouts: 0, bestStreak: 0 };
@@ -204,23 +211,6 @@ const Profile = () => {
     setWeightSaved(true);
     if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current);
     weightSavedTimer.current = setTimeout(() => setWeightSaved(false), 2000);
-  };
-
-  const saveWeightDebounced = useDebouncedCallback(async (raw: string) => {
-    const val = parseFloat(raw);
-    if (!val || val <= 0) return;
-    if (profile?.body_weight && Number(profile.body_weight) === val) return;
-    try {
-      await updateProfile.mutateAsync({ body_weight: val });
-      flashWeightSaved();
-    } catch {
-      toast({ title: "Couldn't save body weight", variant: "destructive" });
-    }
-  }, 1000);
-
-  const handleWeightChange = (value: string) => {
-    setBodyWeight(value);
-    saveWeightDebounced(value);
   };
 
   const handleUpdateWeight = () => {
@@ -310,7 +300,7 @@ const Profile = () => {
               />
             ) : (
               <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 36 : 52, letterSpacing: 1, lineHeight: 1, display: "flex", alignItems: "center", gap: 10 }}>
-                {displayName || "Power Girl"}
+                {displayName || "Add your name"}
                 <button type="button" onClick={handleStartEditName} aria-label="Edit name" style={{ width: 28, height: 28, borderRadius: 8, border: 0, background: "rgba(255,255,255,0.2)", color: "#FFFFFF", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /></svg></button>
               </h1>
             )}
@@ -356,9 +346,8 @@ const Profile = () => {
                   </button>
                   {weightExpanded && (
                     <div style={{ padding: "0 24px 18px" }}>
-                      <Input type="number" placeholder={bw ? String(bw) : "kg"} value={bodyWeight} onChange={(e) => handleWeightChange(e.target.value)} className="h-10 border-2 border-border" />
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 16, marginTop: 6 }}>
-                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.sub }}>Saves automatically</p>
+                      <BodyWeightBox startEditing onSaved={() => { setWeightExpanded(false); flashWeightSaved(); }} />
+                      <div style={{ display: "flex", justifyContent: "flex-end", minHeight: 16, marginTop: 6 }}>
                         <SavedIndicator show={weightSaved} />
                       </div>
                     </div>
@@ -411,7 +400,7 @@ const Profile = () => {
                     <button type="button" onClick={handleUpdateWeight} style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: 0 }}>Update weight</button>
                   </>
                 ) : (
-                  <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 14, border: `2px dashed ${C.rowBorder}`, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg><span style={{ flex: "1 1 180px", fontSize: 14, fontWeight: 700, color: C.body }}>Add your body weight and we'll work out your personal strength levels.</span><button type="button" onClick={handleUpdateWeight} style={{ fontSize: 14, fontWeight: 800, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: 0 }}>Set body weight</button></div>
+                  <BodyWeightBox />
                 )}
               </section>
 
@@ -419,6 +408,13 @@ const Profile = () => {
                 <h3 style={{ margin: 0, ...bangers, fontSize: 24, letterSpacing: 0.5 }}>Weekly progression</h3>
                 <p style={{ margin: "6px 0 0", fontWeight: 800, color: C.ink }}>+{progressionKg} kg added per week</p>
                 <p style={{ margin: "2px 0 0", fontSize: 14, color: C.body }}>In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.</p>
+              </section>
+
+              {/* Membership: €5 a month, the first payment at the end of the first month. */}
+              <section style={{ ...card, padding: 20 }}>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 800, letterSpacing: 1, color: C.body }}>MEMBERSHIP</p>
+                <p style={{ margin: "6px 0 0", fontWeight: 800, fontSize: 18 }}>€5 a month</p>
+                <p style={{ margin: "2px 0 0", fontSize: 15, color: C.body }}>{membershipNote}</p>
               </section>
 
               <button type="button" onClick={signOut} style={{ minHeight: 52, border: `2px solid #A3165E`, borderRadius: 14, background: "#FFFFFF", color: "#A3165E", fontWeight: 800, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
