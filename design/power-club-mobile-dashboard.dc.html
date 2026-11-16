@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Power Club admin dashboard, mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF9FB}
+a{color:#C21C70}a:hover{color:#2B1736}
+button,input{font-family:inherit}
+input:focus{outline:3px solid #E8308C;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1700px; overflow: hidden; display: flex; flex-direction: column; background: #FBF9FB; color: #2B1736; font-family: Nunito, system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+  <header style="flex: none; height: 60px; padding: 0 16px; background: #2B1736; display: flex; align-items: center; justify-content: space-between">
+    <span style="font-family: Bangers, cursive; font-size: 28px; letter-spacing: 1px; color: #FF8AC4">Power Club</span>
+    <span style="width: 36px; height: 36px; border-radius: 999px; background: #E8308C; color: #FFFFFF; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center">KL</span>
+  </header>
+  <main style="flex: 1; min-height: 0; overflow-y: auto; padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 16px">
+    <div><p style="margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #77677E">ADMIN · NOVEMBER</p><h1 style="margin: 2px 0 0; font-family: Bangers, cursive; font-weight: 400; font-size: 40px; letter-spacing: 1px; line-height: 1">Dashboard</h1></div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="background: linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%); color: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; box-shadow: 4px 4px 0 #2B1736; padding: 14px"><p style="margin: 0; font-size: 12px; font-weight: 800">Members</p><p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 36px; line-height: 1">1</p></div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px; padding: 14px"><p style="margin: 0; font-size: 12px; font-weight: 800; color: #77677E">Active this week</p><p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 36px; line-height: 1">1/1</p></div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px; padding: 14px"><p style="margin: 0; font-size: 12px; font-weight: 800; color: #77677E">Workouts this month</p><p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 36px; line-height: 1">1</p></div>
+      <div style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px; padding: 14px"><p style="margin: 0; font-size: 12px; font-weight: 800; color: #77677E">AI cost</p><p style="margin: 2px 0 0; font-family: Bangers, cursive; font-size: 36px; line-height: 1">$0</p><p style="margin: 0; font-size: 11px; font-weight: 700; color: #5E4E66">of $10 budget</p></div>
+    </div>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Workouts per day</h2><span style="font-size: 12px; font-weight: 800; color: #77677E">This week</span></div>
+      <div style="margin-top: 12px; height: 120px; display: flex; align-items: flex-end; gap: 8px; border-bottom: 2px solid #E4DAE7">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="7">
+          <div style="flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px"><span style="font-size: 11px; font-weight: 800; color: {{b.lc}}">{{b.v}}</span><div style="width: 100%; height: {{b.h}}; min-height: 4px; border-radius: 8px 8px 0 0; background: {{b.bg}}"></div></div>
+        </sc-for>
+      </div>
+      <div style="margin-top: 6px; display: flex; gap: 8px"><sc-for list="{{bars}}" as="b" hint-placeholder-count="7"><span style="flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: #5E4E66">{{b.d}}</span></sc-for></div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px">
+      <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Weekly plan</h2>
+      <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: center">
+        <div style="padding: 10px 4px; border-radius: 12px; background: #FFF5FA"><p style="margin: 0; font-family: Bangers, cursive; font-size: 26px; line-height: 1; color: #C21C70">0</p><p style="margin: 2px 0 0; font-size: 12px; font-weight: 800">On plan</p></div>
+        <div style="padding: 10px 4px; border-radius: 12px; background: #F1E9FE"><p style="margin: 0; font-family: Bangers, cursive; font-size: 26px; line-height: 1; color: #5B21B6">1</p><p style="margin: 2px 0 0; font-size: 12px; font-weight: 800">Behind</p></div>
+        <div style="padding: 10px 4px; border-radius: 12px; background: #F6F1F7"><p style="margin: 0; font-family: Bangers, cursive; font-size: 26px; line-height: 1">0</p><p style="margin: 2px 0 0; font-size: 12px; font-weight: 800">Not started</p></div>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Members</h2><span style="font-size: 13px; font-weight: 800; color: #77677E">1</span></div>
+      <label style="margin-top: 10px; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 2px solid #2B1736; border-radius: 12px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#77677E" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search members</span>
+        <input type="search" placeholder="Search name or email" style="flex: 1; min-width: 0; border: 0; height: 100%; font-size: 15px; color: #2B1736; background: transparent">
+      </label>
+      <a href="#member" style="margin-top: 10px; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; border: 2px solid #E4DAE7; color: #2B1736; text-decoration: none">
+        <span style="flex: none; width: 40px; height: 40px; border-radius: 999px; background: #E8308C; color: #FFFFFF; font-weight: 800; display: flex; align-items: center; justify-content: center">K</span>
+        <div style="flex: 1; min-width: 0"><p style="margin: 0; font-weight: 800">Klarita</p><p style="margin: 0; font-size: 12px; font-weight: 700; color: #5E4E66">67 workouts · active 1h ago</p>
+          <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px"><div style="display: flex; gap: 2px; width: 56px"><span style="flex: 1; height: 6px; border-radius: 999px; background: #E8308C"></span><span style="flex: 1; height: 6px; border-radius: 999px; background: #EFE6F1"></span><span style="flex: 1; height: 6px; border-radius: 999px; background: #EFE6F1"></span><span style="flex: 1; height: 6px; border-radius: 999px; background: #EFE6F1"></span></div><span style="font-size: 11px; font-weight: 800; color: #5E4E66">1 of 4 this week</span></div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#77677E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px">
+      <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Feature switches</h2>
+      <div style="margin-top: 6px">
+        <sc-for list="{{flags}}" as="f" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #EFE6F1">
+            <div style="flex: 1; min-width: 0"><p style="margin: 0; font-weight: 800; font-size: 15px">{{f.name}}</p><p style="margin: 0; font-size: 12px; color: #5E4E66">{{f.desc}}</p></div>
+            <button type="button" role="switch" aria-checked="{{f.checked}}" aria-label="{{f.name}}" onClick="{{f.toggle}}" style="flex: none; width: 52px; height: 30px; border-radius: 999px; border: 2px solid #2B1736; background: {{f.bg}}; cursor: pointer; padding: 0; position: relative"><span style="position: absolute; top: 2px; left: {{f.knob}}; width: 22px; height: 22px; border-radius: 999px; background: #FFFFFF; border: 2px solid #2B1736; box-sizing: border-box"></span></button>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+  <nav aria-label="App" style="flex: none; height: 72px; background: #FFFFFF; border-top: 2px solid #2B1736; display: flex">
+    <a href="MobileWeek.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg></span>This week</a>
+    <a href="MobileScorecard.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg></span>Scorecard</a>
+    <a href="MobileChallenge.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.8.8 3 2.6 3.5 5.2"></path></svg></span>Challenge</a>
+    <a href="MobileProfile.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg></span>Profile</a>
+    <a href="MobileDashboard.dc.html" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #C21C70; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: #FCE4F0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"></path></svg></span>Admin</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const off = (this.state && this.state.off) || {};
+    const bars = [['M',0],['T',0],['W',0],['T',0],['F',0],['S',0],['S',1]].map(([d, v]) => ({ d, v: String(v), h: (v * 85) + '%', bg: v ? 'linear-gradient(180deg, #E8308C 0%, #6B2FB3 100%)' : '#EFE6F1', lc: v ? '#2B1736' : '#B8AABF' }));
+    const flags = [['ai','AI workout import','Photo to training plan'],['lang','Language coaching','Daily tasks and vocabulary'],['meals','Meals and nutrition','Meal plan and recipes'],['signup','New member signups','Let new people join']].map(([id, name, desc]) => { const on = !off[id]; return { name, desc, checked: on ? 'true' : 'false', bg: on ? '#E8308C' : '#E4DAE7', knob: on ? '24px' : '2px', toggle: () => this.setState({ off: { ...off, [id]: on } }) }; });
+    return { bars, flags };
+  }
+}
+</script>
+</body>
+</html>

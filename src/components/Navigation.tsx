@@ -8,8 +8,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Link, useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
@@ -25,7 +24,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -229,47 +227,64 @@ export function BottomNav() {
   const isAdmin = useIsAdmin();
   const tabs = isAdmin ? adminMobileTabs : memberMobileTabs;
 
+  // Below lg the app uses this bottom tab bar (phones and tablet); the dark
+  // sidebar takes over at lg+. Styled to match the mobile design: a pink pill
+  // behind the active icon, no neon glow.
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t-2 border-[#2B1736] md:hidden pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">
-        {tabs.map(({ path, icon: Icon, label }) => {
-          const isActive = path === "/more"
-            ? ["/more", "/teams", "/profile"].includes(location.pathname)
-            : location.pathname === path;
-          return (
-            <NavLink
-              key={path}
-              to={path}
-              end
-              className={cn(
-                "flex flex-col items-center gap-0.5 min-w-[56px] min-h-[44px] justify-center px-2 py-1 rounded-xl transition-all duration-200",
-                "text-muted-foreground hover:text-foreground active:scale-95"
-              )}
-              activeClassName="text-primary scale-110"
+    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 h-[72px] flex bg-white border-t-2 border-[#2B1736] lg:hidden pb-[env(safe-area-inset-bottom)]">
+      {tabs.map(({ path, icon: Icon, label }) => {
+        const isActive = path === "/more"
+          ? ["/more", "/teams", "/profile"].includes(location.pathname)
+          : location.pathname === path;
+        return (
+          <Link
+            key={path}
+            to={path}
+            aria-current={isActive ? "page" : undefined}
+            className="flex-1 flex flex-col items-center justify-center gap-[2px] no-underline"
+            style={{ color: isActive ? "#C21C70" : "#5E4E66", fontSize: 11, fontWeight: 800 }}
+          >
+            <span
+              className="flex items-center justify-center"
+              style={{ width: 44, height: 30, borderRadius: 999, background: isActive ? "#FCE4F0" : "transparent" }}
             >
-              <Icon className={cn("w-6 h-6", isActive && "drop-shadow-[0_0_8px_hsl(var(--neon-pink)/0.6)]")} strokeWidth={isActive ? 2.5 : 2} />
-              <span className={cn("text-[11px] font-bold uppercase tracking-wider", isActive && "font-extrabold")}>{label}</span>
-              {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5" />}
-            </NavLink>
-          );
-        })}
-      </div>
+              <Icon className="w-5 h-5" strokeWidth={2.2} />
+            </span>
+            {label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
 
 export function AppHeader() {
+  const { user } = useAuth();
+  const isAdmin = useIsAdmin();
+  const { data: profile } = useProfile();
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Power Girl";
+  const avatarColor = profile?.avatar_color || "#E8308C";
+  const initials = displayName.slice(0, 2).toUpperCase();
+
   return (
     <>
-      {/* Mobile/tablet header */}
-      <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 bg-card/95 backdrop-blur-lg border-b-2 border-[#2B1736] lg:hidden">
-        <SidebarTrigger className="text-foreground hover:text-primary" />
-        <h1 className="text-xl font-display text-primary tracking-wider">Power Club</h1>
-        <div className="ml-auto">
-          <ViewModeToggle />
+      {/* Mobile/tablet (below lg): dark bar with the pink logo + avatar, matching
+          the mobile design. Navigation lives in the bottom tab bar. */}
+      <header className="sticky top-0 z-40 h-[60px] flex items-center justify-between gap-3 px-4 bg-[#2B1736] lg:hidden">
+        <Link to="/" className="font-display text-[28px] tracking-wider text-[#FF8AC4] leading-none">Power Club</Link>
+        <div className="flex items-center gap-2">
+          {isAdmin && <ViewModeToggle />}
+          <Link
+            to="/profile"
+            aria-label="Your profile"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-extrabold text-white shrink-0"
+            style={{ backgroundColor: avatarColor }}
+          >
+            {initials}
+          </Link>
         </div>
       </header>
-      {/* Desktop header, only renders the toggle, no logo (the sidebar carries the branding). */}
+      {/* Desktop header (lg+): just the view toggle (the sidebar carries branding). */}
       <div className="hidden lg:flex sticky top-0 z-40 h-12 items-center justify-end px-6 bg-transparent">
         <ViewModeToggle />
       </div>

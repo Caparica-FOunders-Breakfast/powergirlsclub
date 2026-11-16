@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-11-16 — Mobile breakpoint (follow the mobile design mockups)
+
+Make the member area match the six mobile mockups (390px frame) below `lg`.
+Desktop (`lg+`) is unchanged; branches use the `useIsMobile` hook (768px).
+
+- **Shell** (`Navigation.tsx`, `App.tsx`): dark 60px top bar with the pink
+  logo + avatar (→ Profile), no hamburger; restyled 72px bottom tab bar with a
+  pink pill behind the active icon. The bottom bar now covers everything below
+  `lg` (phones *and* tablet), where tablet previously relied on the slide-out
+  menu. Admins reach Dashboard/Users/Language via their bottom-nav tabs.
+- **This week** (`CurrentWeek.tsx`): compact day-dot week strip, segmented
+  readiness control, sized-down gradient card and rows, responsive padding.
+- **Scorecard** (`ExerciseScorecard.tsx`): mobile heading/padding sizing (it
+  already stacked via auto-fit grids).
+- **Profile** (`Profile.tsx`, `WeekPlanCard.tsx`): mobile header sizing and a
+  vertical day list (day · colour dot · type) in place of the 7-column drag
+  grid; drag-to-reorder stays desktop-only.
+- **Edit exercises** (`CurrentWeek.tsx` edit header): responsive heading/padding;
+  `ExerciseEditor` already went 2-column on mobile via its auto-fit grid.
+- **Challenge** (`TeamManagement.tsx`): mobile hero (vertical how-it-works),
+  heading and padding sizing; cards already stacked.
+- **Dashboard**: already responsive via Tailwind breakpoints, no change.
+
+Verified: `tsc --noEmit` clean, production build clean. Member-area pages are
+behind login, so not screenshot-verified here.
+
+
 ## 2026-11-16 — Sidebar + This week + Challenge polish (design reference pass)
 
 Three design-reference tweaks from screenshots.

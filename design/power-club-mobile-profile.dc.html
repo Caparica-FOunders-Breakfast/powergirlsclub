@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Power Club profile, mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF9FB}
+a{color:#C21C70}a:hover{color:#2B1736}
+button,input{font-family:inherit}
+input:focus{outline:3px solid #E8308C;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1640px; overflow: hidden; display: flex; flex-direction: column; background: #FBF9FB; color: #2B1736; font-family: Nunito, system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+  <header style="flex: none; height: 60px; padding: 0 16px; background: #2B1736; display: flex; align-items: center; justify-content: space-between">
+    <span style="font-family: Bangers, cursive; font-size: 28px; letter-spacing: 1px; color: #FF8AC4">Power Club</span>
+    <span style="width: 36px; height: 36px; border-radius: 999px; background: #E8308C; color: #FFFFFF; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center">KL</span>
+  </header>
+  <main style="flex: 1; min-height: 0; overflow-y: auto; padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 16px">
+    <section style="background: linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%); color: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; box-shadow: 4px 4px 0 #2B1736; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 14px">
+        <span style="flex: none; width: 64px; height: 64px; border-radius: 999px; background: #FFFFFF; color: #C21C70; border: 3px solid #2B1736; font-family: Bangers, cursive; font-size: 36px; display: flex; align-items: center; justify-content: center">K</span>
+        <div style="min-width: 0"><h1 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 36px; letter-spacing: 1px; line-height: 1">Klarita</h1><p style="margin: 2px 0 0; font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.9)">you@example.com</p></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div style="background: rgba(255,255,255,0.16); border-radius: 14px; padding: 10px"><p style="margin: 0; font-family: Bangers, cursive; font-size: 28px; line-height: 1">66</p><p style="margin: 2px 0 0; font-size: 12px; font-weight: 800">Workouts</p></div>
+        <div style="background: rgba(255,255,255,0.16); border-radius: 14px; padding: 10px"><p style="margin: 0; font-family: Bangers, cursive; font-size: 28px; line-height: 1">11</p><p style="margin: 2px 0 0; font-size: 12px; font-weight: 800">Best streak</p></div>
+        <div style="background: rgba(255,255,255,0.16); border-radius: 14px; padding: 10px"><p style="margin: 0; font-family: Bangers, cursive; font-size: 28px; line-height: 1">0</p><p style="margin: 2px 0 0; font-size: 12px; font-weight: 800">Weeks won</p></div>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Training week</h2><button type="button" style="min-height: 40px; padding: 0 12px; border: 2px solid #2B1736; border-radius: 12px; background: #FFFFFF; color: #2B1736; font-weight: 800; font-size: 13px; cursor: pointer">Set up again</button></div>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px">
+        <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 12px; background: {{d.bg}}">
+            <span style="width: 36px; font-weight: 800; font-size: 14px">{{d.day}}</span>
+            <span style="width: 8px; height: 8px; border-radius: 999px; background: {{d.dot}}"></span>
+            <span style="font-weight: 700; font-size: 14px; color: {{d.fg}}">{{d.type}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px; display: flex; align-items: center; gap: 12px; background: {{travelBg}}">
+      <div style="flex: 1; min-width: 0"><h2 style="margin: 0; font-weight: 800; font-size: 17px">Travel mode</h2><p style="margin: 2px 0 0; font-size: 13px; color: #5E4E66">{{travelText}}</p></div>
+      <button type="button" role="switch" aria-checked="{{travelOn}}" aria-label="Travel mode" onClick="{{toggleTravel}}" style="flex: none; width: 60px; height: 34px; border-radius: 999px; border: 2px solid #2B1736; background: {{switchBg}}; cursor: pointer; padding: 0; position: relative"><span style="position: absolute; top: 3px; left: {{knob}}; width: 24px; height: 24px; border-radius: 999px; background: #FFFFFF; border: 2px solid #2B1736; box-sizing: border-box"></span></button>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; overflow: hidden">
+      <a href="#weight" style="display: flex; align-items: center; padding: 14px 16px; color: #2B1736; text-decoration: none; border-bottom: 1px solid #EFE6F1"><div style="flex: 1"><p style="margin: 0; font-size: 12px; font-weight: 800; color: #77677E">Body weight</p><p style="margin: 0; font-weight: 800">63 kg</p></div><span style="font-size: 13px; font-weight: 800; color: #C21C70">Update</span></a>
+      <a href="#prog" style="display: flex; align-items: center; padding: 14px 16px; color: #2B1736; text-decoration: none; border-bottom: 1px solid #EFE6F1"><div style="flex: 1"><p style="margin: 0; font-size: 12px; font-weight: 800; color: #77677E">Weekly progression</p><p style="margin: 0; font-weight: 800">+1 kg per week</p></div><span style="font-size: 13px; font-weight: 800; color: #C21C70">Change</span></a>
+      <a href="#name" style="display: flex; align-items: center; padding: 14px 16px; color: #2B1736; text-decoration: none; border-bottom: 1px solid #EFE6F1"><div style="flex: 1"><p style="margin: 0; font-size: 12px; font-weight: 800; color: #77677E">Profile name</p><p style="margin: 0; font-weight: 800">Klarita</p></div><span style="font-size: 13px; font-weight: 800; color: #C21C70">Edit</span></a>
+      <a href="#pw" style="display: flex; align-items: center; padding: 14px 16px; color: #2B1736; text-decoration: none"><div style="flex: 1"><p style="margin: 0; font-size: 12px; font-weight: 800; color: #77677E">Security</p><p style="margin: 0; font-weight: 800">Password</p></div><span style="font-size: 13px; font-weight: 800; color: #C21C70">Change</span></a>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px">
+      <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Strength levels</h2>
+      <p style="margin: 0; font-size: 13px; font-weight: 700; color: #5E4E66">Based on your body weight (63 kg)</p>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px">
+        <sc-for list="{{levels}}" as="lv" hint-placeholder-count="5">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: {{lv.bg}}; border: 2px solid {{lv.border}}">
+            <span style="flex: 1; font-weight: 800; font-size: 14px">{{lv.name}}<sc-if value="{{lv.you}}" hint-placeholder-val="{{false}}"><span style="margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #2B1736; color: #FFFFFF; font-size: 11px">You</span></sc-if></span>
+            <span style="font-size: 13px; font-weight: 700; color: #5E4E66">{{lv.range}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    <button type="button" style="flex: none; min-height: 50px; border: 2px solid #A3165E; border-radius: 14px; background: #FFFFFF; color: #A3165E; font-weight: 800; font-size: 16px; cursor: pointer">Sign out</button>
+  </main>
+  <nav aria-label="App" style="flex: none; height: 72px; background: #FFFFFF; border-top: 2px solid #2B1736; display: flex">
+    <a href="MobileWeek.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg></span>This week</a>
+    <a href="MobileScorecard.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg></span>Scorecard</a>
+    <a href="MobileChallenge.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.8.8 3 2.6 3.5 5.2"></path></svg></span>Challenge</a>
+    <a href="MobileProfile.dc.html" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #C21C70; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: #FCE4F0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg></span>Profile</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const travel = !!(this.state && this.state.travel);
+    const COL = { 'Lower body': '#E8308C', 'Upper body + core': '#6B2FB3', 'Core + back': '#2B1736', 'Rest': '#E4DAE7' };
+    const week = [['Mon','Lower body'],['Tue','Rest'],['Wed','Upper body + core'],['Thu','Rest'],['Fri','Rest'],['Sat','Core + back'],['Sun','Lower body']].map(([day, t]) => {
+      const rest = t === 'Rest';
+      return { day, type: travel && !rest ? 'Bodyweight' : t, dot: COL[t], bg: rest ? '#FBF9FB' : (travel ? '#F4EDFE' : '#FFF5FA'), fg: rest ? '#77677E' : '#2B1736' };
+    });
+    const levels = [['Very strong','76 kg +'],['Advanced','54–76 kg'],['Strong','38–54 kg'],['Leveling up','22–38 kg'],['Beginner','under 22 kg']].map(([name, range]) => { const you = name === 'Leveling up'; return { name, range, you, bg: you ? '#FFF5FA' : '#FFFFFF', border: you ? '#E8308C' : '#EFE6F1' }; });
+    return { week, levels, travelOn: travel ? 'true' : 'false', travelBg: travel ? '#F1E9FE' : '#FFFFFF', switchBg: travel ? '#6B2FB3' : '#E4DAE7', knob: travel ? '29px' : '3px',
+      travelText: travel ? 'On. Workouts switch to bodyweight.' : 'No gym? Switch to bodyweight workouts.', toggleTravel: () => this.setState({ travel: !travel }) };
+  }
+}
+</script>
+</body>
+</html>
