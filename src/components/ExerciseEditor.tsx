@@ -3,6 +3,7 @@ import { Reorder, useDragControls } from "framer-motion";
 import { type Exercise, type WorkoutDay } from "@/data/workoutPlan";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { firstNumber, typedNumber } from "@/lib/plan";
 
 interface ExerciseEditorProps {
   day: WorkoutDay;
@@ -125,8 +126,8 @@ function ExerciseCard({ row, num, isMobile, videoOpen, onOpenVideo, onUpdate, on
   const ex = row.ex;
   const t = typeOf(ex);
   const cfg = CFG[t];
-  const loadValue = ex.suggestedWeight ? ex.suggestedWeight.replace(/[^0-9.]/g, "") : "";
-  const progValue = ex.progression ? ex.progression.replace(/[^0-9.]/g, "") : "";
+  const loadValue = firstNumber(ex.suggestedWeight);
+  const progValue = firstNumber(ex.progression);
 
   return (
     <Reorder.Item
@@ -196,7 +197,7 @@ function ExerciseCard({ row, num, isMobile, videoOpen, onOpenVideo, onUpdate, on
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={fieldLabel}>{cfg.loadLabel}</span>
             <span style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${C.ink}`, borderRadius: 12, overflow: "hidden" }}>
-              <input type="text" inputMode="decimal" value={loadValue} onChange={(e) => onUpdate({ suggestedWeight: e.target.value ? `${e.target.value} kg` : "" })} placeholder="20" style={{ flex: 1, minWidth: 0, height: "100%", border: 0, padding: "0 12px", fontWeight: 800, fontSize: 16, color: C.ink }} />
+              <input type="text" inputMode="decimal" value={loadValue} onChange={(e) => { const v = typedNumber(e.target.value); onUpdate({ suggestedWeight: v ? `${v} kg` : "" }); }} placeholder="20" style={{ flex: 1, minWidth: 0, height: "100%", border: 0, padding: "0 12px", fontWeight: 800, fontSize: 16, color: C.ink }} />
               <span style={{ padding: "0 12px", fontSize: 14, fontWeight: 700, color: C.sub }}>kg</span>
             </span>
           </label>
@@ -205,7 +206,7 @@ function ExerciseCard({ row, num, isMobile, videoOpen, onOpenVideo, onUpdate, on
           <span style={fieldLabel}>{cfg.progLabel}</span>
           <span style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${C.ink}`, borderRadius: 12, overflow: "hidden", background: C.lilac }}>
             <span style={{ padding: "0 0 0 12px", fontWeight: 800, color: C.purple }}>{cfg.progSign}</span>
-            <input type="text" inputMode="decimal" value={progValue} onChange={(e) => onUpdate({ progression: e.target.value ? `${cfg.progSign}${e.target.value} ${cfg.progUnit}/week` : "" })} placeholder={cfg.progUnit === "kg" ? "1" : cfg.progUnit === "sec" ? "5" : "1"} style={{ flex: 1, minWidth: 0, height: "100%", border: 0, padding: "0 6px", fontWeight: 800, fontSize: 16, color: C.ink, background: "transparent" }} />
+            <input type="text" inputMode="decimal" value={progValue} onChange={(e) => { const v = typedNumber(e.target.value); onUpdate({ progression: v ? `${cfg.progSign}${v} ${cfg.progUnit}/week` : "" }); }} placeholder={cfg.progUnit === "kg" ? "1" : cfg.progUnit === "sec" ? "5" : "1"} style={{ flex: 1, minWidth: 0, height: "100%", border: 0, padding: "0 6px", fontWeight: 800, fontSize: 16, color: C.ink, background: "transparent" }} />
             <span style={{ padding: "0 12px", fontSize: 14, fontWeight: 700, color: C.purple }}>{cfg.progUnit}</span>
           </span>
         </label>

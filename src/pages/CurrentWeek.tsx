@@ -16,6 +16,7 @@ import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
+import { firstNumber } from "@/lib/plan";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
@@ -651,7 +652,9 @@ function FocusedExerciseRow({
   const isBodyweight = exercise.isBodyweight && !isTime;
   const unit = isAssisted ? "kg" : isRounds ? "reps" : isTime ? "sec" : "kg";
 
-  const parsedIncrement = parseFloat(exercise.progression?.replace(/[^0-9.-]/g, "") || "0");
+  // First number only: "+2 to 2.5 kg/week" is +2, not +22.5. Sign comes from
+  // the exercise type below, so the number is read unsigned.
+  const parsedIncrement = parseFloat(firstNumber(exercise.progression) || "0");
   const increment = parsedIncrement !== 0 ? (isAssisted ? -Math.abs(parsedIncrement) : Math.abs(parsedIncrement)) : (isAssisted ? -2 : isRounds ? 1 : isTime ? 5 : 2);
 
   const lastWeekFailed = lastWeekWeight === -1;

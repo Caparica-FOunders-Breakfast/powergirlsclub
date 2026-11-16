@@ -14,6 +14,8 @@ import {
   WEEKDAY_FULL,
   DEFAULT_TRAINING_DAYS,
   weekdayIndex,
+  firstNumber,
+  typedNumber,
 } from "@/lib/plan";
 
 const C = {
@@ -491,7 +493,7 @@ function StepBase({ baseMode, setBaseMode, planDays, setPlanDays }: {
             <div key={`${di}-${ii}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", borderRadius: 12, background: C.tile }}>
               <span style={{ flex: 1, fontWeight: 800 }}>{item.name}</span>
               <label style={{ display: "flex", alignItems: "center", height: 40, border: `2px solid ${C.ink}`, borderRadius: 10, background: "#FFFFFF", overflow: "hidden" }}>
-                <input inputMode="decimal" value={(item.startWeight ?? "").replace(/[^0-9.]/g, "")} onChange={(e) => setWeight(di, ii, e.target.value)} style={{ width: 56, height: "100%", border: 0, padding: "0 8px", textAlign: "right", fontWeight: 800, color: C.ink }} />
+                <input inputMode="decimal" value={firstNumber(item.startWeight)} onChange={(e) => setWeight(di, ii, typedNumber(e.target.value))} style={{ width: 56, height: "100%", border: 0, padding: "0 8px", textAlign: "right", fontWeight: 800, color: C.ink }} />
                 <span style={{ padding: "0 10px 0 2px", fontSize: 13, fontWeight: 700, color: C.sub }}>kg</span>
               </label>
             </div>
