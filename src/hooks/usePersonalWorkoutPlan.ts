@@ -109,6 +109,10 @@ export const usePersonalWorkoutPlan = () => {
     mergedPlan,
     travelMode,
     isLoading: defaultsLoading || customLoading,
+    /** Whether the member has saved a plan of their own (any non-travel day
+     *  row). Without one, the app sends them to plan setup instead of showing
+     *  the old 5-day default plan. Undefined while loading. */
+    hasPlan: customLoading || !customPlans ? undefined : customPlans.some((c: any) => c.day_index < TRAVEL_DAY_OFFSET),
     hasCustom: (dayIdx: number) => !!customPlans?.find((c: any) => c.day_index === dayIdx),
     /** Whether the user has saved edits for this day's travel workout. */
     hasTravelCustom: (dayIdx: number) =>

@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { isJustSignedUp } from "@/lib/onboarding";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AdminProvider, useAdminView } from "@/contexts/AdminContext";
 import { AppSidebar, BottomNav, AppHeader, SidebarProvider } from "@/components/Navigation";
@@ -26,6 +28,7 @@ const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Users = lazy(() => import("@/pages/Users"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PlanSetup = lazy(() => import("@/pages/PlanSetup"));
+const Welcome = lazy(() => import("@/pages/Welcome"));
 const Landing = lazy(() => import("@/pages/Landing"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
 const Terms = lazy(() => import("@/pages/Terms"));
@@ -59,6 +62,7 @@ const AppLoading = () => (
 // (rather than a 404) when they hit a real app URL directly.
 const PROTECTED_PATHS = [
   "/plan-setup",
+  "/welcome",
   "/week",
   "/learn",
   "/meals",
@@ -77,6 +81,20 @@ const AdminOnly = ({ children }: { children: JSX.Element }) => {
   return isRealAdmin ? children : <Navigate to="/week" replace />;
 };
 
+/**
+ * Members need a plan of their own. Without one they go to plan setup (or get
+ * the recommended plan they picked at sign-up); never the old 5-day default.
+ * Real admins are exempt so they can always reach the admin pages.
+ */
+const OnboardingGate = ({ children }: { children: JSX.Element }) => {
+  const { isRealAdmin } = useAdminView();
+  const { status } = useOnboarding();
+  if (isRealAdmin) return children;
+  if (status === "loading" || status === "setting-up") return <PageFallback />;
+  if (status === "needs-plan") return <Navigate to="/plan-setup" replace />;
+  return children;
+};
+
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
 
@@ -92,6 +110,7 @@ const ProtectedLayout = () => {
           <AppHeader />
           <main className="flex-1 pb-[calc(76px+env(safe-area-inset-bottom))] lg:pb-0">
             <PageErrorBoundary>
+            <OnboardingGate>
             <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Leaderboard />} />
@@ -125,6 +144,7 @@ const ProtectedLayout = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
+            </OnboardingGate>
             </PageErrorBoundary>
           </main>
           <BottomNav />
@@ -145,7 +165,8 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<PageFallback />}>
     <Routes>
-      <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+      {/* Right after sign-up, go to the welcome screen instead of "/". */}
+      <Route path="/auth" element={user ? <Navigate to={isJustSignedUp() ? "/welcome" : "/"} replace /> : <Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       {/* Public static pages — reachable whether or not you're logged in. */}
       <Route path="/privacy" element={<Privacy />} />
@@ -157,6 +178,8 @@ const AppRoutes = () => {
         <>
           {/* Full-page plan setup — standalone (its own header, no sidebar). */}
           <Route path="/plan-setup" element={<PlanSetup />} />
+          {/* Sign-up step 5: welcome + first workout. */}
+          <Route path="/welcome" element={<Welcome />} />
           {/* Logged in: everything else (including "/") runs inside the app shell. */}
           <Route path="/*" element={<ProtectedLayout />} />
         </>

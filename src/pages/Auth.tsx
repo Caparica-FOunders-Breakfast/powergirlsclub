@@ -6,6 +6,7 @@ import { setKeepLoggedIn } from "@/integrations/supabase/authStorage";
 import { useToast } from "@/hooks/use-toast";
 import { useFeatureFlags } from "@/hooks/useAppSettings";
 import { StatusBarBackdrop } from "@/components/StatusBarBackdrop";
+import { SignUpWizard } from "@/components/auth/SignUpWizard";
 
 // Palette ported from the "Harley" login design (claude.ai design canvas).
 const C = {
@@ -74,13 +75,12 @@ const Auth = () => {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [showPw, setShowPw] = useState(false);
   // Checked → session persists in localStorage; unchecked → sessionStorage
   // (cleared when the browser closes). Applied in handleSubmit before sign-in.
   const [keepLoggedIn, setKeepLoggedInState] = useState(true);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const { toast } = useToast();
   const { data: flags } = useFeatureFlags();
   const signupsEnabled = flags?.signups_enabled ?? true;
@@ -114,18 +114,10 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Decide where the session is stored before it's created. Signups always
-      // persist; logins honor the "Keep me logged in" checkbox.
-      setKeepLoggedIn(isLogin ? keepLoggedIn : true);
-      if (isLogin) {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password, displayName);
-        toast({
-          title: "Welcome to Power Club!",
-          description: "Check your email to confirm your account.",
-        });
-      }
+      // Decide where the session is stored before it's created: logins honor
+      // the "Keep me logged in" checkbox. (Sign-up is SignUpWizard.)
+      setKeepLoggedIn(keepLoggedIn);
+      await signIn(email, password);
     } catch (err: any) {
       toast({ title: "Oops!", description: err.message, variant: "destructive" });
     } finally {
@@ -148,6 +140,9 @@ const Auth = () => {
       : isLogin
         ? "Let's go!"
         : "Join for €5/month";
+
+  // Sign-up is its own 4-step flow (sign-up.dc.html).
+  if (!isLogin && !isForgotPassword) return <SignUpWizard onLogin={() => setIsLogin(true)} />;
 
   return (
     <>
@@ -223,21 +218,6 @@ const Auth = () => {
           <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit} style={{ width: "100%", maxWidth: 420 }}>
             <h2 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1 }}>{heading}</h2>
             <p style={{ margin: "4px 0 0", color: C.sub }}>{subheading}</p>
-
-            {/* Name (signup only) */}
-            {!isLogin && !isForgotPassword && (
-              <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 8 }}>
-                <label htmlFor="name" style={labelStyle}>Your name</label>
-                <input
-                  id="name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="e.g. Sofia"
-                  required
-                  style={fieldStyle}
-                />
-              </div>
-            )}
 
             {/* Email */}
             <div style={{ marginTop: isLogin || isForgotPassword ? 32 : 20, display: "flex", flexDirection: "column", gap: 8 }}>
