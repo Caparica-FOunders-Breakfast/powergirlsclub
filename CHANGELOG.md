@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-11-16 — Training plan feature, step 4 (Challenge, Profile, admin dashboard)
+
+- **Admin dashboard** (`Dashboard.tsx`), rebuilt to `admin-dashboard.dc.html`:
+  KPI row (Members + signup status, Active this week + retention, Workouts this
+  month, AI cost vs. the $10 budget), a "Workouts per day" chart for this week,
+  a **Weekly plan** card (On plan / Behind / Not started, with the members who
+  need a nudge listed first), the members table, and restyled feature switches.
+  - **Fix**: "Workouts this month" counted exercise *rows*, so one 5-exercise
+    session counted as 5. It now counts sessions (one member, one day), and
+    rest/recovery check-ins are excluded everywhere in admin stats.
+  - Dropped the "Rate-limit hits: 0" line: it was a hard-coded placeholder,
+    nothing records those hits.
+  - Feature-switch note now says members get changes on their next page load
+    (flags use a 30s cache, not a live push).
+- **Members table** (`AdminUsersTable.tsx`, also on the Users page): mockup
+  layout with Joined, Last active, a "This week N of M" bar, workouts and a plan
+  chip; data now comes from a shared `useAdminMembers` hook so the table and
+  the Weekly plan card agree.
+- **Challenge** (`TeamManagement.tsx`): icon tiles on Start/Join a team, a
+  "Share this code" panel with **Share on WhatsApp**, and the example team board
+  for members without a team. Emoji removed from toasts, the challenge card and
+  `RewardJourney`.
+- **Profile**: already matched `profile-with-plan.dc.html` from step 1; removed
+  the remaining visible emoji (toasts, edit-name pencil, "Admin" crown).
+
+
 ## 2026-11-16 — Training plan feature, step 3 (Scorecard)
 
 Matches `scorecard.dc.html`. Activity, strength levels and exercise progress

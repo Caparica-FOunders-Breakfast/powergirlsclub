@@ -227,7 +227,7 @@ const Profile = () => {
   const handleToggleTravel = async (on: boolean) => {
     try {
       await setTravelMode.mutateAsync(on);
-      toast(on ? { title: "Travel mode on ✈️", description: "Bodyweight workouts, your plan is saved." } : { title: "Welcome back 💪", description: "Your normal plan is restored." });
+      toast(on ? { title: "Travel mode on", description: "Bodyweight workouts, your plan is saved." } : { title: "Welcome back", description: "Your normal plan is restored." });
     } catch (e) {
       toast({ title: "Couldn't switch travel mode", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     }
@@ -328,7 +328,7 @@ const Profile = () => {
       }
       resetPasswordFields();
       setPasswordOpen(false);
-      toast({ title: "Password updated 🔑" });
+      toast({ title: "Password updated" });
     } finally {
       setChangingPassword(false);
     }
@@ -366,10 +366,10 @@ const Profile = () => {
             ) : (
               <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 36 : 52, letterSpacing: 1, lineHeight: 1, display: "flex", alignItems: "center", gap: 10 }}>
                 {displayName || "Power Girl"}
-                <button type="button" onClick={handleStartEditName} aria-label="Edit name" style={{ width: 28, height: 28, borderRadius: 8, border: 0, background: "rgba(255,255,255,0.2)", color: "#FFFFFF", cursor: "pointer", fontSize: 13 }}>✎</button>
+                <button type="button" onClick={handleStartEditName} aria-label="Edit name" style={{ width: 28, height: 28, borderRadius: 8, border: 0, background: "rgba(255,255,255,0.2)", color: "#FFFFFF", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /></svg></button>
               </h1>
             )}
-            <p style={{ margin: "4px 0 0", fontWeight: 700, color: "rgba(255,255,255,0.9)", wordBreak: "break-all" }}>{user?.email}{isAdmin ? " · Admin 👑" : ""}</p>
+            <p style={{ margin: "4px 0 0", fontWeight: 700, color: "rgba(255,255,255,0.9)", wordBreak: "break-all" }}>{user?.email}{isAdmin ? " · Admin" : ""}</p>
           </div>
           <div style={{ flex: "2 1 380px", minWidth: 0, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
             {headerStat(String(stats.workouts), "Workouts")}
