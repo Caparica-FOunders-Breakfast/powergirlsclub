@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-16 — Power exercises shown in blue
+
+- This Week: power exercises (library type "power") get a blue card
+  (`#E3F0FF` background, `#2563EB` border) with a POWER label above the name.
+  Done rows keep the pink done style.
+- Profile plan card and plan setup: the POWER START block uses the same blue
+  instead of lilac. Colours live in `POWER_COLORS` (`src/lib/plan.ts`).
+- Why blue: requested by the owner ("real blue", not the lilac/purple
+  family), so power work stands apart from the pink/purple brand colours.
+
 ## 2026-11-16 — Plan setup save can't hang; "Last time" by exercise; videos from the library
 
 Reported: plan setup stuck on "Saving...", new exercises not showing, missing

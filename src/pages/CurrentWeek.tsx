@@ -17,7 +17,7 @@ import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { PageViewToggle } from "@/components/ViewModeToggle";
-import { firstNumber, makeLibraryLookup, looseExerciseKey } from "@/lib/plan";
+import { firstNumber, makeLibraryLookup, looseExerciseKey, POWER_COLORS } from "@/lib/plan";
 import { useExerciseLibrary } from "@/hooks/usePlan";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
@@ -541,6 +541,7 @@ const CurrentWeek = () => {
                         mood={mood}
                         compact={isMobile}
                         fallbackVideoUrl={findInLibrary(ex.name)?.video_url ?? undefined}
+                        isPower={findInLibrary(ex.name)?.type === "power"}
                         isDone={!!localCompleted[key]}
                         weight={localWeights[key] || ""}
                         lastWeekWeight={prevWeightMap[looseExerciseKey(ex.name)]}
@@ -638,13 +639,15 @@ const CurrentWeek = () => {
 
 // ── Per-exercise row inside the focused day card ──
 function FocusedExerciseRow({
-  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false, fallbackVideoUrl,
+  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false, fallbackVideoUrl, isPower = false,
   onWeightChange, onWeightBlur, onToggle, onVideoClick,
 }: {
   exercise: Exercise;
   mood: Mood;
   compact?: boolean;
   fallbackVideoUrl?: string;
+  /** Power exercise (library type "power"): blue card with a POWER label. */
+  isPower?: boolean;
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
@@ -684,11 +687,12 @@ function FocusedExerciseRow({
   const lastLabel = lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
 
   return (
-    <div style={{ display: "flex", flexWrap: compact ? "nowrap" : "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : "#FFFFFF" }}>
+    <div style={{ display: "flex", flexWrap: compact ? "nowrap" : "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : isPower ? POWER_COLORS.border : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : isPower ? POWER_COLORS.bg : "#FFFFFF" }}>
       <button type="button" onClick={onToggle} aria-pressed={isDone} aria-label={`${isDone ? "Mark not done" : "Mark done"}: ${exercise.name}`} style={{ flex: "none", width: 44, height: 44, borderRadius: 999, border: `2px solid ${C.ink}`, background: isDone ? C.magenta : "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#FFFFFF" : C.border} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
       </button>
       <div style={{ flex: compact ? "1 1 0%" : "1 1 200px", minWidth: 0 }}>
+        {isPower && <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 800, letterSpacing: 1, color: POWER_COLORS.label }}>POWER</p>}
         <p style={{ margin: 0, fontWeight: 800, fontSize: compact ? 15 : 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
           {exercise.name}
           {videoUrl && (

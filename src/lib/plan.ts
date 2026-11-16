@@ -177,3 +177,11 @@ export const makeLibraryLookup = (library: ExerciseRow[] | undefined) => {
   return (name: string | null | undefined): ExerciseRow | undefined =>
     name ? byKey.get(looseExerciseKey(name)) : undefined;
 };
+
+/**
+ * Power exercises (type "power": jump squats, kettlebell swings, med ball
+ * throws...) are highlighted in blue everywhere they appear: This Week, the
+ * Profile plan card and plan setup. Label blue is a shade deeper than the
+ * border so the small "POWER" text keeps enough contrast on the light blue.
+ */
+export const POWER_COLORS = { bg: "#E3F0FF", border: "#2563EB", label: "#1D4ED8" } as const;
