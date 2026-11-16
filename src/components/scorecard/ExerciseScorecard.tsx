@@ -272,6 +272,11 @@ export function ExerciseScorecard() {
   }
 
   const hasData = grouped && grouped.size > 0;
+  const noStreakYet = streaks.current === 0 && streaks.longest === 0;
+  // Empty exercise progress lists what's coming up in the member's plan.
+  const comingUp = Array.from(
+    new Set((plan ?? []).filter((d) => !d.isRest && !d.isRecovery).flatMap((d) => d.exercises.map((e) => e.name))),
+  ).slice(0, 12);
   const filtered = exercises.filter((e) => filter === "All" || e.group === filter);
   const sorted = [...filtered].sort((a, b) => {
     if (sort === "Sessions") return b.sessions - a.sessions;
@@ -333,14 +338,19 @@ export function ExerciseScorecard() {
         <section style={{ flex: "1 1 260px", minWidth: 0, ...card, padding: isMobile ? 18 : 24, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16 }}>
           <div>
             <Label>CURRENT STREAK</Label>
-            <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 48 : 64, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
+            {/* New member (no streak ever yet): "Starts today". */}
+            <p style={{ margin: "4px 0 0", ...bangers, fontSize: noStreakYet ? (isMobile ? 36 : 40) : isMobile ? 48 : 64, letterSpacing: noStreakYet ? 1 : undefined, lineHeight: 1, color: C.pink }}>
+              {noStreakYet ? "Starts today" : `${streaks.current} ${streaks.current === 1 ? "day" : "days"}`}
+            </p>
             <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
-              {streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
+              {noStreakYet
+                ? "Finish today's workout and your first streak begins. Rest days don't break it."
+                : streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
             </p>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 12, background: C.lilac, fontWeight: 800 }}>
             <span>Best streak</span>
-            <span style={{ color: C.purple }}>{streaks.longest} {streaks.longest === 1 ? "day" : "days"}</span>
+            <span style={{ color: C.purple }}>{noStreakYet ? "Not yet" : `${streaks.longest} ${streaks.longest === 1 ? "day" : "days"}`}</span>
           </div>
         </section>
       </div>
@@ -441,11 +451,32 @@ export function ExerciseScorecard() {
         <section style={{ flex: "2 1 520px", minWidth: 0, ...card, padding: isMobile ? 18 : 24 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Exercise progress</h2>
+            {hasData && (
             <button type="button" onClick={() => setAddModalOpen(true)} disabled={!hasHidden} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: `2px solid ${C.ink}`, borderRadius: 12, background: hasHidden ? C.pink : "#EDE7EF", color: hasHidden ? "#FFFFFF" : C.sub, fontWeight: 800, fontSize: 15, cursor: hasHidden ? "pointer" : "not-allowed" }}>
               <Plus className="w-4 h-4" /> Add exercise
             </button>
+            )}
           </div>
 
+          {!hasData ? (
+            <>
+              <div style={{ marginTop: 16, padding: 22, border: "2px dashed #E4DAE7", borderRadius: 16, textAlign: "center" }}>
+                <p style={{ margin: 0, fontWeight: 800, fontSize: 18 }}>Nothing logged yet</p>
+                <p style={{ margin: "6px auto 0", maxWidth: 420, fontSize: 15, color: C.body }}>After your first workout, every exercise you log shows up here with your weights over time.</p>
+              </div>
+              {comingUp.length > 0 && (
+                <>
+                  <p style={{ margin: "18px 0 8px", fontSize: 12, fontWeight: 800, letterSpacing: 1, color: C.body }}>COMING UP IN YOUR PLAN</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {comingUp.map((name) => (
+                      <span key={name} style={{ padding: "6px 12px", borderRadius: 999, background: "#F3EEF4", color: C.body, fontSize: 14, fontWeight: 700 }}>{name}</span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+          <>
           <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {FILTERS.map((f) => (
@@ -494,6 +525,8 @@ export function ExerciseScorecard() {
             <button type="button" onClick={() => setShowAll((v) => !v)} style={{ marginTop: 8, width: "100%", minHeight: 48, border: "2px dashed #B79BF2", borderRadius: 14, background: "#FBF9FB", color: C.purple, fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
               {showAll ? "Show fewer" : `Show all ${sorted.length} exercises`}
             </button>
+          )}
+          </>
           )}
         </section>
       </div>
