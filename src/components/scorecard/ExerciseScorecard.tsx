@@ -31,6 +31,7 @@ import {
 } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PageViewToggle } from "@/components/ViewModeToggle";
+import { BodyWeightBox } from "@/components/BodyWeightBox";
 import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 
 // ── Palette (ported from the "Harley" scorecard design) ──
@@ -434,7 +435,15 @@ export function ExerciseScorecard() {
 
           <div style={{ ...card, padding: isMobile ? 18 : 24 }}>
             <Label>STRENGTH LEVELS</Label>
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+            {!bw && (
+              <p style={{ margin: "8px 0 0", display: "flex", alignItems: "center", gap: 8, fontWeight: 800, color: C.purple }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "inline-block" }}><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                Locked until you add your body weight
+              </p>
+            )}
+            {/* Missing body weight: the "What's your body weight?" box; set: an editable row. */}
+            <BodyWeightBox />
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10, opacity: bw ? 1 : 0.45 }}>
               {["Very strong", "Advanced", "Strong", "Leveling up", "Beginner"].map((name, i) => (
                 <div key={name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ display: "flex", gap: 3, width: 80 }}>

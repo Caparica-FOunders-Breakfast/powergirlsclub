@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile, useUpdateProfile, useMemberName } from "@/hooks/useProfile";
+import { BodyWeightBox } from "@/components/BodyWeightBox";
 import {
   PROGRESSION_DEFAULT,
   useUserPreferences,
@@ -25,7 +26,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SavedIndicator } from "@/components/ui/SavedIndicator";
 import { useToast } from "@/hooks/use-toast";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 const C = {
   bg: "#FBF9FB",
@@ -117,7 +117,6 @@ const Profile = () => {
   const [name, setName] = useState("");
 
   const [weightExpanded, setWeightExpanded] = useState(false);
-  const [bodyWeight, setBodyWeight] = useState("");
   const [weightSaved, setWeightSaved] = useState(false);
   const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -205,23 +204,6 @@ const Profile = () => {
     setWeightSaved(true);
     if (weightSavedTimer.current) clearTimeout(weightSavedTimer.current);
     weightSavedTimer.current = setTimeout(() => setWeightSaved(false), 2000);
-  };
-
-  const saveWeightDebounced = useDebouncedCallback(async (raw: string) => {
-    const val = parseFloat(raw);
-    if (!val || val <= 0) return;
-    if (profile?.body_weight && Number(profile.body_weight) === val) return;
-    try {
-      await updateProfile.mutateAsync({ body_weight: val });
-      flashWeightSaved();
-    } catch {
-      toast({ title: "Couldn't save body weight", variant: "destructive" });
-    }
-  }, 1000);
-
-  const handleWeightChange = (value: string) => {
-    setBodyWeight(value);
-    saveWeightDebounced(value);
   };
 
   const handleUpdateWeight = () => {
@@ -357,9 +339,8 @@ const Profile = () => {
                   </button>
                   {weightExpanded && (
                     <div style={{ padding: "0 24px 18px" }}>
-                      <Input type="number" placeholder={bw ? String(bw) : "kg"} value={bodyWeight} onChange={(e) => handleWeightChange(e.target.value)} className="h-10 border-2 border-border" />
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 16, marginTop: 6 }}>
-                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.sub }}>Saves automatically</p>
+                      <BodyWeightBox startEditing onSaved={() => { setWeightExpanded(false); flashWeightSaved(); }} />
+                      <div style={{ display: "flex", justifyContent: "flex-end", minHeight: 16, marginTop: 6 }}>
                         <SavedIndicator show={weightSaved} />
                       </div>
                     </div>
@@ -412,7 +393,7 @@ const Profile = () => {
                     <button type="button" onClick={handleUpdateWeight} style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: 0 }}>Update weight</button>
                   </>
                 ) : (
-                  <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 14, border: `2px dashed ${C.rowBorder}`, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg><span style={{ flex: "1 1 180px", fontSize: 14, fontWeight: 700, color: C.body }}>Add your body weight and we'll work out your personal strength levels.</span><button type="button" onClick={handleUpdateWeight} style={{ fontSize: 14, fontWeight: 800, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: 0 }}>Set body weight</button></div>
+                  <BodyWeightBox />
                 )}
               </section>
 
