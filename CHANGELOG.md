@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-16 — Fix mobile bottom tab bar under the iOS home indicator
+
+In standalone (home-screen) mode the bottom tab bar used a fixed `h-[72px]`
+with `padding-bottom: env(safe-area-inset-bottom)`; with `box-sizing:
+border-box` that inset ate into the 72px, squeezing the tabs against the home
+indicator. Restructured so the bar's white background fills the safe-area
+inset via padding while a 72px tab row sits above it, and bumped the content's
+bottom clearance to `calc(76px + env(safe-area-inset-bottom))`.
+
+
 ## 2026-11-16 — Fix mobile header under the iOS status bar
 
 The dark mobile top bar had no top safe-area inset, so on a notched iPhone
