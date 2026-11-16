@@ -7,27 +7,14 @@ import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import {
   PROGRESSION_DEFAULT,
   useUserPreferences,
-  useSaveUserPreferences,
   useSetTravelMode,
 } from "@/hooks/useUserPreferences";
-import { useProfileSetup } from "@/hooks/useProfileSetup";
 import { useActivityData } from "@/hooks/useActivityData";
 import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
-import {
-  usePersonalWorkoutPlan,
-  useSavePersonalDay,
-} from "@/hooks/usePersonalWorkoutPlan";
-import type { WorkoutDay } from "@/data/workoutPlan";
+import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 import { supabase } from "@/integrations/supabase/client";
 import AdminApiUsage from "@/components/AdminApiUsage";
-import ImportWorkoutPlanModal from "@/components/ImportWorkoutPlanModal";
-import {
-  LockedStrengthLevelsNote,
-  ProfileSetupWizard,
-  StepProgression,
-} from "@/components/profile-setup/ProfileSetupWizard";
-import { PlanGeneratorModal } from "@/components/profile-setup/PlanGeneratorModal";
-import { WeekPlanCard } from "@/components/profile-setup/WeekPlanCard";
+import { ProgressionEditor } from "@/components/profile-plan/ProgressionEditor";
 import { TrainingPlanCard } from "@/components/profile-plan/TrainingPlanCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -118,14 +105,9 @@ const Profile = () => {
   const isMobile = useIsMobile();
   const { data: activity } = useActivityData();
   const { data: grouped } = useExerciseScorecard();
-  const { plan, mergedPlan, travelMode } = usePersonalWorkoutPlan();
-  const savePersonalDay = useSavePersonalDay();
-  const savePrefs = useSaveUserPreferences();
+  const { plan, travelMode } = usePersonalWorkoutPlan();
   const setTravelMode = useSetTravelMode();
   const navigate = useNavigate();
-
-  const setup = useProfileSetup();
-  const wizardActive = setup.ready && setup.state.wizardActive;
 
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
@@ -139,8 +121,6 @@ const Profile = () => {
   const weightSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [progressionEditOpen, setProgressionEditOpen] = useState(false);
-  const [generatorOpen, setGeneratorOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
 
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -190,39 +170,6 @@ const Profile = () => {
     return { workouts: days.size, bestStreak: longest };
   }, [activity]);
 
-  const trainingDays = useMemo(() => prefs?.training_days ?? [], [prefs]);
-  const selectedPlanDays = useMemo(
-    () =>
-      [...trainingDays]
-        .sort((a, b) => a - b)
-        .map((idx) => ({ idx, day: mergedPlan[idx] }))
-        .filter((e): e is { idx: number; day: NonNullable<typeof e.day> } => !!e.day),
-    [trainingDays, mergedPlan],
-  );
-
-  const dayPayload = (d: WorkoutDay, dayIndex: number) => ({
-    dayIndex,
-    exercises: d.exercises,
-    label: d.label,
-    emoji: d.emoji,
-    isRest: d.isRest,
-    isRecovery: d.isRecovery,
-    restNote: d.restNote,
-  });
-
-  const handleReorderDays = async (next: WorkoutDay[], changed: number[]) => {
-    if (!prefs || changed.length === 0) return;
-    try {
-      for (const col of changed) {
-        await savePersonalDay.mutateAsync(dayPayload(next[col], col));
-      }
-      const training = next.map((d, i) => ({ d, i })).filter(({ d }) => !d.isRest).map(({ i }) => i);
-      await savePrefs.mutateAsync({ ...prefs, training_days: training });
-    } catch (e) {
-      toast({ title: "Couldn't move that day", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
-      throw e;
-    }
-  };
 
   const handleToggleTravel = async (on: boolean) => {
     try {
@@ -276,12 +223,10 @@ const Profile = () => {
   };
 
   const handleUpdateWeight = () => {
-    if (wizardActive) setup.startWeightEdit();
-    else setWeightExpanded(true);
+    setWeightExpanded(true);
   };
 
   const openProgressionEdit = () => {
-    setup.startProgressionEdit();
     setProgressionEditOpen(true);
   };
 
@@ -334,8 +279,6 @@ const Profile = () => {
     }
   };
 
-  const showProgressionSummary = !wizardActive || setup.state.step === 4;
-
   const headerStat = (value: string, label: React.ReactNode) => (
     <div style={{ background: "rgba(255,255,255,0.16)", borderRadius: 16, padding: isMobile ? "10px 12px" : "14px 16px" }}>
       <p style={{ margin: 0, ...bangers, fontSize: isMobile ? 28 : 40, lineHeight: 1 }}>{value}</p>
@@ -378,7 +321,6 @@ const Profile = () => {
           </div>
         </section>
 
-        {!setup.ready ? null : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* LEFT */}
             <div style={{ flex: "3 1 520px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
@@ -467,17 +409,15 @@ const Profile = () => {
                     <button type="button" onClick={handleUpdateWeight} style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: 0 }}>Update weight</button>
                   </>
                 ) : (
-                  <div style={{ marginTop: 12 }}><LockedStrengthLevelsNote /></div>
+                  <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 14, border: `2px dashed ${C.rowBorder}`, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg><span style={{ flex: "1 1 180px", fontSize: 14, fontWeight: 700, color: C.body }}>Add your body weight and we'll work out your personal strength levels.</span><button type="button" onClick={handleUpdateWeight} style={{ fontSize: 14, fontWeight: 800, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: 0 }}>Set body weight</button></div>
                 )}
               </section>
 
-              {showProgressionSummary && (
-                <section style={{ ...card, padding: 24 }}>
-                  <h3 style={{ margin: 0, ...bangers, fontSize: 24, letterSpacing: 0.5 }}>Weekly progression</h3>
-                  <p style={{ margin: "6px 0 0", fontWeight: 800, color: C.ink }}>+{progressionKg} kg added per week</p>
-                  <p style={{ margin: "2px 0 0", fontSize: 14, color: C.body }}>In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.</p>
-                </section>
-              )}
+              <section style={{ ...card, padding: 24 }}>
+                <h3 style={{ margin: 0, ...bangers, fontSize: 24, letterSpacing: 0.5 }}>Weekly progression</h3>
+                <p style={{ margin: "6px 0 0", fontWeight: 800, color: C.ink }}>+{progressionKg} kg added per week</p>
+                <p style={{ margin: "2px 0 0", fontSize: 14, color: C.body }}>In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.</p>
+              </section>
 
               <button type="button" onClick={signOut} style={{ minHeight: 52, border: `2px solid #A3165E`, borderRadius: 14, background: "#FFFFFF", color: "#A3165E", fontWeight: 800, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" /></svg>
@@ -485,34 +425,17 @@ const Profile = () => {
               </button>
             </div>
           </div>
-        )}
       </div>
 
-      {/* Standalone progression edit */}
+      {/* Weekly progression editor */}
       <Dialog open={progressionEditOpen} onOpenChange={(open) => setProgressionEditOpen(open)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-foreground">Progression</DialogTitle>
+            <DialogTitle className="sr-only">Weekly progression</DialogTitle>
           </DialogHeader>
-          <StepProgression setup={setup} onSaved={() => setProgressionEditOpen(false)} />
+          <ProgressionEditor onSaved={() => setProgressionEditOpen(false)} />
         </DialogContent>
       </Dialog>
-
-      {/* Plan generator */}
-      <PlanGeneratorModal open={generatorOpen} onOpenChange={setGeneratorOpen} days={setup.state.daysPerWeek ?? 5} kgPerWeek={setup.state.kgPerWeek} onGenerated={() => navigate("/week")} />
-
-      {/* Import a plan */}
-      <ImportWorkoutPlanModal
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        selectedDayIndices={trainingDays}
-        days={selectedPlanDays}
-        onImport={async (dayIndex, exercises) => {
-          const target = mergedPlan[dayIndex];
-          await savePersonalDay.mutateAsync({ dayIndex, exercises, label: target?.label, emoji: target?.emoji, isRest: false, isRecovery: target?.isRecovery, restNote: target?.restNote });
-          navigate("/week");
-        }}
-      />
 
       {/* Password modal */}
       <Dialog open={passwordOpen} onOpenChange={(open) => { setPasswordOpen(open); if (!open) resetPasswordFields(); }}>

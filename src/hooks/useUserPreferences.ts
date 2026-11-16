@@ -193,3 +193,28 @@ export const useSetTravelMode = () => {
     },
   });
 };
+
+/** Save just the weekly progression. A targeted upsert (like plan_type and
+ *  travel_mode) so changing progression never touches training_days, frequency
+ *  or plan_type. The old onboarding save rewrote all of those, which reset a
+ *  member's chosen training days to the old wizard defaults. */
+export const useSetProgression = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (kgPerWeek: number) => {
+      const { error } = await supabase
+        .from("user_preferences" as never)
+        .upsert(
+          { user_id: user!.id, progression_kg_per_week: kgPerWeek } as never,
+          { onConflict: "user_id" },
+        );
+      if (error) throw error;
+      return kgPerWeek;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["personal-workout-plan"] });
+    },
+  });
+};
