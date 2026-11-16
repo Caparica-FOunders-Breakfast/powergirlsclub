@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile, useUpdateProfile, useMemberName } from "@/hooks/useProfile";
 import { BodyWeightBox } from "@/components/BodyWeightBox";
+import { addDays, format } from "date-fns";
+import { firstMonthRange } from "@/lib/memberMonth";
 import {
   PROGRESSION_DEFAULT,
   useUserPreferences,
@@ -150,6 +152,11 @@ const Profile = () => {
   }, [grouped, bw]);
 
   const progressionKg = prefs?.progression_kg_per_week ?? PROGRESSION_DEFAULT;
+  // First €5 is due at the end of the first month (counted from the join date).
+  const firstMonthEnd = user?.created_at ? firstMonthRange(new Date(user.created_at)).end : null;
+  const membershipNote = firstMonthEnd && new Date() <= addDays(firstMonthEnd, 1)
+    ? `Nothing to pay yet. Your first €5 is due on ${format(firstMonthEnd, "MMM d")}.`
+    : "Paid at the end of each month. Cancel anytime.";
   // First name typed at sign-up; never "Power Girl" or letters from the email.
   const { firstName: displayName, initial } = useMemberName();
   const initials = initial || "?";
@@ -401,6 +408,13 @@ const Profile = () => {
                 <h3 style={{ margin: 0, ...bangers, fontSize: 24, letterSpacing: 0.5 }}>Weekly progression</h3>
                 <p style={{ margin: "6px 0 0", fontWeight: 800, color: C.ink }}>+{progressionKg} kg added per week</p>
                 <p style={{ margin: "2px 0 0", fontSize: 14, color: C.body }}>In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.</p>
+              </section>
+
+              {/* Membership: €5 a month, the first payment at the end of the first month. */}
+              <section style={{ ...card, padding: 20 }}>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 800, letterSpacing: 1, color: C.body }}>MEMBERSHIP</p>
+                <p style={{ margin: "6px 0 0", fontWeight: 800, fontSize: 18 }}>€5 a month</p>
+                <p style={{ margin: "2px 0 0", fontSize: 15, color: C.body }}>{membershipNote}</p>
               </section>
 
               <button type="button" onClick={signOut} style={{ minHeight: 52, border: `2px solid #A3165E`, borderRadius: 14, background: "#FFFFFF", color: "#A3165E", fontWeight: 800, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>

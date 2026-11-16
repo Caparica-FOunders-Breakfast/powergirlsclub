@@ -5,6 +5,8 @@ import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
 import { useActivityData } from "@/hooks/useActivityData";
 import { useStreaks } from "@/hooks/useActivityData";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { computeMemberMonth } from "@/lib/memberMonth";
 import { useScorecardVisibility } from "@/hooks/useScorecardVisibility";
 import { Button } from "@/components/ui/button";
 import { ExerciseDetail } from "./ExerciseDetail";
@@ -18,8 +20,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  startOfMonth,
-  endOfMonth,
   startOfWeek,
   endOfWeek,
   addDays,
@@ -119,6 +119,7 @@ export function ExerciseScorecard() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { plan } = usePersonalWorkoutPlan();
+  const { user } = useAuth();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [filter, setFilter] = useState<string>("All");
@@ -231,42 +232,19 @@ export function ExerciseScorecard() {
   // Targets come from the live plan's training weekdays, clipped to days inside
   // the month, so a partial first/last week never asks for impossible sessions.
   // Rest/recovery check-ins are logged as exercises too, so they don't count.
+  // First month counts from the join date (weeks 1 to 5 from that day); never
+  // count weeks before the member joined. See lib/memberMonth.
   const month = useMemo(() => {
-    const now = new Date();
     const trainingIdx = (plan ?? [])
       .map((d, i) => (!d.isRest && !d.isRecovery && d.exercises.length > 0 ? i : -1))
       .filter((i) => i >= 0);
-    const workoutDays = new Set(
+    const workoutDates = new Set(
       (activityEntries ?? [])
         .filter((e) => !/^(rest|recovery) day$/i.test(e.exerciseName.trim()))
         .map((e) => e.date),
     );
-    const mStart = startOfMonth(now);
-    const mEnd = endOfMonth(now);
-    const weeks: { label: string; planned: number; done: number; status: string }[] = [];
-    let monthDone = 0, monthTarget = 0, leftThisWeek = 0;
-    for (let wk = startOfWeek(mStart, { weekStartsOn: 1 }); wk <= mEnd; wk = addDays(wk, 7)) {
-      let planned = 0, done = 0, fullPlanned = 0, fullDone = 0;
-      for (let i = 0; i < 7; i++) {
-        const day = addDays(wk, i);
-        const inMonth = day >= mStart && day <= mEnd;
-        const isTraining = trainingIdx.includes(i); // day_index 0 = Monday
-        const did = workoutDays.has(format(day, "yyyy-MM-dd"));
-        if (isTraining) fullPlanned++;
-        if (did) fullDone++;
-        if (inMonth && isTraining) planned++;
-        if (inMonth && did) done++;
-      }
-      const isThisWeek = wk <= now && now < addDays(wk, 7);
-      if (isThisWeek) leftThisWeek = Math.max(0, fullPlanned - fullDone);
-      monthDone += done;
-      monthTarget += planned;
-      if (planned === 0 && done === 0) continue; // a sliver of a week with no training days
-      const status = wk > now ? "Coming up" : isThisWeek ? `${done} of ${planned}, this week` : `${done} of ${planned}`;
-      weeks.push({ label: `Week ${weeks.length + 1}`, planned, done, status });
-    }
-    return { name: format(now, "MMMM").toUpperCase(), weeks, monthDone, monthTarget, leftThisWeek, hasPlan: trainingIdx.length > 0 };
-  }, [plan, activityEntries]);
+    return computeMemberMonth({ now: new Date(), joined: user?.created_at ? new Date(user.created_at) : null, trainingIdx, workoutDates });
+  }, [plan, activityEntries, user?.created_at]);
 
   if (isLoading) {
     return (
@@ -315,13 +293,15 @@ export function ExerciseScorecard() {
         <section style={{ flex: "2 1 520px", minWidth: 0, background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, boxShadow: isMobile ? `4px 4px 0 ${C.ink}` : `6px 6px 0 ${C.ink}`, padding: isMobile ? 18 : 28 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
             <div>
-              <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>THIS MONTH · {month.name}</p>
+              <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>{month.title}</p>
               <h2 style={{ margin: "6px 0 0", ...bangers, fontSize: isMobile ? 34 : 40, letterSpacing: 1, lineHeight: 1 }}>
                 {month.hasPlan ? `${month.monthDone} of ${month.monthTarget} workouts` : `${month.monthDone} ${month.monthDone === 1 ? "workout" : "workouts"}`}
               </h2>
               <p style={{ margin: "8px 0 0", fontSize: isMobile ? 14 : 16, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>
                 {!month.hasPlan
                   ? "Set up your plan to track each week."
+                  : month.firstMonth && month.monthDone === 0
+                    ? `${month.perWeek} a week, counted from the day you joined.`
                   : month.leftThisWeek > 0
                     ? `${month.leftThisWeek} more this week to stay on plan.`
                     : "You're on plan this week. Nice work."}
@@ -335,8 +315,9 @@ export function ExerciseScorecard() {
           {!isMobile && month.hasPlan && month.weeks.length > 0 && (
             <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: `repeat(${month.weeks.length}, minmax(0, 1fr))`, gap: 12 }}>
               {month.weeks.map((wk) => (
-                <div key={wk.label} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 14, padding: "12px 14px" }}>
+                <div key={wk.label} style={{ background: wk.current ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.12)", border: `2px solid ${wk.current ? "#FFFFFF" : "transparent"}`, borderRadius: 14, padding: "10px 12px" }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>{wk.label}</p>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, opacity: 0.9 }}>{wk.dates}</p>
                   <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
                     {Array.from({ length: Math.max(wk.planned, wk.done) }).map((_, k) => (
                       <span key={k} style={{ flex: 1, height: 10, borderRadius: 999, background: k < wk.done ? "#FFFFFF" : "rgba(255,255,255,0.28)" }} />
