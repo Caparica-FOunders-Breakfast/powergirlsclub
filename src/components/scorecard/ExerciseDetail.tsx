@@ -83,7 +83,12 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
 
       <div className="rounded-2xl border-2 border-[#2B1736] bg-card p-5">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{level.icon}</span>
+          {/* Level as 5 segments (no emoji, per the brief). */}
+          <div className="flex gap-[3px] w-14 shrink-0" aria-hidden="true">
+            {[0, 1, 2, 3, 4].map((s) => (
+              <span key={s} className="flex-1 h-2 rounded-full" style={{ background: level.index >= 0 && s <= level.index ? "#E8308C" : "#EFE6F1" }} />
+            ))}
+          </div>
           <div>
             <h2 className="font-display text-xl text-foreground">{name}</h2>
             <p className="text-xs font-bold text-muted-foreground">{level.label}</p>
@@ -212,7 +217,7 @@ export function ExerciseDetail({ exercise, bodyWeight, onBack, onRemove }: Exerc
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm">{entryLevel.icon}</span>
+                    <span className="w-2 h-2 rounded-full shrink-0" aria-hidden="true" style={{ background: entryLevel.index >= 0 ? "#E8308C" : "#EFE6F1", opacity: entryLevel.index >= 0 ? 0.35 + entryLevel.index * 0.16 : 1 }} />
                     <span className="text-xs font-bold text-muted-foreground w-16">
                       {format(new Date(entry.date), "MMM d")}
                     </span>
