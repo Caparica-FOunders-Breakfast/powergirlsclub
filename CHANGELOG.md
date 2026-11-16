@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-16 — Fix This week exercise rows wrapping on mobile
+
+On a phone each exercise's weight box wrapped onto a second line under the
+name instead of sitting inline on the right like the mockup. The row wrapped
+because the name column had a 200px floor (`flex: 1 1 200px`) while the row
+allowed wrapping. On mobile the row is now `nowrap` with the name column
+`flex: 1 1 0%` (shrinks, `min-width: 0`), and the weight box is trimmed
+slightly, so each exercise is a single row: check · name/detail · input.
+
+
 ## 2026-11-16 — Fix mobile bottom tab bar under the iOS home indicator
 
 In standalone (home-screen) mode the bottom tab bar used a fixed `h-[72px]`
