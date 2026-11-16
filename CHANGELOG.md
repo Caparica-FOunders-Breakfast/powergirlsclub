@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-11-16 — Sidebar + This week + Challenge polish (design reference pass)
+
+Three design-reference tweaks from screenshots.
+
+- **Sidebar** (`Navigation.tsx`): dropped the `💜` from "Stronger Together";
+  renamed the `/week` nav item "Exercises" → "This week"; Scorecard icon
+  `Trophy` → `BarChart3` (matches the reference); active pill rounded more
+  (`rounded-xl` → `rounded-2xl`). Applied across desktop + mobile sidebar and
+  the mobile bottom nav so labels stay consistent.
+- **This week** (`CurrentWeek.tsx`): reframed the week strip as a bordered
+  overview card — header reads "N workouts planned · N left this week" with a
+  Lower/Upper/Core colour legend; bigger day tiles with type, per-exercise
+  progress dashes, status pills, and a gradient tile for today. Week-nav pill
+  rounded to a full pill; range label collapses the month when same-month
+  (`Nov 9 – 15`). The interactive focused-day card below is unchanged.
+- **Challenge** (`TeamManagement.tsx`): the `ChallengeSection` card was still on
+  the old Tailwind type scale (20px heading, 10–12px body) — raised it to the
+  design-system scale (32px Bangers heading, 15–17px body, 13px labels) and
+  switched its border to 2px `#2B1736` to match the rest of the page.
+
+Verified: `tsc --noEmit` clean, dev server no build/console errors. Member-area
+pages are behind login (not screenshot-verified here).
+
+
 ## 2026-11-15 — Design consistency: shell + tokens (`feat/design-consistency`)
 
 Unify the whole app on the new design language.

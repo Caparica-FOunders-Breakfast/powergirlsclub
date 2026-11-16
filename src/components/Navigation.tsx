@@ -1,10 +1,10 @@
 import {
+  BarChart3,
   Dumbbell,
   Globe,
   Heart,
   LayoutDashboard,
   MoreHorizontal,
-  Trophy,
   User,
   Users,
 } from "lucide-react";
@@ -29,14 +29,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-type NavItem = { path: string; icon: typeof Trophy; label: string; emoji: string };
+type NavItem = { path: string; icon: typeof Dumbbell; label: string; emoji: string };
 
 // Meals is intentionally omitted until the feature is ready, it can be
 // re-added here once meals_enabled is flipped on for real. Admins can still
 // reach /meals directly by URL.
 const adminSidebarTabs: NavItem[] = [
-  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
-  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
   { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
@@ -48,23 +48,23 @@ const adminOnlySidebarTabs: NavItem[] = [
 ];
 
 const memberSidebarTabs: NavItem[] = [
-  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
-  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
   { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
 const adminMobileTabs: NavItem[] = [
-  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
-  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
   { path: "/dashboard", icon: LayoutDashboard, label: "Admin", emoji: "📊" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
   { path: "/more", icon: MoreHorizontal, label: "More", emoji: "⋯" },
 ];
 
 const memberMobileTabs: NavItem[] = [
-  { path: "/week", icon: Dumbbell, label: "Exercises", emoji: "💪" },
-  { path: "/", icon: Trophy, label: "Scorecard", emoji: "🏆" },
+  { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
   { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
@@ -86,7 +86,7 @@ export function AppSidebar() {
           <SidebarContent className="bg-[#2B1736] text-white pt-4">
             <div className="px-5 pb-4 border-b border-white/10">
               <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF8AC4] leading-none">Power Club</h2>
-              <p className="text-[11px] font-bold text-white/60 mt-2 uppercase tracking-wider">💜 Stronger Together</p>
+              <p className="text-[11px] font-bold text-white/60 mt-2 uppercase tracking-wider">Stronger Together</p>
             </div>
 
             <SidebarGroup>
@@ -101,7 +101,7 @@ export function AppSidebar() {
                         <NavLink
                           to={item.path}
                           end
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-white/80 hover:bg-white/5 hover:text-white transition-colors"
                           activeClassName="bg-[#E8308C] text-white"
                         >
                           <item.icon className="h-5 w-5" />
@@ -127,7 +127,7 @@ export function AppSidebar() {
                           <NavLink
                             to={item.path}
                             end
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-white/80 hover:bg-white/5 hover:text-white transition-colors"
                             activeClassName="bg-[#E8308C] text-white"
                           >
                             <item.icon className="h-5 w-5" />
@@ -154,7 +154,7 @@ export function AppSidebar() {
           <h2 className="text-3xl font-display uppercase tracking-widest text-[#FF8AC4] leading-none">
             Power Club
           </h2>
-          <p className="text-xs font-bold text-white/60 mt-2 uppercase tracking-wider">💜 Stronger Together</p>
+          <p className="text-xs font-bold text-white/60 mt-2 uppercase tracking-wider">Stronger Together</p>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-6">
           <p className="px-3 mb-3 font-bold text-[11px] uppercase tracking-widest text-white/40">
@@ -166,7 +166,7 @@ export function AppSidebar() {
                 key={item.path}
                 to={item.path}
                 end
-                className="flex items-center gap-3.5 px-5 py-3.5 rounded-xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                className="flex items-center gap-3.5 px-5 py-3.5 rounded-2xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
                 activeClassName="bg-[#E8308C] text-white"
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -186,7 +186,7 @@ export function AppSidebar() {
                     key={item.path}
                     to={item.path}
                     end
-                    className="flex items-center gap-3.5 px-5 py-3.5 rounded-xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                    className="flex items-center gap-3.5 px-5 py-3.5 rounded-2xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
                     activeClassName="bg-[#E8308C] text-white"
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
