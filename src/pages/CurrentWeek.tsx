@@ -19,6 +19,8 @@ import { useNavigate } from "react-router-dom";
 import { PageViewToggle } from "@/components/ViewModeToggle";
 import { firstNumber, makeLibraryLookup, looseExerciseKey, POWER_COLORS } from "@/lib/plan";
 import { useExerciseLibrary } from "@/hooks/usePlan";
+import { ExerciseInfo } from "@/components/profile-plan/ExerciseInfo";
+import { travelVideoFor } from "@/data/travelPlan";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
@@ -532,7 +534,7 @@ const CurrentWeek = () => {
                         exercise={ex}
                         mood={mood}
                         compact={isMobile}
-                        fallbackVideoUrl={findInLibrary(ex.name)?.video_url ?? undefined}
+                        fallbackVideoUrl={findInLibrary(ex.name)?.video_url ?? travelVideoFor(ex.name)}
                         isPower={findInLibrary(ex.name)?.type === "power"}
                         isDone={!!localCompleted[key]}
                         weight={localWeights[key] || ""}
@@ -688,6 +690,7 @@ function FocusedExerciseRow({
         {isPower && <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 800, letterSpacing: 1, color: POWER_COLORS.label }}>POWER</p>}
         <p style={{ margin: 0, fontWeight: 800, fontSize: compact ? 15 : 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
           {exercise.name}
+          <ExerciseInfo name={exercise.name} color={isPower ? POWER_COLORS.label : C.sub} />
           {videoUrl && (
             <button type="button" onClick={() => onVideoClick(videoUrl)} aria-label={`Watch tutorial for ${exercise.name}`} style={{ flex: "none", width: 24, height: 24, borderRadius: 999, border: 0, background: "rgba(194,28,112,0.1)", color: C.pink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z" /></svg></button>
           )}
