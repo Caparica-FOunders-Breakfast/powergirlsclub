@@ -18,6 +18,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
+  startOfMonth,
+  endOfMonth,
   startOfWeek,
   endOfWeek,
   addDays,
@@ -28,6 +30,7 @@ import {
   isSameDay,
 } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 
 // ── Palette (ported from the "Harley" scorecard design) ──
 const C = {
@@ -113,6 +116,7 @@ export function ExerciseScorecard() {
   const streaks = useStreaks();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { plan } = usePersonalWorkoutPlan();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [filter, setFilter] = useState<string>("All");
@@ -221,6 +225,47 @@ export function ExerciseScorecard() {
     return { workouts, exercisesLogged, peakHour, daysActivePct, cols };
   }, [activityEntries, range]);
 
+  // ── This month: workouts done vs. the member's planned training days ──
+  // Targets come from the live plan's training weekdays, clipped to days inside
+  // the month, so a partial first/last week never asks for impossible sessions.
+  // Rest/recovery check-ins are logged as exercises too, so they don't count.
+  const month = useMemo(() => {
+    const now = new Date();
+    const trainingIdx = (plan ?? [])
+      .map((d, i) => (!d.isRest && !d.isRecovery && d.exercises.length > 0 ? i : -1))
+      .filter((i) => i >= 0);
+    const workoutDays = new Set(
+      (activityEntries ?? [])
+        .filter((e) => !/^(rest|recovery) day$/i.test(e.exerciseName.trim()))
+        .map((e) => e.date),
+    );
+    const mStart = startOfMonth(now);
+    const mEnd = endOfMonth(now);
+    const weeks: { label: string; planned: number; done: number; status: string }[] = [];
+    let monthDone = 0, monthTarget = 0, leftThisWeek = 0;
+    for (let wk = startOfWeek(mStart, { weekStartsOn: 1 }); wk <= mEnd; wk = addDays(wk, 7)) {
+      let planned = 0, done = 0, fullPlanned = 0, fullDone = 0;
+      for (let i = 0; i < 7; i++) {
+        const day = addDays(wk, i);
+        const inMonth = day >= mStart && day <= mEnd;
+        const isTraining = trainingIdx.includes(i); // day_index 0 = Monday
+        const did = workoutDays.has(format(day, "yyyy-MM-dd"));
+        if (isTraining) fullPlanned++;
+        if (did) fullDone++;
+        if (inMonth && isTraining) planned++;
+        if (inMonth && did) done++;
+      }
+      const isThisWeek = wk <= now && now < addDays(wk, 7);
+      if (isThisWeek) leftThisWeek = Math.max(0, fullPlanned - fullDone);
+      monthDone += done;
+      monthTarget += planned;
+      if (planned === 0 && done === 0) continue; // a sliver of a week with no training days
+      const status = wk > now ? "Coming up" : isThisWeek ? `${done} of ${planned}, this week` : `${done} of ${planned}`;
+      weeks.push({ label: `Week ${weeks.length + 1}`, planned, done, status });
+    }
+    return { name: format(now, "MMMM").toUpperCase(), weeks, monthDone, monthTarget, leftThisWeek, hasPlan: trainingIdx.length > 0 };
+  }, [plan, activityEntries]);
+
   if (isLoading) {
     return (
       <div style={{ padding: "24px 0", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -260,20 +305,59 @@ export function ExerciseScorecard() {
     <div style={{ color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
       <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Scorecard</h1>
 
-      {/* Row 1: Streak */}
-      <section style={{ ...card, padding: isMobile ? 18 : 28, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: isMobile ? 14 : 20 }}>
-        <div>
-          <Label>CURRENT STREAK</Label>
-          <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 44 : 56, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
-          <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
-            {streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
-            <span style={{ color: C.purple }}> · Best streak {streaks.longest} days</span>
-          </p>
-        </div>
-        <Link to="/week" style={{ background: C.pink, color: "#FFFFFF", fontWeight: 800, textDecoration: "none", padding: "16px 24px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `4px 4px 0 ${C.ink}`, whiteSpace: "nowrap" }}>
-          Start today's workout
-        </Link>
-      </section>
+      {/* Row 1: This month + Streak */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24 }}>
+        <section style={{ flex: "2 1 520px", minWidth: 0, background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, boxShadow: isMobile ? `4px 4px 0 ${C.ink}` : `6px 6px 0 ${C.ink}`, padding: isMobile ? 18 : 28 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+            <div>
+              <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>THIS MONTH · {month.name}</p>
+              <h2 style={{ margin: "6px 0 0", ...bangers, fontSize: isMobile ? 34 : 40, letterSpacing: 1, lineHeight: 1 }}>
+                {month.hasPlan ? `${month.monthDone} of ${month.monthTarget} workouts` : `${month.monthDone} ${month.monthDone === 1 ? "workout" : "workouts"}`}
+              </h2>
+              <p style={{ margin: "8px 0 0", fontSize: isMobile ? 14 : 16, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>
+                {!month.hasPlan
+                  ? "Set up your plan to track each week."
+                  : month.leftThisWeek > 0
+                    ? `${month.leftThisWeek} more this week to stay on plan.`
+                    : "You're on plan this week. Nice work."}
+              </p>
+            </div>
+            {/* The page's single yellow call to action (per the brief). */}
+            <Link to={month.hasPlan ? "/week" : "/plan-setup"} style={{ display: isMobile ? "block" : "inline-block", width: isMobile ? "100%" : undefined, textAlign: "center", boxSizing: "border-box", background: C.yellow, color: C.ink, fontWeight: 800, textDecoration: "none", padding: isMobile ? 13 : "14px 22px", borderRadius: 14, border: `2px solid ${C.ink}`, boxShadow: `${isMobile ? 3 : 4}px ${isMobile ? 3 : 4}px 0 ${C.ink}`, whiteSpace: "nowrap" }}>
+              {month.hasPlan ? "Start today's workout" : "Set up your plan"}
+            </Link>
+          </div>
+          {!isMobile && month.hasPlan && month.weeks.length > 0 && (
+            <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: `repeat(${month.weeks.length}, minmax(0, 1fr))`, gap: 12 }}>
+              {month.weeks.map((wk) => (
+                <div key={wk.label} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 14, padding: "12px 14px" }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>{wk.label}</p>
+                  <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
+                    {Array.from({ length: Math.max(wk.planned, wk.done) }).map((_, k) => (
+                      <span key={k} style={{ flex: 1, height: 10, borderRadius: 999, background: k < wk.done ? "#FFFFFF" : "rgba(255,255,255,0.28)" }} />
+                    ))}
+                  </div>
+                  <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>{wk.status}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section style={{ flex: "1 1 260px", minWidth: 0, ...card, padding: isMobile ? 18 : 24, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <Label>CURRENT STREAK</Label>
+            <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 48 : 64, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
+            <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
+              {streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
+            </p>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 12, background: C.lilac, fontWeight: 800 }}>
+            <span>Best streak</span>
+            <span style={{ color: C.purple }}>{streaks.longest} {streaks.longest === 1 ? "day" : "days"}</span>
+          </div>
+        </section>
+      </div>
 
       {/* Row 2: Activity */}
       {hasData && (
@@ -406,6 +490,7 @@ export function ExerciseScorecard() {
                     <p style={{ margin: 0, ...bangers, fontSize: 26, lineHeight: 1 }}>{ex.currentWeight}<span style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, fontWeight: 700, color: C.sub }}> {ex.unit}</span></p>
                     <p style={{ margin: "2px 0 0", fontSize: 12, fontWeight: 700, color: C.sub }}>{ex.bwLabel}</p>
                   </div>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
                 </button>
               ))}
             </div>
