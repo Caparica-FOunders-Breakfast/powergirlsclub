@@ -18,4 +18,18 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split the big, rarely-changing libraries into their own chunks so an
+        // app-code-only deploy doesn't invalidate them — returning visitors
+        // keep them cached instead of re-downloading the whole bundle.
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          supabase: ["@supabase/supabase-js"],
+          "react-query": ["@tanstack/react-query"],
+        },
+      },
+    },
+  },
 }));

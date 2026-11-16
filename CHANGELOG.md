@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-16 — Faster load, part 2: split vendor bundle + loading skeleton
+
+- **Split the vendor bundle** (`vite.config.ts` `manualChunks`): React,
+  react-router, `@supabase/supabase-js` and react-query each get their own
+  chunk. The eager `index` chunk dropped ~599 KB → ~187 KB; the ~412 KB of
+  vendors now stay cached across app-only deploys instead of re-downloading.
+  (First-load total is unchanged — this helps repeat loads.)
+- **Branded loading skeleton** (`App.tsx`): while the Supabase session resolves,
+  the app shows a dark header + placeholder cards (`AppLoading`) instead of a
+  blank screen with a spinner, so the load feels faster. The small spinner
+  (`PageFallback`) stays for quick in-app route/chunk transitions.
+
+
 ## 2026-11-16 — Faster load: preconnect Supabase + don't block public pages on auth
 
 Two load-time fixes (the slow "sometimes" was the Supabase session check

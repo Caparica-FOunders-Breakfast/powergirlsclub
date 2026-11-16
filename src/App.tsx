@@ -36,6 +36,23 @@ const PageFallback = () => (
   </div>
 );
 
+// Branded skeleton shown while the Supabase session resolves. Returning
+// visitors see the app painting in (dark header + placeholder cards) instead
+// of a blank screen with a spinner, so the load feels faster.
+const AppLoading = () => (
+  <div style={{ minHeight: "100vh", background: "#FBF9FB", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: 60, background: "#2B1736", display: "flex", alignItems: "center", padding: "0 16px" }}>
+      <span style={{ fontFamily: "Bangers, cursive", fontSize: 26, letterSpacing: 1, color: "#FF8AC4" }}>Power Club</span>
+    </div>
+    <div style={{ flex: 1, width: "100%", maxWidth: 1120, margin: "0 auto", padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="animate-pulse" style={{ height: 40, width: 200, borderRadius: 10, background: "#EDE4EF" }} />
+      <div className="animate-pulse" style={{ height: 150, borderRadius: 20, background: "#EDE4EF" }} />
+      <div className="animate-pulse" style={{ height: 120, borderRadius: 20, background: "#EDE4EF" }} />
+      <div className="animate-pulse" style={{ height: 120, borderRadius: 20, background: "#EDE4EF" }} />
+    </div>
+  </div>
+);
+
 // App routes that require auth — used to send logged-out visitors to login
 // (rather than a 404) when they hit a real app URL directly.
 const PROTECTED_PATHS = [
@@ -60,13 +77,7 @@ const AdminOnly = ({ children }: { children: JSX.Element }) => {
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <AppLoading />;
 
   if (!user) return <Navigate to="/auth" replace />;
 
@@ -136,7 +147,7 @@ const AppRoutes = () => {
       <Route path="/terms" element={<Terms />} />
       {loading ? (
         /* Only the auth-dependent routes wait for the session to resolve. */
-        <Route path="*" element={<PageFallback />} />
+        <Route path="*" element={<AppLoading />} />
       ) : user ? (
         /* Logged in: everything (including "/") runs inside the app shell. */
         <Route path="/*" element={<ProtectedLayout />} />
