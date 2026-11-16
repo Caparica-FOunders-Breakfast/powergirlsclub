@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-16 — Remove the old onboarding wizard (and fix progression resetting training days)
+
+The new `/plan-setup` flow replaced the old inline onboarding wizard in step 1,
+but its code was still in the repo and one piece was still live.
+
+- **Deleted** (2,246 lines, no live importers): `ProfileSetupWizard`,
+  `KlaritaSplitPreview`, `PlanGeneratorModal`, `WeekPlanCard` (the whole
+  `components/profile-setup/` folder), the `useProfileSetup` hook,
+  `ImportWorkoutPlanModal` (plan setup calls the `analyze-workout-image`
+  function directly) and `TrainingPreferences` (nothing rendered it).
+- **Still live, moved out first**: Profile's "Weekly progression > Change"
+  dialog rendered the wizard's `StepProgression`. It is now a standalone
+  `ProgressionEditor` (same presets, custom stepper, projection and warning;
+  design-system styling, no emoji). The locked strength-levels note (which said
+  "set your body weight in step 1") is now inline with a "Set body weight" link.
+- **Bug fix**: the old progression save rewrote the whole preferences row,
+  resetting `training_days` to the old wizard's default layout and `plan_type`,
+  so changing progression silently undid the days picked in `/plan-setup`. The
+  new `useSetProgression` writes only `progression_kg_per_week`.
+
 ## 2026-11-16 — Training plan feature, step 6 (homepage + login)
 
 The mockup changes were the €5 pricing switch, already shipped in #15/#16,
