@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
-import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useProfile, useUpdateProfile, useMemberName } from "@/hooks/useProfile";
 import {
   PROGRESSION_DEFAULT,
   useUserPreferences,
@@ -151,8 +151,9 @@ const Profile = () => {
   }, [grouped, bw]);
 
   const progressionKg = prefs?.progression_kg_per_week ?? PROGRESSION_DEFAULT;
-  const displayName = profile?.display_name ?? "";
-  const initials = (displayName[0] ?? "?").toUpperCase();
+  // First name typed at sign-up; never "Power Girl" or letters from the email.
+  const { firstName: displayName, initial } = useMemberName();
+  const initials = initial || "?";
 
   const stats = useMemo(() => {
     if (!activity || activity.length === 0) return { workouts: 0, bestStreak: 0 };
@@ -310,7 +311,7 @@ const Profile = () => {
               />
             ) : (
               <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 36 : 52, letterSpacing: 1, lineHeight: 1, display: "flex", alignItems: "center", gap: 10 }}>
-                {displayName || "Power Girl"}
+                {displayName || "Add your name"}
                 <button type="button" onClick={handleStartEditName} aria-label="Edit name" style={{ width: 28, height: 28, borderRadius: 8, border: 0, background: "rgba(255,255,255,0.2)", color: "#FFFFFF", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /></svg></button>
               </h1>
             )}

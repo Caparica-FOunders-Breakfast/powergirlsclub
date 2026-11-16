@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useProfile, useUpdateProfile, isPlaceholderName, signUpFirstName } from "@/hooks/useProfile";
 import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 import { useRecommendedPlan, useSaveMemberPlan } from "@/hooks/usePlan";
 import { readOnboarding, signUpBodyWeight } from "@/lib/onboarding";
@@ -37,6 +37,16 @@ export const useOnboarding = (): { status: OnboardingStatus; error: string | nul
     if (bw === null) return;
     weightSaved.current = true;
     updateProfile.mutate({ body_weight: bw });
+  }, [profile, user, updateProfile]);
+
+  // Profile still has a placeholder name ("New Member") → the sign-up name.
+  const nameSaved = useRef(false);
+  useEffect(() => {
+    if (nameSaved.current || !profile || !isPlaceholderName(profile.display_name)) return;
+    const name = signUpFirstName(user);
+    if (!name) return;
+    nameSaved.current = true;
+    updateProfile.mutate({ display_name: name });
   }, [profile, user, updateProfile]);
 
   // Recommended plan picked at sign-up → save it, once.

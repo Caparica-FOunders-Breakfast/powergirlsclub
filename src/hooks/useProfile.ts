@@ -36,6 +36,23 @@ export const useProfile = () => {
   });
 };
 
+/** Placeholder names the DB trigger used before we had the real first name. */
+const PLACEHOLDER_NAMES = new Set(["", "new member", "power girl"]);
+export const isPlaceholderName = (name: string | null | undefined) => PLACEHOLDER_NAMES.has((name ?? "").trim().toLowerCase());
+
+/**
+ * The member's own first name and avatar initial. Uses the profile name, or
+ * the first name typed at sign-up when the profile has none (or a
+ * placeholder). Never "Power Girl", never letters from the email.
+ */
+export const useMemberName = (): { firstName: string; initial: string } => {
+  const { user } = useAuth();
+  const { data: profile } = useProfile();
+  const fromProfile = profile?.display_name?.trim() ?? "";
+  const firstName = isPlaceholderName(fromProfile) ? signUpFirstName(user) : fromProfile;
+  return { firstName, initial: firstName ? firstName[0].toUpperCase() : "" };
+};
+
 /** The first name typed at sign-up (auth metadata), trimmed; "" if none. */
 export const signUpFirstName = (user: { user_metadata?: Record<string, unknown> } | null | undefined): string => {
   const raw = user?.user_metadata?.display_name ?? user?.user_metadata?.first_name;

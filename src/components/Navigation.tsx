@@ -12,7 +12,12 @@ import { Link, useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, useMemberName } from "@/hooks/useProfile";
+
+/** Avatar placeholder when we don't know the member's name yet. */
+const PersonIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "inline-block" }}><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
+);
 import ViewModeToggle from "@/components/ViewModeToggle";
 import {
   Sidebar,
@@ -72,9 +77,9 @@ export function AppSidebar() {
   const isAdmin = useIsAdmin();
   const { data: profile } = useProfile();
   const tabs = isAdmin ? adminSidebarTabs : memberSidebarTabs;
-  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Power Girl";
+  const { firstName: displayName, initial } = useMemberName();
   const avatarColor = profile?.avatar_color || "#FF2D87";
-  const initials = displayName.slice(0, 2).toUpperCase();
+  const initials = initial || <PersonIcon />;
 
   return (
     <>
@@ -266,9 +271,9 @@ export function BottomNav() {
 export function AppHeader() {
   const { user } = useAuth();
   const { data: profile } = useProfile();
-  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Power Girl";
+  const { firstName: displayName, initial } = useMemberName();
   const avatarColor = profile?.avatar_color || "#E8308C";
-  const initials = displayName.slice(0, 2).toUpperCase();
+  const initials = initial || <PersonIcon />;
 
   return (
     <>
