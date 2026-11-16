@@ -184,7 +184,8 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* Phones show just the three counts (mobile-dashboard mockup); the members list sits below. */}
+            <div style={{ marginTop: 14, display: isMobile ? "none" : "flex", flexDirection: "column", gap: 8 }}>
               {planList.length === 0 && <p style={{ margin: 0, fontSize: 14, color: C.sub }}>No members have a plan yet.</p>}
               {planList.map((u) => {
                 const chip = STATUS_CHIP[u.status];

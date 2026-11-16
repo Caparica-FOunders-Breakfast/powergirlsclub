@@ -126,7 +126,9 @@ export default function PlanSetup() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5 }}>
-      <header style={{ background: C.ink, color: "#FFFFFF" }}>
+      {/* Safe-area top padding: in the home-screen app the iOS status bar sits on
+          top of the page, same fix as the main app header. */}
+      <header style={{ background: C.ink, color: "#FFFFFF", paddingTop: "env(safe-area-inset-top)" }}>
         <div style={{ maxWidth: 1040, margin: "0 auto", padding: isMobile ? "14px 16px" : "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
           <span style={{ ...bangers, fontSize: 28, letterSpacing: 1, color: "#FF8AC4" }}>Power Club</span>
           <button type="button" onClick={() => navigate("/profile")} style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#FFFFFF", fontWeight: 800, fontSize: 15, background: "transparent", border: 0, cursor: "pointer", padding: "10px 0" }}>
@@ -180,6 +182,8 @@ const titleFor = (source: PlanSource): [string, string] =>
 function StepDays({ count, setCount, days, setDays, dayNote, good }: {
   count: number; setCount: (n: number) => void; days: Record<string, boolean>; setDays: (d: Record<string, boolean>) => void; dayNote: string; good: boolean;
 }) {
+  // Seven columns on a ~340px phone leave ~40px per day: shrink the type and gaps.
+  const isMobile = useIsMobile();
   return (
     <>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
@@ -193,13 +197,13 @@ function StepDays({ count, setCount, days, setDays, dayNote, good }: {
       </div>
       <p style={{ margin: "18px 0 0", fontWeight: 800, fontSize: 18 }}>Pick {count} days</p>
       <p style={{ margin: "2px 0 0", color: C.body }}>Leave a rest day between sessions so your muscles recover.</p>
-      <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 10 }}>
+      <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: isMobile ? 4 : 10 }}>
         {WEEKDAYS.map((d) => {
           const on = !!days[d];
           return (
-            <button key={d} type="button" aria-pressed={on} onClick={() => setDays({ ...days, [d]: !on })} style={{ minHeight: 88, border: `2px solid ${C.ink}`, borderRadius: 16, background: on ? C.magenta : "#FFFFFF", color: on ? "#FFFFFF" : C.body, boxShadow: on ? `3px 3px 0 ${C.ink}` : "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
-              <span style={{ ...bangers, fontSize: 24, letterSpacing: 1, lineHeight: 1 }}>{d}</span>
-              <span style={{ fontSize: 12, fontWeight: 800 }}>{on ? "Train" : "Rest"}</span>
+            <button key={d} type="button" aria-pressed={on} aria-label={`${WEEKDAY_FULL[d]}: ${on ? "training" : "rest"}`} onClick={() => setDays({ ...days, [d]: !on })} style={{ minHeight: isMobile ? 64 : 88, padding: 0, border: `2px solid ${C.ink}`, borderRadius: isMobile ? 12 : 16, background: on ? C.magenta : "#FFFFFF", color: on ? "#FFFFFF" : C.body, boxShadow: on ? `${isMobile ? 2 : 3}px ${isMobile ? 2 : 3}px 0 ${C.ink}` : "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
+              <span style={{ ...bangers, fontSize: isMobile ? 17 : 24, letterSpacing: isMobile ? 0.5 : 1, lineHeight: 1 }}>{d}</span>
+              <span style={{ fontSize: isMobile ? 10 : 12, fontWeight: 800 }}>{on ? "Train" : "Rest"}</span>
             </button>
           );
         })}

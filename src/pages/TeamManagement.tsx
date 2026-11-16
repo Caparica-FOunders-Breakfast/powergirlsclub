@@ -463,7 +463,7 @@ const TeamManagement = () => {
             {/* Start a team */}
             <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: isMobile ? 18 : 28 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ flex: "none", width: 48, height: 48, borderRadius: 12, background: "#E8308C", border: "2px solid #2B1736", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ flex: "none", width: 48, height: 48, borderRadius: 12, background: "#E8308C", border: "2px solid #2B1736", display: isMobile ? "none" : "flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
                 </span>
                 <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Start a team</h2>
@@ -479,7 +479,7 @@ const TeamManagement = () => {
             {/* Join a team */}
             <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #6B2FB3", padding: isMobile ? 18 : 28 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ flex: "none", width: 48, height: 48, borderRadius: 12, background: "#6B2FB3", border: "2px solid #2B1736", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ flex: "none", width: 48, height: 48, borderRadius: 12, background: "#6B2FB3", border: "2px solid #2B1736", display: isMobile ? "none" : "flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
                 <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Join a team</h2>
