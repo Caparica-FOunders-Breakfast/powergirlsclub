@@ -17,7 +17,8 @@ import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { PageViewToggle } from "@/components/ViewModeToggle";
-import { firstNumber } from "@/lib/plan";
+import { firstNumber, makeLibraryLookup, looseExerciseKey } from "@/lib/plan";
+import { useExerciseLibrary } from "@/hooks/usePlan";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
@@ -102,6 +103,10 @@ const CurrentWeek = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  // How-to videos come from the exercise library when the plan row has none
+  // (older and custom plans rarely stored links).
+  const { data: library } = useExerciseLibrary();
+  const findInLibrary = useMemo(() => makeLibraryLookup(library), [library]);
 
   const now = new Date();
   const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
@@ -535,10 +540,11 @@ const CurrentWeek = () => {
                         exercise={ex}
                         mood={mood}
                         compact={isMobile}
+                        fallbackVideoUrl={findInLibrary(ex.name)?.video_url ?? undefined}
                         isDone={!!localCompleted[key]}
                         weight={localWeights[key] || ""}
-                        lastWeekWeight={prevWeightMap[key]}
-                        prevPrevWeekWeight={prevPrevWeightMap[key]}
+                        lastWeekWeight={prevWeightMap[looseExerciseKey(ex.name)]}
+                        prevPrevWeekWeight={prevPrevWeightMap[looseExerciseKey(ex.name)]}
                         onWeightChange={(v) => handleWeightChange(selectedDayIndex, i, v)}
                         onWeightBlur={() => handleWeightBlur(selectedDayIndex, i, ex.name)}
                         onToggle={() => toggleExercise(selectedDayIndex, i, ex.name)}
@@ -632,12 +638,13 @@ const CurrentWeek = () => {
 
 // ── Per-exercise row inside the focused day card ──
 function FocusedExerciseRow({
-  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false,
+  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false, fallbackVideoUrl,
   onWeightChange, onWeightBlur, onToggle, onVideoClick,
 }: {
   exercise: Exercise;
   mood: Mood;
   compact?: boolean;
+  fallbackVideoUrl?: string;
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
@@ -647,7 +654,7 @@ function FocusedExerciseRow({
   onToggle: () => void;
   onVideoClick: (url: string) => void;
 }) {
-  const videoUrl = exercise.videoUrl?.trim();
+  const videoUrl = exercise.videoUrl?.trim() || fallbackVideoUrl;
   const isRounds = exercise.isRoundsBased;
   const isTime = exercise.isTimeBased;
   const isAssisted = exercise.isAssisted;

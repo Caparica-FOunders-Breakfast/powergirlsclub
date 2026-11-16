@@ -8,7 +8,6 @@ import {
   type PlanSource,
   type BaseMode,
   buildPlanDayWrites,
-  weekdayIndex,
 } from "@/lib/plan";
 
 // ── Exercise library (for swap, custom builder, search) ───────────────────
@@ -97,9 +96,34 @@ export interface SaveMemberPlanInput {
   days: PlanDayDraft[]; // one per training day, in order
 }
 
-// Save the plan: write the member_plans header, project the chosen days into
-// user_workout_plans (the existing per-day JSONB that This Week reads), and set
-// the numeric training_days + plan_type so the overlay blanks rest days.
+/**
+ * Reject if a request doesn't settle in time. Without this, a request that
+ * never settles (e.g. the auth lock stalling after an iPhone home-screen app
+ * resumes) left plan setup on "Saving..." forever with no error.
+ */
+const withTimeout = async <T,>(request: PromiseLike<T>, step: string, ms = 20_000): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Timed out while ${step}. Check your connection and try again.`)), ms);
+  });
+  try {
+    return await Promise.race([Promise.resolve(request), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const check = (res: { error: { message: string } | null }, step: string) => {
+  if (res.error) throw new Error(`Couldn't finish ${step}: ${res.error.message}`);
+};
+
+// Save the plan: project the chosen days into user_workout_plans (the per-day
+// JSONB This Week reads), set the numeric training_days + plan_type so the
+// overlay blanks rest days, then write the member_plans header.
+//
+// Order matters: new days are upserted before old ones are deleted, and the
+// header goes last, so a failure part-way never leaves a member without a plan
+// or with a header that doesn't match their days.
 export const useSaveMemberPlan = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -108,26 +132,10 @@ export const useSaveMemberPlan = () => {
     mutationFn: async (input: SaveMemberPlanInput) => {
       const uid = user!.id;
       const todayIso = new Date().toISOString().slice(0, 10);
-
-      // 1) member_plans header
-      const { error: mpErr } = await supabase.from("member_plans" as any).upsert(
-        {
-          user_id: uid,
-          source: input.source,
-          days_per_week: input.daysPerWeek,
-          training_days: input.trainingDays,
-          base_mode: input.baseMode,
-          started_at: todayIso,
-          updated_at: new Date().toISOString(),
-        } as any,
-        { onConflict: "user_id" },
-      );
-      if (mpErr) throw mpErr;
-
-      // 2) project into user_workout_plans. Clear the member's non-travel day
-      // rows (day_index < 100 preserves travel days), then insert training days.
       const writes = buildPlanDayWrites(input.trainingDays, input.days);
-      await supabase.from("user_workout_plans" as any).delete().eq("user_id", uid).lt("day_index", 100);
+      const trainingIdx = writes.map((w) => w.dayIndex).sort((a, b) => a - b);
+
+      // 1) Write the new training days (replaces those day_index rows).
       if (writes.length) {
         const rows = writes.map((w) => ({
           user_id: uid,
@@ -138,26 +146,53 @@ export const useSaveMemberPlan = () => {
           is_recovery: false,
           exercises: w.exercises,
         }));
-        const { error: wpErr } = await supabase.from("user_workout_plans" as any).insert(rows as any);
-        if (wpErr) throw wpErr;
+        check(await withTimeout(
+          supabase.from("user_workout_plans" as never).upsert(rows as never, { onConflict: "user_id,day_index" }),
+          "saving your training days",
+        ), "saving your training days");
       }
 
-      // 3) preferences: numeric training_days + start date, and plan_type.
-      const trainingIdx = input.trainingDays.map(weekdayIndex).sort((a, b) => a - b);
-      await supabase.from("user_preferences" as any).upsert(
-        { user_id: uid, training_days: trainingIdx, frequency: input.daysPerWeek, start_date: todayIso } as any,
-        { onConflict: "user_id" },
-      );
-      await supabase.from("user_preferences" as any).upsert(
-        { user_id: uid, plan_type: "custom" } as any,
-        { onConflict: "user_id" },
-      );
+      // 2) Remove the member's other non-travel days (travel rows are >= 100).
+      let stale = supabase.from("user_workout_plans" as never).delete().eq("user_id", uid).lt("day_index", 100);
+      if (trainingIdx.length) stale = stale.not("day_index", "in", `(${trainingIdx.join(",")})`);
+      check(await withTimeout(stale, "clearing your old days"), "clearing your old days");
+
+      // 3) Preferences: numeric training_days + start date, then plan_type.
+      check(await withTimeout(
+        supabase.from("user_preferences" as never).upsert(
+          { user_id: uid, training_days: trainingIdx, frequency: input.daysPerWeek, start_date: todayIso } as never,
+          { onConflict: "user_id" },
+        ),
+        "saving your training days",
+      ), "saving your training days");
+      check(await withTimeout(
+        supabase.from("user_preferences" as never).upsert({ user_id: uid, plan_type: "custom" } as never, { onConflict: "user_id" }),
+        "saving your plan type",
+      ), "saving your plan type");
+
+      // 4) The member_plans header, last.
+      check(await withTimeout(
+        supabase.from("member_plans" as never).upsert(
+          {
+            user_id: uid,
+            source: input.source,
+            days_per_week: input.daysPerWeek,
+            training_days: input.trainingDays,
+            base_mode: input.baseMode,
+            started_at: todayIso,
+            updated_at: new Date().toISOString(),
+          } as never,
+          { onConflict: "user_id" },
+        ),
+        "saving your plan",
+      ), "saving your plan");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["member-plan"] });
       queryClient.invalidateQueries({ queryKey: ["personal-workout-plan"] });
       queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
       queryClient.invalidateQueries({ queryKey: ["plan-type"] });
+      queryClient.invalidateQueries({ queryKey: ["prior-exercise-weights"] });
     },
   });
 };

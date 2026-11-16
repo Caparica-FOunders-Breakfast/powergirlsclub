@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { looseExerciseKey } from "@/lib/plan";
 
 export const useExerciseLogs = (weekStart: string) => {
   const { user } = useAuth();
@@ -30,6 +31,17 @@ export const useExerciseLogs = (weekStart: string) => {
 // `${day_index}-${exercise_index}` -> array of weights ordered most-recent-first.
 // This is what powers the "Last week: X kg → Try Y" reference, so it keeps working
 // even after a gap of several weeks with no training.
+/**
+ * Your most recent weights for each exercise from any week before `weekStart`,
+ * keyed by exercise name (loose match: "Goblet Squats" == "Goblet squat"),
+ * newest first. Keyed by name, not by day/slot position: a new plan, a
+ * reordered day or a different training day must still find the last time you
+ * did *that exercise*. (Position keys showed another exercise's weight, or
+ * "First time", after any plan change.)
+ *
+ * -1 (a failed set, logged as "F") is kept; the week view falls back to the
+ * record before a fail.
+ */
 export const usePriorExerciseWeights = (weekStart: string) => {
   const { user } = useAuth();
 
@@ -38,17 +50,18 @@ export const usePriorExerciseWeights = (weekStart: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exercise_logs")
-        .select("day_index, exercise_index, weight_used, week_start")
+        .select("exercise_name, day_index, weight_used, week_start")
         .eq("user_id", user!.id)
         .lt("week_start", weekStart)
         .not("weight_used", "is", null)
-        .order("week_start", { ascending: false });
+        .order("week_start", { ascending: false })
+        .order("day_index", { ascending: false });
       if (error) throw error;
 
       const map: Record<string, number[]> = {};
       data.forEach((log) => {
-        if (log.weight_used == null) return;
-        const key = `${log.day_index}-${log.exercise_index}`;
+        if (log.weight_used == null || !log.exercise_name) return;
+        const key = looseExerciseKey(log.exercise_name);
         if (!map[key]) map[key] = [];
         map[key].push(Number(log.weight_used));
       });

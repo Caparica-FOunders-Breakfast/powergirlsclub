@@ -150,3 +150,30 @@ export const restDay = (dayIndex: number): Omit<WorkoutDay, "day"> & { dayIndex:
   isRest: true,
   exercises: [],
 });
+
+// ── Library lookup by exercise name ──────────────────────────────────────
+// Plans store free-text names ("Goblet Squats", "Romanian deadlift", "Pull Ups")
+// while the library uses its own spellings ("Goblet squat", "Dumbbell Romanian
+// deadlift", "Assisted pull ups"). Match loosely: case, punctuation, bracketed
+// notes, leading equipment words and a trailing plural "s" don't matter.
+const EQUIPMENT_WORDS = ["dumbbell", "barbell", "assisted", "single-arm", "single arm", "kettlebell"];
+
+export const looseExerciseKey = (name: string): string => {
+  let s = name.toLowerCase().replace(/\(.*?\)/g, " ").replace(/[^a-z0-9 -]/g, " ").replace(/\s+/g, " ").trim();
+  let stripped = true;
+  while (stripped) {
+    stripped = false;
+    for (const w of EQUIPMENT_WORDS) {
+      if (s.startsWith(w + " ")) { s = s.slice(w.length + 1); stripped = true; }
+    }
+  }
+  return s.replace(/(\w*[^s])s$/, "$1"); // "pull ups" -> "pull up", keeps "press"
+};
+
+/** Find the library row for a plan exercise name, or undefined. */
+export const makeLibraryLookup = (library: ExerciseRow[] | undefined) => {
+  const byKey = new Map<string, ExerciseRow>();
+  for (const row of library ?? []) byKey.set(looseExerciseKey(row.name), row);
+  return (name: string | null | undefined): ExerciseRow | undefined =>
+    name ? byKey.get(looseExerciseKey(name)) : undefined;
+};
