@@ -27,6 +27,7 @@ import {
   isAfter,
   isSameDay,
 } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ── Palette (ported from the "Harley" scorecard design) ──
 const C = {
@@ -111,6 +112,7 @@ export function ExerciseScorecard() {
   const { hiddenExercises, hideExercise, unhideExercise } = useScorecardVisibility();
   const streaks = useStreaks();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [filter, setFilter] = useState<string>("All");
@@ -255,14 +257,14 @@ export function ExerciseScorecard() {
   const hasHidden = hiddenExercises.length > 0;
 
   return (
-    <div style={{ color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, display: "flex", flexDirection: "column", gap: 24 }}>
-      <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1 }}>Scorecard</h1>
+    <div style={{ color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
+      <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Scorecard</h1>
 
       {/* Row 1: Streak */}
-      <section style={{ ...card, padding: 28, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+      <section style={{ ...card, padding: isMobile ? 18 : 28, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: isMobile ? 14 : 20 }}>
         <div>
           <Label>CURRENT STREAK</Label>
-          <p style={{ margin: "4px 0 0", ...bangers, fontSize: 56, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
+          <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 44 : 56, lineHeight: 1, color: C.pink }}>{streaks.current} {streaks.current === 1 ? "day" : "days"}</p>
           <p style={{ margin: "8px 0 0", fontWeight: 700, color: C.body }}>
             {streaks.current > 0 ? "Keep it going, train again today." : "Train today to start a new streak."}
             <span style={{ color: C.purple }}> · Best streak {streaks.longest} days</span>
@@ -275,9 +277,9 @@ export function ExerciseScorecard() {
 
       {/* Row 2: Activity */}
       {hasData && (
-        <section style={{ ...card, padding: 24 }}>
+        <section style={{ ...card, padding: isMobile ? 18 : 24 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-            <h2 style={{ margin: 0, ...bangers, fontSize: 32, letterSpacing: 1 }}>Activity this year</h2>
+            <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Activity this year</h2>
             <div style={{ display: "flex", border: `2px solid ${C.ink}`, borderRadius: 12, overflow: "hidden" }}>
               {RANGES.map((r) => (
                 <button key={r} type="button" onClick={() => setRange(r)} style={{ minHeight: 40, padding: "0 14px", border: 0, background: r === range ? C.ink : "#FFFFFF", color: r === range ? "#FFFFFF" : C.ink, fontWeight: 800, fontSize: 14, cursor: "pointer" }}>{r}</button>
@@ -323,12 +325,12 @@ export function ExerciseScorecard() {
       )}
 
       {/* Row 3: Strength + Exercise progress */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
-        <section style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
+        <section style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
           {strength && (
-            <div style={{ ...card, padding: 24 }}>
+            <div style={{ ...card, padding: isMobile ? 18 : 24 }}>
               <Label>OVERALL STRENGTH</Label>
-              <p style={{ margin: "4px 0 0", ...bangers, fontSize: 36, letterSpacing: 1, lineHeight: 1.1 }}>{strength.overall.label}</p>
+              <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 30 : 36, letterSpacing: 1, lineHeight: 1.1 }}>{strength.overall.label}</p>
               <p style={{ margin: "6px 0 0", color: C.body }}>On average you lift <strong style={{ color: C.ink }}>{strength.avgRatio.toFixed(2)}×</strong> your bodyweight.</p>
               <p style={{ margin: "20px 0 8px", fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>STRONGEST LIFTS</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -342,7 +344,7 @@ export function ExerciseScorecard() {
             </div>
           )}
 
-          <div style={{ ...card, padding: 24 }}>
+          <div style={{ ...card, padding: isMobile ? 18 : 24 }}>
             <Label>STRENGTH LEVELS</Label>
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
               {["Very strong", "Advanced", "Strong", "Leveling up", "Beginner"].map((name, i) => (
@@ -358,9 +360,9 @@ export function ExerciseScorecard() {
           </div>
         </section>
 
-        <section style={{ flex: "2 1 520px", minWidth: 0, ...card, padding: 24 }}>
+        <section style={{ flex: "2 1 520px", minWidth: 0, ...card, padding: isMobile ? 18 : 24 }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-            <h2 style={{ margin: 0, ...bangers, fontSize: 32, letterSpacing: 1 }}>Exercise progress</h2>
+            <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Exercise progress</h2>
             <button type="button" onClick={() => setAddModalOpen(true)} disabled={!hasHidden} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: `2px solid ${C.ink}`, borderRadius: 12, background: hasHidden ? C.pink : "#EDE7EF", color: hasHidden ? "#FFFFFF" : C.sub, fontWeight: 800, fontSize: 15, cursor: hasHidden ? "pointer" : "not-allowed" }}>
               <Plus className="w-4 h-4" /> Add exercise
             </button>

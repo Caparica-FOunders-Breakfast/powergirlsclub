@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const TeamManagement = () => {
   const { data: team } = useMyTeam();
@@ -34,6 +35,7 @@ const TeamManagement = () => {
   const leaveChallenge = useLeaveChallenge();
   const deleteChallenge = useDeleteChallenge();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const progress = useChallengeProgress(challenge?.start_date ?? null);
 
@@ -376,16 +378,16 @@ const TeamManagement = () => {
   const myId = profile?.user_id;
 
   return (
-    <div style={{ background: "#FBF9FB", minHeight: "100%", color: "#2B1736", fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: "32px 24px 64px" }}>
-      <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", flexDirection: "column", gap: 28 }}>
+    <div style={{ background: "#FBF9FB", minHeight: "100%", color: "#2B1736", fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 28 }}>
         {/* HERO */}
-        <section style={{ background: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)", color: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 24, boxShadow: "6px 6px 0 #2B1736", padding: "36px 36px 32px" }}>
+        <section style={{ background: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)", color: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 24, boxShadow: isMobile ? "4px 4px 0 #2B1736" : "6px 6px 0 #2B1736", padding: isMobile ? "22px 18px" : "36px 36px 32px" }}>
           <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>4-WEEK TEAM CHALLENGE</p>
-          <h1 style={{ margin: "6px 0 0", fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: "clamp(48px, 6vw, 72px)", letterSpacing: 1.5, lineHeight: 0.95 }}>
+          <h1 style={{ margin: "4px 0 0", fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 42 : "clamp(48px, 6vw, 72px)", letterSpacing: 1.5, lineHeight: 0.95 }}>
             Train with friends.<span style={{ display: "block", color: "#FFD6EA" }}>Win the week.</span>
           </h1>
-          <p style={{ margin: "16px 0 0", maxWidth: 560, fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>Start a team or join one with a code. Every workout you finish earns points for your team.</p>
-          <ol style={{ margin: "28px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
+          <p style={{ margin: "16px 0 0", maxWidth: 560, fontSize: isMobile ? 15 : 18, fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>Start a team or join one with a code. Every workout you finish earns points for your team.</p>
+          <ol style={{ margin: isMobile ? "16px 0 0" : "28px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(190px, 1fr))", gap: isMobile ? 8 : 12 }}>
             {[
               ["Make your team", "Create one or join with a friend's code."],
               ["Train your plan", "Everyone follows their own weekly plan."],
@@ -404,9 +406,9 @@ const TeamManagement = () => {
         {/* TEAM: your team + board, or create/join */}
         {team ? (
           <>
-            <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: 28 }}>
+            <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: isMobile ? 18 : 28 }}>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>{team.name}</h2>
+                <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>{team.name}</h2>
                 {teamCode && (
                   <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
                     <span style={{ fontFamily: "Bangers, cursive", fontSize: 32, letterSpacing: 4, color: "#C21C70" }}>{teamCode.toUpperCase()}</span>
@@ -417,8 +419,8 @@ const TeamManagement = () => {
               <p style={{ margin: "8px 0 0", color: "#5E4E66" }}>Share your code so friends can join your team.</p>
             </section>
 
-            <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, padding: 28 }}>
-              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>Team board</h2>
+            <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, padding: isMobile ? 18 : 28 }}>
+              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Team board</h2>
               <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
                 {scores && scores.length > 0 ? (
                   scores.map((s, i) => {
@@ -444,8 +446,8 @@ const TeamManagement = () => {
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
             {/* Start a team */}
-            <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: 28 }}>
-              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>Start a team</h2>
+            <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: isMobile ? 18 : 28 }}>
+              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Start a team</h2>
               <p style={{ margin: "10px 0 0", color: "#5E4E66" }}>You'll get a code to share with your friends.</p>
               <label htmlFor="team" style={{ display: "block", marginTop: 20, fontWeight: 800, fontSize: 15 }}>Team name</label>
               <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -455,8 +457,8 @@ const TeamManagement = () => {
             </section>
 
             {/* Join a team */}
-            <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #6B2FB3", padding: 28 }}>
-              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1 }}>Join a team</h2>
+            <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #6B2FB3", padding: isMobile ? 18 : 28 }}>
+              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Join a team</h2>
               <p style={{ margin: "10px 0 0", color: "#5E4E66" }}>Got a code from a friend? Pop it in here.</p>
               <label htmlFor="code" style={{ display: "block", marginTop: 20, fontWeight: 800, fontSize: 15 }}>Team code</label>
               <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 10 }}>

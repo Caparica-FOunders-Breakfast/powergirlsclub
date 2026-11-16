@@ -28,6 +28,7 @@ import {
 } from "@/components/profile-setup/ProfileSetupWizard";
 import { PlanGeneratorModal } from "@/components/profile-setup/PlanGeneratorModal";
 import { WeekPlanCard } from "@/components/profile-setup/WeekPlanCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,6 +114,7 @@ const Profile = () => {
   const { data: profile } = useProfile();
   const { data: prefs } = useUserPreferences();
   const isAdmin = useIsAdmin();
+  const isMobile = useIsMobile();
   const { data: activity } = useActivityData();
   const { data: grouped } = useExerciseScorecard();
   const { plan, mergedPlan, travelMode } = usePersonalWorkoutPlan();
@@ -341,11 +343,11 @@ const Profile = () => {
   );
 
   return (
-    <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: "32px 24px 64px" }}>
-      <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
         {/* Header */}
-        <section style={{ background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 24, boxShadow: `6px 6px 0 ${C.ink}`, padding: "28px 32px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
-          <span style={{ flex: "none", width: 96, height: 96, borderRadius: 999, background: "#FFFFFF", color: C.pink, border: `3px solid ${C.ink}`, ...bangers, fontSize: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>{initials}</span>
+        <section style={{ background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 24, boxShadow: isMobile ? `4px 4px 0 ${C.ink}` : `6px 6px 0 ${C.ink}`, padding: isMobile ? 18 : "28px 32px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: isMobile ? 14 : 24 }}>
+          <span style={{ flex: "none", width: isMobile ? 64 : 96, height: isMobile ? 64 : 96, borderRadius: 999, background: "#FFFFFF", color: C.pink, border: `3px solid ${C.ink}`, ...bangers, fontSize: isMobile ? 36 : 52, display: "flex", alignItems: "center", justifyContent: "center" }}>{initials}</span>
           <div style={{ flex: "1 1 220px", minWidth: 0 }}>
             {editingName ? (
               <Input
@@ -361,7 +363,7 @@ const Profile = () => {
                 className="text-2xl font-display text-foreground"
               />
             ) : (
-              <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1, display: "flex", alignItems: "center", gap: 10 }}>
+              <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 36 : 52, letterSpacing: 1, lineHeight: 1, display: "flex", alignItems: "center", gap: 10 }}>
                 {displayName || "Power Girl"}
                 <button type="button" onClick={handleStartEditName} aria-label="Edit name" style={{ width: 28, height: 28, borderRadius: 8, border: 0, background: "rgba(255,255,255,0.2)", color: "#FFFFFF", cursor: "pointer", fontSize: 13 }}>✎</button>
               </h1>
@@ -378,9 +380,9 @@ const Profile = () => {
         {!setup.ready ? null : wizardActive ? (
           <ProfileSetupWizard setup={setup} onGoToWeek={() => navigate("/week")} onImport={() => setImportOpen(true)} onGenerate={() => setGeneratorOpen(true)} />
         ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* LEFT */}
-            <div style={{ flex: "3 1 520px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ flex: "3 1 520px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
               <WeekPlanCard plan={plan} onReorder={travelMode ? undefined : handleReorderDays} travelMode={travelMode} onSetUpAgain={setup.restartWizard} />
 
               {/* Travel mode */}
@@ -434,9 +436,9 @@ const Profile = () => {
             </div>
 
             {/* RIGHT */}
-            <div style={{ flex: "2 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
-              <section style={{ ...card, padding: 24 }}>
-                <h2 style={{ margin: 0, ...bangers, fontSize: 32, letterSpacing: 1 }}>Strength levels</h2>
+            <div style={{ flex: "2 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
+              <section style={{ ...card, padding: isMobile ? 18 : 24 }}>
+                <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Strength levels</h2>
                 <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.body }}>
                   {bw ? `Based on your body weight (${bw} kg). Your overall level is marked.` : "Locked until you set your body weight."}
                 </p>

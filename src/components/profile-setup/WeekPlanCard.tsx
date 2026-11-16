@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
 import type { WorkoutDay } from "@/data/workoutPlan";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -32,6 +33,7 @@ export function WeekPlanCard({
   onSetUpAgain?: () => void;
 }) {
   const draggable = !!onReorder;
+  const isMobile = useIsMobile();
 
   const [order, setOrder] = useState<Tile[]>(() => plan.slice(0, 7).map((day, i) => ({ uid: i, day })));
   const preDrag = useRef<Tile[]>(order);
@@ -59,10 +61,10 @@ export function WeekPlanCard({
   };
 
   return (
-    <section style={{ background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, padding: 24 }}>
+    <section style={{ background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, padding: isMobile ? 18 : 24 }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: 32, letterSpacing: 1, color: C.ink }}>Your training week</h2>
+          <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1, color: C.ink }}>Your training week</h2>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.body }}>
             {trainingCount} training {trainingCount === 1 ? "day" : "days"}{travelMode ? " · ✈️ travel mode" : ""}
           </p>
@@ -72,35 +74,55 @@ export function WeekPlanCard({
         )}
       </div>
 
-      <Reorder.Group as="div" axis="x" values={order} onReorder={setOrder} style={{ marginTop: 18, display: "flex", gap: 8, overflowX: "auto" }}>
-        {order.map((tile, col) => {
-          const rest = tile.day.isRest;
-          const type = rest ? (tile.day.isRecovery ? "Recovery" : "Rest") : tile.day.label;
-          const bg = rest ? C.tile : travelMode ? C.lilac : "#FFF5FA";
-          const fg = rest ? C.sub : C.ink;
-          const border = rest ? C.tile : travelMode ? C.purple : C.magenta;
-          return (
-            <Reorder.Item
-              as="div"
-              key={tile.uid}
-              value={tile}
-              drag={draggable && !rest ? "x" : false}
-              onDragStart={() => { preDrag.current = order; }}
-              onDragEnd={handleDrop}
-              whileDrag={{ scale: 1.08, zIndex: 50, cursor: "grabbing" }}
-              style={{ minWidth: 76, minHeight: 96, flex: 1, padding: 10, borderRadius: 14, background: bg, color: fg, border: `2px solid ${border}`, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "space-between", cursor: draggable && !rest ? "grab" : "default", touchAction: "none" }}
-            >
-              <span style={{ fontWeight: 800, fontSize: 14 }}>{DAY_SHORT[col]}</span>
-              <span style={{ fontWeight: 800, fontSize: 13, lineHeight: 1.2 }}>{type}</span>
-            </Reorder.Item>
-          );
-        })}
-      </Reorder.Group>
+      {isMobile ? (
+        /* Mobile: a vertical day list (day · colour dot · type), no drag. */
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+          {order.map((tile, col) => {
+            const rest = tile.day.isRest;
+            const type = rest ? (tile.day.isRecovery ? "Recovery" : "Rest") : travelMode ? "Bodyweight" : tile.day.label;
+            const dot = rest ? "#E4DAE7" : /upper/i.test(tile.day.label) ? C.purple : /core/i.test(tile.day.label) ? C.ink : C.magenta;
+            const bg = rest ? "#FBF9FB" : travelMode ? "#F4EDFE" : "#FFF5FA";
+            const fg = rest ? C.sub : C.ink;
+            return (
+              <div key={tile.uid} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", borderRadius: 12, background: bg }}>
+                <span style={{ width: 36, fontWeight: 800, fontSize: 14 }}>{DAY_SHORT[col]}</span>
+                <span style={{ flex: "none", width: 8, height: 8, borderRadius: 999, background: dot }} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: fg }}>{type}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <Reorder.Group as="div" axis="x" values={order} onReorder={setOrder} style={{ marginTop: 18, display: "flex", gap: 8, overflowX: "auto" }}>
+          {order.map((tile, col) => {
+            const rest = tile.day.isRest;
+            const type = rest ? (tile.day.isRecovery ? "Recovery" : "Rest") : tile.day.label;
+            const bg = rest ? C.tile : travelMode ? C.lilac : "#FFF5FA";
+            const fg = rest ? C.sub : C.ink;
+            const border = rest ? C.tile : travelMode ? C.purple : C.magenta;
+            return (
+              <Reorder.Item
+                as="div"
+                key={tile.uid}
+                value={tile}
+                drag={draggable && !rest ? "x" : false}
+                onDragStart={() => { preDrag.current = order; }}
+                onDragEnd={handleDrop}
+                whileDrag={{ scale: 1.08, zIndex: 50, cursor: "grabbing" }}
+                style={{ minWidth: 76, minHeight: 96, flex: 1, padding: 10, borderRadius: 14, background: bg, color: fg, border: `2px solid ${border}`, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "space-between", cursor: draggable && !rest ? "grab" : "default", touchAction: "none" }}
+              >
+                <span style={{ fontWeight: 800, fontSize: 14 }}>{DAY_SHORT[col]}</span>
+                <span style={{ fontWeight: 800, fontSize: 13, lineHeight: 1.2 }}>{type}</span>
+              </Reorder.Item>
+            );
+          })}
+        </Reorder.Group>
+      )}
 
       <p style={{ margin: "14px 0 0", fontSize: 14, color: C.body }}>
         {travelMode
           ? "Travel mode is on, these days show bodyweight workouts. Switch it off to get your normal plan back."
-          : draggable
+          : !isMobile && draggable
             ? "Drag a workout onto another day to move it. Bigger changes? Tap “Set up again”."
             : "Tap “Set up again” to change your plan."}
       </p>

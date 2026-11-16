@@ -76,7 +76,7 @@ const ProtectedLayout = () => {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0 lg:bg-[#FBF9FB]">
           <AppHeader />
-          <main className="flex-1">
+          <main className="flex-1 pb-[76px] lg:pb-0">
             <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Leaderboard />} />

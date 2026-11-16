@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
@@ -51,6 +52,14 @@ const C = {
 const bangers = { fontFamily: "Bangers, cursive", fontWeight: 400 } as const;
 const card: React.CSSProperties = { background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22 };
 
+// Body-part colour for the compact mobile week dots (Lower=pink, Upper=purple, Core=ink).
+const dayDotColor = (label: string) => {
+  const l = label.toLowerCase();
+  if (l.includes("upper")) return C.purple;
+  if (l.includes("core")) return C.ink;
+  return C.magenta;
+};
+
 type Mood = "Ready" | "So-so" | "Not ready";
 const MOODS: { label: Mood; hint: string }[] = [
   { label: "Ready", hint: "Push hard, go heavier" },
@@ -81,6 +90,7 @@ const CurrentWeek = () => {
   const saveTravelDay = useSaveTravelDay();
   const resetTravelDay = useResetTravelDay();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const now = new Date();
   const currentWeekDate = startOfWeek(now, { weekStartsOn: 1 });
@@ -256,12 +266,12 @@ const CurrentWeek = () => {
   if (editingDay !== null) {
     const day = weeklyPlan[editingDay];
     return (
-      <div style={{ background: C.bg, minHeight: "100%", padding: "32px 24px 64px" }}>
+      <div style={{ background: C.bg, minHeight: "100%", padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
           <button type="button" onClick={() => setEditingDay(null)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 14, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: "6px 0" }}>
             ← Back to this week
           </button>
-          <h1 style={{ margin: "6px 0 0", ...bangers, fontSize: 44, letterSpacing: 1, color: C.ink }}>Edit {day.day}</h1>
+          <h1 style={{ margin: "6px 0 0", ...bangers, fontSize: isMobile ? 38 : 44, letterSpacing: 1, color: C.ink }}>Edit {day.day}</h1>
           <p style={{ margin: "6px 0 18px", color: C.body, fontWeight: 700 }}>{day.label} · {day.exercises.length} exercises</p>
           <ExerciseEditor
             day={day}
@@ -308,11 +318,11 @@ const CurrentWeek = () => {
   const leftCount = plannedWorkouts.filter(({ d, i }) => getDayCompletion(i, d) < 100).length;
 
   return (
-    <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: "32px 24px 64px" }}>
-      <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
         {/* Header */}
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 20 }}>
-          <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1 }}>This week</h1>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: isMobile ? 10 : 20 }}>
+          <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>This week</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 4, border: `2px solid ${C.ink}`, borderRadius: 999, background: "#FFFFFF" }}>
             <button type="button" aria-label="Previous week" onClick={() => setWeekOffset((o) => o - 1)} style={{ width: 44, height: 40, border: 0, background: "transparent", cursor: "pointer", fontSize: 18, fontWeight: 800 }}>‹</button>
             <span style={{ fontWeight: 800, fontSize: 15, padding: "0 4px", whiteSpace: "nowrap" }}>{weekRangeLabel}</span>
@@ -324,6 +334,37 @@ const CurrentWeek = () => {
         </div>
 
         {/* Week overview */}
+        {isMobile ? (
+          <div>
+            <section aria-label="Week overview" style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 5 }}>
+              {weeklyPlan.map((d, i) => {
+                const isSel = i === selectedDayIndex;
+                const isToday = isCurrentWeek && i === todayIndex;
+                const isRest = (d.isRest || d.isRecovery) && d.exercises.length === 0;
+                const dot = isToday ? "#FFFFFF" : isRest ? "#E4DAE7" : dayDotColor(d.label);
+                const bg = isToday ? C.ink : isRest ? C.tile : "#FFFFFF";
+                const fg = isToday ? "#FFFFFF" : isRest ? C.sub : C.ink;
+                const baseBorder = isToday ? C.ink : isRest ? C.tile : C.border;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setSelectedDayIndex(i)}
+                    aria-pressed={isSel}
+                    style={{ padding: "8px 2px 10px", borderRadius: 14, background: bg, color: fg, border: `2px solid ${isSel && !isToday ? C.magenta : baseBorder}`, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer" }}
+                  >
+                    <span style={{ fontSize: 11, fontWeight: 800 }}>{d.day.slice(0, 3)}</span>
+                    <span style={{ ...bangers, fontSize: 20, lineHeight: 1 }}>{format(addDays(selectedWeekDate, i), "d")}</span>
+                    <span style={{ width: 8, height: 8, borderRadius: 999, background: dot }} />
+                  </button>
+                );
+              })}
+            </section>
+            <p style={{ margin: "10px 0 0", fontSize: 13, fontWeight: 700, color: C.body }}>
+              {plannedCount} workout{plannedCount === 1 ? "" : "s"} planned · {leftCount} left this week
+            </p>
+          </div>
+        ) : (
         <section style={{ ...card }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "18px 22px", borderBottom: `2px solid ${C.ink}` }}>
             <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>
@@ -387,8 +428,9 @@ const CurrentWeek = () => {
             })}
           </div>
         </section>
+        )}
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
           {/* Focused day */}
           <section style={{ flex: "2 1 560px", minWidth: 0, ...card, boxShadow: `6px 6px 0 ${C.magenta}`, overflow: "hidden" }}>
             {(selectedDay.isRest || selectedDay.isRecovery) && total === 0 ? (
@@ -402,15 +444,15 @@ const CurrentWeek = () => {
               </div>
             ) : (
               <>
-                <div style={{ background: C.grad, color: "#FFFFFF", padding: "24px 28px", borderBottom: `2px solid ${C.ink}` }}>
+                <div style={{ background: C.grad, color: "#FFFFFF", padding: isMobile ? "18px" : "24px 28px", borderBottom: `2px solid ${C.ink}` }}>
                   <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
                     <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>{isTodayFocused ? "TODAY · " : ""}{selectedDay.day.toUpperCase()}</p>
-                      <h2 style={{ margin: "4px 0 0", ...bangers, fontSize: 44, letterSpacing: 1, lineHeight: 1 }}>{selectedDay.label}</h2>
-                      <p style={{ margin: "6px 0 0", fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{total} exercises · 3 rounds · about 30 minutes</p>
+                      <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>{isTodayFocused ? "TODAY · " : ""}{selectedDay.day.toUpperCase()}</p>
+                      <h2 style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 34 : 44, letterSpacing: 1, lineHeight: 1 }}>{selectedDay.label}</h2>
+                      <p style={{ margin: "6px 0 0", fontSize: isMobile ? 14 : 16, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{total} exercises{isMobile ? "" : " · 3 rounds"} · about 30 min{isMobile ? "" : "utes"}</p>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <p style={{ margin: 0, ...bangers, fontSize: 40, lineHeight: 1 }}>{doneCount}/{total}</p>
+                      <p style={{ margin: 0, ...bangers, fontSize: isMobile ? 34 : 40, lineHeight: 1 }}>{doneCount}/{total}</p>
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.88)" }}>done</p>
                     </div>
                   </div>
@@ -420,29 +462,43 @@ const CurrentWeek = () => {
                 </div>
 
                 {/* Readiness */}
-                <div style={{ padding: "22px 28px 6px" }}>
+                <div style={{ padding: isMobile ? "18px 18px 6px" : "22px 28px 6px" }}>
                   <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>How do you feel today?</p>
-                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
-                    {MOODS.map((r) => {
-                      const on = r.label === mood;
-                      return (
-                        <button key={r.label} type="button" aria-pressed={on} onClick={() => setMood(selectedDayIndex, r.label)} style={{ minHeight: 64, padding: "10px 12px", border: `2px solid ${C.ink}`, borderRadius: 14, background: on ? C.ink : "#FFFFFF", color: on ? "#FFFFFF" : C.ink, textAlign: "left", cursor: "pointer", boxShadow: on ? `3px 3px 0 ${C.magenta}` : "none" }}>
-                          <span style={{ display: "block", fontWeight: 800, fontSize: 16 }}>{r.label}</span>
-                          <span style={{ display: "block", fontSize: 13, fontWeight: 600, opacity: 0.9 }}>{r.hint}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {isMobile ? (
+                    <>
+                      <div style={{ marginTop: 10, display: "flex", border: `2px solid ${C.ink}`, borderRadius: 14, overflow: "hidden" }}>
+                        {MOODS.map((r) => {
+                          const on = r.label === mood;
+                          return (
+                            <button key={r.label} type="button" aria-pressed={on} onClick={() => setMood(selectedDayIndex, r.label)} style={{ flex: 1, minHeight: 48, border: 0, background: on ? C.ink : "#FFFFFF", color: on ? "#FFFFFF" : C.ink, fontWeight: 800, fontSize: 14, cursor: "pointer" }}>{r.label}</button>
+                          );
+                        })}
+                      </div>
+                      <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: C.body }}>{MOODS.find((m) => m.label === mood)?.hint}</p>
+                    </>
+                  ) : (
+                    <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                      {MOODS.map((r) => {
+                        const on = r.label === mood;
+                        return (
+                          <button key={r.label} type="button" aria-pressed={on} onClick={() => setMood(selectedDayIndex, r.label)} style={{ minHeight: 64, padding: "10px 12px", border: `2px solid ${C.ink}`, borderRadius: 14, background: on ? C.ink : "#FFFFFF", color: on ? "#FFFFFF" : C.ink, textAlign: "left", cursor: "pointer", boxShadow: on ? `3px 3px 0 ${C.magenta}` : "none" }}>
+                            <span style={{ display: "block", fontWeight: 800, fontSize: 16 }}>{r.label}</span>
+                            <span style={{ display: "block", fontSize: 13, fontWeight: 600, opacity: 0.9 }}>{r.hint}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Exercises */}
-                <div style={{ padding: "16px 28px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ padding: isMobile ? "14px 18px 8px" : "16px 28px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>EXERCISES</p>
                   <button type="button" onClick={() => setEditingDay(selectedDayIndex)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 800, fontSize: 14, color: C.pink, background: "transparent", border: 0, cursor: "pointer", padding: "8px 0" }}>
                     ✎ Edit exercises
                   </button>
                 </div>
-                <div style={{ padding: "0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ padding: isMobile ? "0 18px" : "0 28px", display: "flex", flexDirection: "column", gap: isMobile ? 8 : 10 }}>
                   {selectedDay.exercises.map((ex, i) => {
                     const key = getExKey(selectedDayIndex, i);
                     return (
@@ -450,6 +506,7 @@ const CurrentWeek = () => {
                         key={i}
                         exercise={ex}
                         mood={mood}
+                        compact={isMobile}
                         isDone={!!localCompleted[key]}
                         weight={localWeights[key] || ""}
                         lastWeekWeight={prevWeightMap[key]}
@@ -462,7 +519,7 @@ const CurrentWeek = () => {
                     );
                   })}
                 </div>
-                <div style={{ padding: "20px 28px 28px" }}>
+                <div style={{ padding: isMobile ? "16px 18px 20px" : "20px 28px 28px" }}>
                   {allDone ? (
                     <button type="button" onClick={() => handleUndoDay(selectedDayIndex, selectedDay)} style={{ width: "100%", minHeight: 56, background: "#FFF5FA", color: C.ink, border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
                       Workout complete! Reopen to edit
@@ -478,7 +535,7 @@ const CurrentWeek = () => {
           </section>
 
           {/* Right column */}
-          <aside style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+          <aside style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
             {nextUp.length > 0 && (
               <section style={{ ...card, padding: 22 }}>
                 <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>NEXT UP</p>
@@ -524,11 +581,12 @@ const CurrentWeek = () => {
 
 // ── Per-exercise row inside the focused day card ──
 function FocusedExerciseRow({
-  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight,
+  exercise, mood, isDone, weight, lastWeekWeight, prevPrevWeekWeight, compact = false,
   onWeightChange, onWeightBlur, onToggle, onVideoClick,
 }: {
   exercise: Exercise;
   mood: Mood;
+  compact?: boolean;
   isDone: boolean;
   weight: string;
   lastWeekWeight?: number;
@@ -566,18 +624,18 @@ function FocusedExerciseRow({
   const lastLabel = lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px 16px", padding: "14px 16px", border: `2px solid ${isDone ? C.magenta : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : "#FFFFFF" }}>
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: compact ? "8px 10px" : "12px 16px", padding: compact ? "10px 12px" : "14px 16px", border: `2px solid ${isDone ? C.magenta : C.border}`, borderRadius: 16, background: isDone ? "#FFF5FA" : "#FFFFFF" }}>
       <button type="button" onClick={onToggle} aria-pressed={isDone} aria-label={`${isDone ? "Mark not done" : "Mark done"}: ${exercise.name}`} style={{ flex: "none", width: 44, height: 44, borderRadius: 999, border: `2px solid ${C.ink}`, background: isDone ? C.magenta : "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#FFFFFF" : C.border} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
       </button>
       <div style={{ flex: "1 1 200px", minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 800, fontSize: 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
+        <p style={{ margin: 0, fontWeight: 800, fontSize: compact ? 15 : 17, textDecoration: isDone ? "line-through" : "none", display: "flex", alignItems: "center", gap: 8 }}>
           {exercise.name}
           {videoUrl && (
             <button type="button" onClick={() => onVideoClick(videoUrl)} aria-label={`Watch tutorial for ${exercise.name}`} style={{ flex: "none", width: 24, height: 24, borderRadius: 999, border: 0, background: "rgba(194,28,112,0.1)", color: C.pink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>▶</button>
           )}
         </p>
-        <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.body }}>
+        <p style={{ margin: "2px 0 0", fontSize: compact ? 12 : 14, fontWeight: 700, color: C.body }}>
           <span style={{ color: C.pink }}>{isRounds ? `${exercise.sets} rounds` : exercise.reps ? `${exercise.sets} × ${exercise.reps}` : `${exercise.sets} sets`}</span> · {lastLabel}
         </p>
       </div>
@@ -585,7 +643,7 @@ function FocusedExerciseRow({
         <span style={{ padding: "4px 10px", borderRadius: 999, background: C.tile, color: C.body, fontSize: 12, fontWeight: 800 }}>Bodyweight</span>
       ) : (
         <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ padding: "4px 10px", borderRadius: 999, background: tag.bg, color: tag.fg, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>{tag.text}</span>
+          {!compact && <span style={{ padding: "4px 10px", borderRadius: 999, background: tag.bg, color: tag.fg, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>{tag.text}</span>}
           <label style={{ display: "flex", alignItems: "center", height: 44, border: `2px solid ${weight === "F" ? "#C0244E" : C.ink}`, borderRadius: 12, background: "#FFFFFF", overflow: "hidden", opacity: isDone ? 0.5 : 1 }}>
             <input
               type="text"

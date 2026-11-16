@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Power Club challenge, mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF9FB}
+a{color:#C21C70}a:hover{color:#2B1736}
+button,input{font-family:inherit}
+input:focus{outline:3px solid #E8308C;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1500px; overflow: hidden; display: flex; flex-direction: column; background: #FBF9FB; color: #2B1736; font-family: Nunito, system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+  <header style="flex: none; height: 60px; padding: 0 16px; background: #2B1736; display: flex; align-items: center; justify-content: space-between">
+    <span style="font-family: Bangers, cursive; font-size: 28px; letter-spacing: 1px; color: #FF8AC4">Power Club</span>
+    <span style="width: 36px; height: 36px; border-radius: 999px; background: #E8308C; color: #FFFFFF; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center">KL</span>
+  </header>
+  <main style="flex: 1; min-height: 0; overflow-y: auto; padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 16px">
+    <section style="background: linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%); color: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; box-shadow: 4px 4px 0 #2B1736; padding: 22px 18px">
+      <p style="margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.88)">4-WEEK TEAM CHALLENGE</p>
+      <h1 style="margin: 4px 0 0; font-family: Bangers, cursive; font-weight: 400; font-size: 42px; letter-spacing: 1px; line-height: 0.95">Train with friends.<span style="display: block; color: #FFD6EA">Win the week.</span></h1>
+      <ol style="margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px">
+        <li style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px"><span style="flex: none; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; color: #2B1736; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center">1</span>Make your team or join with a code</li>
+        <li style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px"><span style="flex: none; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; color: #2B1736; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center">2</span>Everyone trains their own plan</li>
+        <li style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px"><span style="flex: none; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; color: #2B1736; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center">3</span>Each finished workout earns points</li>
+        <li style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px"><span style="flex: none; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; color: #2B1736; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center">4</span>A winner every week, rewards as you go</li>
+      </ol>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px; box-shadow: 4px 4px 0 #E8308C">
+      <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Start a team</h2>
+      <p style="margin: 2px 0 0; font-size: 14px; color: #5E4E66">You'll get a code to share with friends.</p>
+      <sc-if value="{{notCreated}}" hint-placeholder-val="{{true}}">
+        <label for="team" style="display: block; margin-top: 12px; font-weight: 800; font-size: 14px">Team name</label>
+        <input id="team" type="text" placeholder="e.g. Caparica Lifters" style="margin-top: 6px; width: 100%; height: 48px; padding: 0 14px; border: 2px solid #2B1736; border-radius: 12px; font-size: 16px; color: #2B1736; box-sizing: border-box">
+        <button type="button" onClick="{{create}}" style="margin-top: 10px; width: 100%; height: 50px; background: #C21C70; color: #FFFFFF; border: 2px solid #2B1736; border-radius: 12px; box-shadow: 3px 3px 0 #2B1736; font-weight: 800; font-size: 16px; cursor: pointer">Create team</button>
+      </sc-if>
+      <sc-if value="{{created}}" hint-placeholder-val="{{false}}">
+        <div style="margin-top: 12px; padding: 14px; border-radius: 14px; background: #FFF5FA; border: 2px solid #E8308C">
+          <p style="margin: 0; font-weight: 800">Team created! Share this code:</p>
+          <p style="margin: 6px 0 0; font-family: Bangers, cursive; font-size: 38px; letter-spacing: 6px; line-height: 1; color: #C21C70">PWR482</p>
+          <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <button type="button" style="min-height: 44px; border: 2px solid #2B1736; border-radius: 12px; background: #FFFFFF; color: #2B1736; font-weight: 800; cursor: pointer">Copy</button>
+            <button type="button" style="min-height: 44px; border: 2px solid #2B1736; border-radius: 12px; background: #2B1736; color: #FFFFFF; font-weight: 800; cursor: pointer">WhatsApp</button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px; box-shadow: 4px 4px 0 #6B2FB3">
+      <h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Join a team</h2>
+      <p style="margin: 2px 0 0; font-size: 14px; color: #5E4E66">Got a code from a friend?</p>
+      <label for="code" style="display: block; margin-top: 12px; font-weight: 800; font-size: 14px">Team code</label>
+      <div style="margin-top: 6px; display: flex; gap: 8px">
+        <input id="code" type="text" maxlength="6" placeholder="ABC123" style="flex: 1; min-width: 0; height: 50px; padding: 0 14px; border: 2px solid #2B1736; border-radius: 12px; font-size: 18px; font-weight: 800; letter-spacing: 3px; color: #2B1736; box-sizing: border-box">
+        <button type="button" style="flex: none; height: 50px; padding: 0 20px; background: #6B2FB3; color: #FFFFFF; border: 2px solid #2B1736; border-radius: 12px; box-shadow: 3px 3px 0 #2B1736; font-weight: 800; cursor: pointer">Join</button>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 2px solid #2B1736; border-radius: 20px; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-family: Bangers, cursive; font-weight: 400; font-size: 26px; letter-spacing: 1px">Team board</h2><span style="font-size: 12px; font-weight: 800; color: #77677E">Example</span></div>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #FFF5FA; border: 2px solid #E8308C"><span style="font-family: Bangers, cursive; font-size: 22px; color: #C21C70; width: 18px">1</span><span style="flex: 1; font-weight: 800">You</span><span style="font-size: 13px; font-weight: 700; color: #5E4E66">3 workouts</span></div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #F6F1F7"><span style="font-family: Bangers, cursive; font-size: 22px; color: #5E4E66; width: 18px">2</span><span style="flex: 1; font-weight: 800">Teammate</span><span style="font-size: 13px; font-weight: 700; color: #5E4E66">2 workouts</span></div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #F6F1F7"><span style="font-family: Bangers, cursive; font-size: 22px; color: #5E4E66; width: 18px">3</span><span style="flex: 1; font-weight: 800">Teammate</span><span style="font-size: 13px; font-weight: 700; color: #5E4E66">1 workout</span></div>
+      </div>
+    </section>
+  </main>
+  <nav aria-label="App" style="flex: none; height: 72px; background: #FFFFFF; border-top: 2px solid #2B1736; display: flex">
+    <a href="MobileWeek.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg></span>This week</a>
+    <a href="MobileScorecard.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg></span>Scorecard</a>
+    <a href="MobileChallenge.dc.html" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #C21C70; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: #FCE4F0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.8.8 3 2.6 3.5 5.2"></path></svg></span>Challenge</a>
+    <a href="MobileProfile.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5E4E66; font-size: 11px; font-weight: 800">
+      <span style="width: 44px; height: 30px; border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg></span>Profile</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const created = !!(this.state && this.state.created);
+    return { created, notCreated: !created, create: () => this.setState({ created: true }) };
+  }
+}
+</script>
+</body>
+</html>
