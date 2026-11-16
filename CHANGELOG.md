@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-11-16 — New member fixes (live sign-up test)
+
+From the sign-up test video in the power-club-design 2 brief, fixed in order:
+
+1. **Blank page after sign-up.** A stale lazy chunk after a deploy left the
+   page blank. PageErrorBoundary + `vite:preloadError` reload once ("Getting
+   the latest version"), then show "This page didn't load" with Reload. A
+   session flag with a timestamp stops loops. vercel.json no longer serves
+   index.html for missing `/assets/*` (that caused the MIME-type error).
+   The 406 was `.single()` on a missing profile row: useProfile now creates
+   it from the sign-up first name. The 422s are Supabase sign-up errors
+   (existing email, weak password), now shown in plain words.
+2. **Onboarding.** 4-step sign-up (account, about you, your week,
+   membership) + welcome screen, landing on This week. Answers ride on the
+   auth user's metadata so they survive email confirmation. No plan means
+   plan setup (or the recommended plan picked at sign-up); never the old
+   5-day default. Real admins are exempt from the plan redirect.
+3. **Name and initials.** Sign-up first name everywhere, one initial. "KL"
+   came from the email (klara...+pctest), not a hardcoded value.
+4. **Body weight.** Asked at sign-up; "What's your body weight?" box on
+   Scorecard and Profile when missing; strength levels locked until saved.
+   25 to 300 kg, comma or dot.
+5. **Week 1 "Find your base".** First session of each training day: no
+   readiness check or "Go heavier"; after ticking a kg exercise, Too light /
+   Just right / Too heavy sets the starting weight (+2.5 / used / -2.5 kg),
+   stored on the plan day (`baseWeight`, `baseWeek`) so logged history stays
+   what was lifted. Fixed "kg kg" (placeholder was the unit).
+6. **First month from the join date.** Nov 16 to Dec 15, 0 of 13, weeks 1
+   to 5; days before joining never count. Profile shows when the first €5
+   is due.
+7. **Empty states.** Streak "Starts today"; exercise progress "Nothing
+   logged yet" with the exercises coming up in the plan.
+
+Why some choices: the starting weight lives on the plan, not in
+exercise_logs, so history isn't rewritten; join date is the auth account's
+created_at; no migration needed.
+
 ## 2026-11-16 — Travel mode: videos and info for every move
 
 - Every travel-mode move (25 bodyweight moves) now has a short demo video,
