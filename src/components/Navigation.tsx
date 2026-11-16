@@ -230,30 +230,35 @@ export function BottomNav() {
   // Below lg the app uses this bottom tab bar (phones and tablet); the dark
   // sidebar takes over at lg+. Styled to match the mobile design: a pink pill
   // behind the active icon, no neon glow.
+  // The white background fills the iOS home-indicator area (safe-area inset)
+  // via padding, while the 72px tab row sits above it, so tabs never collide
+  // with the home indicator in standalone (home-screen) mode.
   return (
-    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 h-[72px] flex bg-white border-t-2 border-[#2B1736] lg:hidden pb-[env(safe-area-inset-bottom)]">
-      {tabs.map(({ path, icon: Icon, label }) => {
-        const isActive = path === "/more"
-          ? ["/more", "/teams", "/profile"].includes(location.pathname)
-          : location.pathname === path;
-        return (
-          <Link
-            key={path}
-            to={path}
-            aria-current={isActive ? "page" : undefined}
-            className="flex-1 flex flex-col items-center justify-center gap-[2px] no-underline"
-            style={{ color: isActive ? "#C21C70" : "#5E4E66", fontSize: 11, fontWeight: 800 }}
-          >
-            <span
-              className="flex items-center justify-center"
-              style={{ width: 44, height: 30, borderRadius: 999, background: isActive ? "#FCE4F0" : "transparent" }}
+    <nav aria-label="App navigation" className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-[#2B1736] lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="h-[72px] flex">
+        {tabs.map(({ path, icon: Icon, label }) => {
+          const isActive = path === "/more"
+            ? ["/more", "/teams", "/profile"].includes(location.pathname)
+            : location.pathname === path;
+          return (
+            <Link
+              key={path}
+              to={path}
+              aria-current={isActive ? "page" : undefined}
+              className="flex-1 flex flex-col items-center justify-center gap-[2px] no-underline"
+              style={{ color: isActive ? "#C21C70" : "#5E4E66", fontSize: 11, fontWeight: 800 }}
             >
-              <Icon className="w-5 h-5" strokeWidth={2.2} />
-            </span>
-            {label}
-          </Link>
-        );
-      })}
+              <span
+                className="flex items-center justify-center"
+                style={{ width: 44, height: 30, borderRadius: 999, background: isActive ? "#FCE4F0" : "transparent" }}
+              >
+                <Icon className="w-5 h-5" strokeWidth={2.2} />
+              </span>
+              {label}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
