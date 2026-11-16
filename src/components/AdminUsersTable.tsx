@@ -1,7 +1,8 @@
 import { Fragment, useMemo, useState } from "react";
 import { useAdminMembers, formatSupabaseError, type AdminMember } from "@/hooks/useAdminMembers";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-const C = { ink: "#2B1736", sub: "#77677E", body: "#5E4E66", pink: "#C21C70", magenta: "#E8308C", seg: "#EFE6F1", row: "#EFE6F1" };
+const C = { ink: "#2B1736", sub: "#77677E", body: "#5E4E66", pink: "#C21C70", magenta: "#E8308C", seg: "#EFE6F1", row: "#EFE6F1", border: "#E4DAE7" };
 const bangers = { fontFamily: "Bangers, cursive", fontWeight: 400 } as const;
 
 const formatDate = (iso: string | null) => {
@@ -58,6 +59,7 @@ const td: React.CSSProperties = { padding: "14px 8px", verticalAlign: "middle" }
 
 const AdminUsersTable = ({ title = "Members" }: { title?: string }) => {
   const { data, isLoading, error } = useAdminMembers();
+  const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -68,12 +70,12 @@ const AdminUsersTable = ({ title = "Members" }: { title?: string }) => {
   }, [data, query]);
 
   return (
-    <section style={{ background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, padding: 24, color: C.ink, fontFamily: "Nunito, system-ui, sans-serif" }}>
+    <section style={{ background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, padding: isMobile ? 18 : 24, color: C.ink, fontFamily: "Nunito, system-ui, sans-serif" }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <h2 style={{ margin: 0, ...bangers, fontSize: 30, letterSpacing: 1 }}>
+        <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 30, letterSpacing: 1 }}>
           {title} {data && <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 15, fontWeight: 800, color: C.sub }}>{query ? `${filtered.length} of ${data.users.length}` : data.users.length}</span>}
         </h2>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, height: 44, padding: "0 14px", border: `2px solid ${C.ink}`, borderRadius: 12, background: "#FFFFFF", minWidth: 0, flex: "0 1 280px" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, height: 44, padding: "0 14px", border: `2px solid ${C.ink}`, borderRadius: 12, background: "#FFFFFF", minWidth: 0, flex: isMobile ? "1 1 100%" : "0 1 280px" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.4} strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
           <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>Search members</span>
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or email" style={{ flex: 1, minWidth: 0, border: 0, height: "100%", fontSize: 15, color: C.ink, background: "transparent", outline: "none" }} />
@@ -92,6 +94,53 @@ const AdminUsersTable = ({ title = "Members" }: { title?: string }) => {
         <p style={{ margin: "16px 0 0", color: C.sub }}>Loading members...</p>
       ) : filtered.length === 0 ? (
         <p style={{ margin: "16px 0 0", color: C.sub }}>{query ? "No members match that search." : "No members yet."}</p>
+      ) : isMobile ? (
+        /* Phones: one card per member (mobile-dashboard mockup) instead of a wide table. */
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+          {filtered.map((u) => {
+            const open = expanded === u.user_id;
+            const chip = planChip(u);
+            return (
+              <div key={u.user_id} style={{ border: `2px solid ${C.border}`, borderRadius: 14 }}>
+                <button type="button" aria-expanded={open} onClick={() => setExpanded(open ? null : u.user_id)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: 12, background: "transparent", border: 0, textAlign: "left", cursor: "pointer", color: C.ink, fontFamily: "inherit" }}>
+                  <Avatar u={u} size={40} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontWeight: 800 }}>{u.display_name}</p>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.body }}>{u.workout_days} workouts · active {formatRelative(u.last_active_at).toLowerCase()}</p>
+                    {u.planned_per_week ? (
+                      <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ display: "flex", gap: 2, width: 56 }} aria-hidden="true">
+                          {Array.from({ length: Math.max(u.planned_per_week, u.week_workouts) }).map((_, i) => (
+                            <span key={i} style={{ flex: 1, height: 6, borderRadius: 999, background: i < u.week_workouts ? C.magenta : C.seg }} />
+                          ))}
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: C.body }}>{u.week_workouts} of {u.planned_per_week} this week</span>
+                      </div>
+                    ) : (
+                      <span style={{ display: "inline-block", marginTop: 4, padding: "1px 8px", borderRadius: 999, background: chip.bg, color: chip.fg, fontSize: 11, fontWeight: 800 }}>{chip.text}</span>
+                    )}
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}><path d="M9 6l6 6-6 6" /></svg>
+                </button>
+                {open && (
+                  <dl style={{ margin: 0, padding: "0 12px 12px", display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px 12px", fontSize: 13 }}>
+                    {[
+                      ["Plan", chip.text],
+                      ["Joined", formatDate(u.joined_at)],
+                      ["Email", u.email ?? "Not available"],
+                      ["Body weight", u.body_weight ? `${u.body_weight} kg` : "—"],
+                    ].map(([k, v]) => (
+                      <div key={k} style={{ minWidth: 0 }}>
+                        <dt style={{ fontSize: 11, fontWeight: 800, color: C.sub }}>{k}</dt>
+                        <dd style={{ margin: 0, fontWeight: 800, overflowWrap: "anywhere" }}>{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <div style={{ marginTop: 16, overflowX: "auto" }}>
           <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: 15 }}>

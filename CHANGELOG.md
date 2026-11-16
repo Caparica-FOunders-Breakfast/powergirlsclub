@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-16 — Training plan feature, step 5 (mobile layouts)
+
+The brief's six `mobile-*.dc.html` mockups are byte-identical to the ones
+already implemented (PR #23 + iPhone fixes #25-#28), so this step covers the
+new UI from steps 1-4 at phone width:
+
+- **Admin members** (`AdminUsersTable.tsx`): on phones, one card per member
+  (avatar, workouts, last active, this-week bar, tap for details) instead of a
+  640px table that scrolled sideways, per `mobile-dashboard.dc.html`.
+- **Dashboard Weekly plan**: phones show just the three counts (mockup).
+- **Challenge**: Start/Join icon tiles hidden on phones (mockup).
+- **Plan setup**: the 7-day picker fits a phone (smaller type and gaps; it had
+  ~34px per day for a 24px-font "Wed"), with full day names for screen readers.
+- **Plan setup header** now pads for the iOS safe area, so the logo doesn't sit
+  under the status bar in the home-screen app (same bug fixed for the main
+  header in #25). The landing and legal pages have the same gap; they're public
+  pages, fixed in step 6.
+
+
 ## 2026-11-16 — Training plan feature, step 4 (Challenge, Profile, admin dashboard)
 
 - **Admin dashboard** (`Dashboard.tsx`), rebuilt to `admin-dashboard.dc.html`:
