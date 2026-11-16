@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-16 — Training plan feature, step 3 (Scorecard)
+
+Matches `scorecard.dc.html`. Activity, strength levels and exercise progress
+already matched; the change is Row 1.
+
+- **"This month" card** (`ExerciseScorecard.tsx`): "N of M workouts",
+  "N more this week to stay on plan", one tile per week of the month with its
+  own N of M, and the page's single yellow CTA ("Start today's workout", or
+  "Set up your plan" with no plan yet). Targets come from the member's live
+  training weekdays, clipped to days inside the month, so partial edge weeks
+  never ask for sessions that can't happen. Rest/recovery check-ins don't
+  count as workouts. Week tiles are hidden on mobile (per the mobile mockup).
+- **Streak** is now its own card, with best streak in a lilac row.
+- Exercise rows get a chevron; the exercise detail screen shows the level as
+  segments instead of emoji.
+
+
 ## 2026-11-16 — Training plan feature, step 2 (This Week + exercise editor)
 
 Matches `this-week.dc.html` and `edit-exercises.dc.html` from the brief.
