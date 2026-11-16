@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AdminProvider, useAdminView } from "@/contexts/AdminContext";
 import { AppSidebar, BottomNav, AppHeader, SidebarProvider } from "@/components/Navigation";
 import FeatureGate from "@/components/FeatureGate";
+import { PageErrorBoundary } from "@/components/AppUpdateScreen";
 
 // Pages are code-split so a first load only ships the page it needs. The heavy
 // bits (charts, the member area, admin, language/meals) no longer block the
@@ -90,6 +91,7 @@ const ProtectedLayout = () => {
         <div className="flex-1 flex flex-col min-w-0 lg:bg-[#FBF9FB]">
           <AppHeader />
           <main className="flex-1 pb-[calc(76px+env(safe-area-inset-bottom))] lg:pb-0">
+            <PageErrorBoundary>
             <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Leaderboard />} />
@@ -123,6 +125,7 @@ const ProtectedLayout = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
+            </PageErrorBoundary>
           </main>
           <BottomNav />
         </div>
@@ -182,7 +185,11 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AppRoutes />
+            {/* Catches failed lazy chunks after a deploy (and any render crash)
+                so the member sees the update screen, never a blank page. */}
+            <PageErrorBoundary>
+              <AppRoutes />
+            </PageErrorBoundary>
           </BrowserRouter>
         </TooltipProvider>
       </AdminProvider>

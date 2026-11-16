@@ -23,7 +23,7 @@ export const useMyTeam = () => {
         .from("profiles")
         .select("team_id")
         .eq("user_id", user!.id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       if (!profile?.team_id) return null;
 
