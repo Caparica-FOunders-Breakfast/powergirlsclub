@@ -7,6 +7,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#FF2D87" />
+
+    <!-- Warm up the connection to Supabase so the auth/session call on load
+         doesn't pay for DNS + TLS setup first. -->
+    <link rel="preconnect" href="https://yclbhridztsnfjhlnxtu.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://yclbhridztsnfjhlnxtu.supabase.co" />
+
     <title>Power Club – Get strong in 30 minutes</title>
     <meta name="description" content="A fun strength club for everyone: 5 exercises, 3 rounds, 10 reps. €5/month, cancel anytime.">
     <meta name="author" content="Lovable" />
