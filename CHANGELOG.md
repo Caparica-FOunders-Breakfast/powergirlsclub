@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-16 — "Workout complete!" without "Reopen to edit"
+
+- This Week: once every exercise is ticked, the bottom bar now reads
+  "Workout complete!" in the pink finish style from the design, with a tick,
+  and is no longer a button. Removed the "Reopen to edit" action (it unticked
+  the whole day). Why: the owner didn't like it, and the design shows only
+  "Workout complete!". To change a value, untick that one exercise.
+
 ## 2026-11-16 — Bodyweight exercises can be ticked off
 
 - This Week: bodyweight moves (e.g. Jump squats) show a "Bodyweight" pill with
