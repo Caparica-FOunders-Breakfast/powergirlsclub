@@ -1,496 +1,243 @@
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Activity,
-  AlertTriangle,
-  DollarSign,
-  Dumbbell,
-  Globe,
-  ImagePlus,
-  Repeat,
-  Sparkles,
-  UserPlus,
-  Users,
-  UtensilsCrossed,
-} from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip as ChartTooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import AdminUsersTable from "@/components/AdminUsersTable";
-import { Switch } from "@/components/ui/switch";
+import AdminUsersTable, { Avatar } from "@/components/AdminUsersTable";
 import { useToast } from "@/hooks/use-toast";
-import {
-  FEATURE_FLAGS,
-  useFeatureFlags,
-  useSetAppSetting,
-  type FeatureFlagKey,
-} from "@/hooks/useAppSettings";
-import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { FEATURE_FLAGS, useFeatureFlags, useSetAppSetting, type FeatureFlagKey } from "@/hooks/useAppSettings";
+import { useAdminMembers, isRestCheckIn, localDateKey, mondayOfThisWeek, type AdminMember } from "@/hooks/useAdminMembers";
 
-// Day labels for the bar chart. Day index here follows the rest of the app:
-// 0 = Monday … 6 = Sunday.
+const C = {
+  ink: "#2B1736", sub: "#77677E", body: "#5E4E66", pink: "#C21C70", magenta: "#E8308C",
+  purpleText: "#5B21B6", lilac: "#F1E9FE", tile: "#F6F1F7", border: "#E4DAE7", seg: "#EFE6F1",
+  grad: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)",
+};
+const bangers = { fontFamily: "Bangers, cursive", fontWeight: 400 } as const;
+const card: React.CSSProperties = { background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22 };
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
 const MONTHLY_BUDGET_USD = 10;
 
-// Calls Anthropic returning a 429 (daily-limit error). The edge function
-// doesn't tag rows that hit the rate limit, so this is the closest signal
-// we can show without schema changes, count is always 0 for now and the
-// card explains that. Keeping the placeholder here makes the future wiring
-// obvious without breaking the layout today.
-const RATE_LIMIT_HITS_PLACEHOLDER = 0;
-
-const startOfMonth = () => {
-  const d = new Date();
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
-const startOfWeek = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  // Monday-based week, matching the rest of the app.
-  const day = d.getDay(); // 0 = Sun … 6 = Sat
-  const mondayOffset = (day + 6) % 7;
-  d.setDate(d.getDate() - mondayOffset);
-  return d;
-};
-
-interface ProfileRow {
-  user_id: string;
-  display_name: string;
-  avatar_color: string;
-}
-
-interface ExerciseLogRow {
-  user_id: string;
-  day_index: number;
-  completed: boolean;
-  completed_at: string | null;
-  created_at: string;
-}
-
-interface ApiUsageRow {
-  id: string;
-  user_id: string;
-  cost_estimate: number;
-  created_at: string;
-}
-
-const FEATURE_CONTROLS: {
-  key: FeatureFlagKey;
-  label: string;
-  description: string;
-  icon: typeof Sparkles;
-}[] = [
-  {
-    key: FEATURE_FLAGS.aiImport,
-    label: "AI workout import",
-    description: "Photo-to-plan import in Training Preferences.",
-    icon: ImagePlus,
-  },
-  {
-    key: FEATURE_FLAGS.language,
-    label: "Language coaching",
-    description: "Daily language tasks and vocabulary.",
-    icon: Globe,
-  },
-  {
-    key: FEATURE_FLAGS.meals,
-    label: "Meals & nutrition",
-    description: "Meal plan, recipes, and combos.",
-    icon: UtensilsCrossed,
-  },
-  {
-    key: FEATURE_FLAGS.signups,
-    label: "New user signups",
-    description: "Allow new accounts to register.",
-    icon: UserPlus,
-  },
+const FEATURE_CONTROLS: { key: FeatureFlagKey; label: string; description: string }[] = [
+  { key: FEATURE_FLAGS.aiImport, label: "AI workout import", description: "Photo to training plan" },
+  { key: FEATURE_FLAGS.language, label: "Language coaching", description: "Daily tasks and vocabulary" },
+  { key: FEATURE_FLAGS.meals, label: "Meals and nutrition", description: "Meal plan and recipes" },
+  { key: FEATURE_FLAGS.signups, label: "New member signups", description: "Let new people join" },
 ];
 
-const MetricCard = ({
-  icon: Icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: typeof Sparkles;
-  label: string;
-  value: string;
-  hint?: string;
-}) => (
-  <div className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5">
-    <div className="flex items-center gap-2 text-muted-foreground">
-      <Icon className="w-4 h-4 text-primary" />
-      <p className="text-[10px] font-bold uppercase tracking-wider">{label}</p>
-    </div>
-    <p className="font-display text-3xl text-foreground mt-1.5 tabular-nums lg:text-4xl">
-      {value}
-    </p>
-    {hint && <p className="text-[11px] font-bold text-muted-foreground mt-1">{hint}</p>}
-  </div>
-);
+const STATUS_CHIP: Record<string, { text: string; bg: string; fg: string }> = {
+  on_plan: { text: "On plan", bg: "#FFF5FA", fg: "#A3165E" },
+  behind: { text: "Behind", bg: C.lilac, fg: C.purpleText },
+  not_started: { text: "Not started", bg: C.tile, fg: C.body },
+};
+
+interface LogRow { user_id: string; exercise_name: string; completed_at: string | null }
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const { data: flags } = useFeatureFlags();
   const setSetting = useSetAppSetting();
+  const { data: members } = useAdminMembers();
 
-  const monthStart = useMemo(() => startOfMonth(), []);
-  const weekStart = useMemo(() => startOfWeek(), []);
+  const now = new Date();
+  const monthStart = useMemo(() => new Date(now.getFullYear(), now.getMonth(), 1), [now.getFullYear(), now.getMonth()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const weekStart = useMemo(() => mondayOfThisWeek(), []);
+  // The earlier of the two, so one query covers both "this month" and "this week".
+  const since = monthStart < weekStart ? monthStart : weekStart;
 
-  const { data: profiles = [] } = useQuery<ProfileRow[]>({
-    queryKey: ["admin-dashboard-profiles"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, avatar_color");
-      if (error) throw error;
-      return (data ?? []) as ProfileRow[];
-    },
-  });
-
-  const { data: monthLogs = [] } = useQuery<ExerciseLogRow[]>({
-    queryKey: ["admin-dashboard-exercise-logs", monthStart.toISOString()],
+  const { data: logs = [] } = useQuery<LogRow[]>({
+    queryKey: ["admin-dashboard-logs", since.toISOString()],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exercise_logs")
-        .select("user_id, day_index, completed, completed_at, created_at")
+        .select("user_id, exercise_name, completed_at")
         .eq("completed", true)
-        .gte("completed_at", monthStart.toISOString());
+        .gte("completed_at", since.toISOString());
       if (error) throw error;
-      return (data ?? []) as ExerciseLogRow[];
+      return (data ?? []) as LogRow[];
     },
   });
 
-  const { data: weekLogs = [] } = useQuery<ExerciseLogRow[]>({
-    queryKey: ["admin-dashboard-exercise-logs-week", weekStart.toISOString()],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exercise_logs")
-        .select("user_id, day_index, completed, completed_at, created_at")
-        .eq("completed", true)
-        .gte("completed_at", weekStart.toISOString());
-      if (error) throw error;
-      return (data ?? []) as ExerciseLogRow[];
-    },
-  });
-
-  const { data: apiUsage = [] } = useQuery<ApiUsageRow[]>({
+  const { data: apiUsage = [] } = useQuery<{ cost_estimate: number }[]>({
     queryKey: ["admin-dashboard-api-usage", monthStart.toISOString()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("api_usage_logs")
-        .select("id, user_id, cost_estimate, created_at")
-        .gte("created_at", monthStart.toISOString());
+      const { data, error } = await supabase.from("api_usage_logs").select("cost_estimate").gte("created_at", monthStart.toISOString());
       if (error) throw error;
-      return (data ?? []) as ApiUsageRow[];
+      return (data ?? []) as { cost_estimate: number }[];
     },
     refetchInterval: 60_000,
   });
 
+  const users: AdminMember[] = members?.users ?? [];
+
   const stats = useMemo(() => {
-    const totalUsers = profiles.length;
-    const workoutsThisMonth = monthLogs.length;
-
-    // Retention: unique users with ≥1 completed log this week / total users.
-    const activeUsersThisWeek = new Set(weekLogs.map((l) => l.user_id)).size;
-    const retentionPct = totalUsers > 0 ? (activeUsersThisWeek / totalUsers) * 100 : 0;
-
-    const apiCost = apiUsage.reduce((sum, r) => sum + Number(r.cost_estimate ?? 0), 0);
-    const apiImports = apiUsage.length;
-
-    // Workouts per weekday (Mon–Sun). Group "workouts" by (user, day, date) so
-    // a user completing 5 exercises on Monday counts once for that Monday.
-    const dayBuckets = Array.from({ length: 7 }, () => new Set<string>());
-    for (const log of monthLogs) {
-      const completedAt = log.completed_at ?? log.created_at;
-      const dayKey = completedAt.slice(0, 10);
-      dayBuckets[log.day_index]?.add(`${log.user_id}|${dayKey}`);
+    // A "workout" is one member finishing exercises on one day; rest/recovery
+    // check-ins don't count. (Counting raw log rows made one 5-exercise
+    // session look like 5 workouts.)
+    const monthSessions = new Set<string>();
+    const weekActive = new Set<string>();
+    const perDay = DAY_LABELS.map(() => new Set<string>());
+    for (const l of logs) {
+      if (!l.completed_at || isRestCheckIn(l.exercise_name)) continue;
+      const at = new Date(l.completed_at);
+      const key = `${l.user_id}|${localDateKey(at)}`;
+      if (at >= monthStart) monthSessions.add(key);
+      if (at >= weekStart) {
+        weekActive.add(l.user_id);
+        perDay[(at.getDay() + 6) % 7].add(key);
+      }
     }
-    const workoutsPerDay = DAY_LABELS.map((label, idx) => ({
-      day: label,
-      count: dayBuckets[idx].size,
-    }));
-
-    // Most active users this month, count distinct workout days, not raw rows.
-    const perUser = new Map<string, Set<string>>();
-    for (const log of monthLogs) {
-      const completedAt = log.completed_at ?? log.created_at;
-      const dayKey = completedAt.slice(0, 10);
-      if (!perUser.has(log.user_id)) perUser.set(log.user_id, new Set());
-      perUser.get(log.user_id)!.add(dayKey);
-    }
-    const nameByUser = new Map(profiles.map((p) => [p.user_id, p]));
-    const topUsers = [...perUser.entries()]
-      .map(([userId, days]) => {
-        const profile = nameByUser.get(userId);
-        return {
-          userId,
-          name: profile?.display_name ?? `User ${userId.slice(0, 6)}…`,
-          color: profile?.avatar_color ?? "#FF2D87",
-          count: days.size,
-        };
-      })
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-
+    const apiCost = apiUsage.reduce((s, r) => s + Number(r.cost_estimate ?? 0), 0);
+    const counts = { on_plan: 0, behind: 0, not_started: 0 };
+    for (const u of users) if (u.status !== "no_plan") counts[u.status] += 1;
     return {
-      totalUsers,
-      workoutsThisMonth,
-      retentionPct,
+      workoutsThisMonth: monthSessions.size,
+      activeThisWeek: weekActive.size,
+      perDay: perDay.map((s) => s.size),
       apiCost,
-      apiImports,
-      workoutsPerDay,
-      topUsers,
+      apiImports: apiUsage.length,
+      counts,
     };
-  }, [profiles, monthLogs, weekLogs, apiUsage]);
+  }, [logs, apiUsage, users, monthStart, weekStart]);
 
+  const total = users.length;
+  const retention = total ? Math.round((stats.activeThisWeek / total) * 100) : 0;
   const budgetPct = Math.min(100, (stats.apiCost / MONTHLY_BUDGET_USD) * 100);
   const overBudget = stats.apiCost > MONTHLY_BUDGET_USD;
+  const maxDay = Math.max(1, ...stats.perDay);
+  const todayIdx = (now.getDay() + 6) % 7;
+  const signupsOpen = flags?.[FEATURE_FLAGS.signups] ?? true;
+  // Weekly plan list: members with a plan, the ones needing a nudge first.
+  const ORDER = { behind: 0, not_started: 1, on_plan: 2, no_plan: 3 } as const;
+  const planList = users.filter((u) => u.status !== "no_plan").sort((a, b) => ORDER[a.status] - ORDER[b.status]).slice(0, 5);
 
-  const handleToggle = async (key: FeatureFlagKey, next: boolean) => {
+  const handleToggle = async (key: FeatureFlagKey, next: boolean, label: string) => {
     try {
       await setSetting.mutateAsync({ key, value: next });
-      toast({ description: `${key} = ${next ? "on" : "off"}` });
+      toast({ description: `${label} is now ${next ? "on" : "off"}.` });
     } catch (e) {
-      toast({
-        title: "Couldn't update setting",
-        description: e instanceof Error ? e.message : undefined,
-        variant: "destructive",
-      });
+      toast({ title: "Couldn't update setting", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     }
   };
 
+  const kpi = (label: string, value: React.ReactNode, hint: React.ReactNode, extra?: React.ReactNode, highlight = false) => (
+    <div style={highlight
+      ? { background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 20, boxShadow: `4px 4px 0 ${C.ink}`, padding: isMobile ? 14 : 20 }
+      : { ...card, borderRadius: 20, padding: isMobile ? 14 : 20 }}>
+      <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, color: highlight ? "rgba(255,255,255,0.9)" : C.sub }}>{label}</p>
+      <p style={{ margin: "4px 0 0", ...bangers, fontSize: isMobile ? 36 : 48, lineHeight: 1 }}>{value}</p>
+      {extra}
+      <p style={{ margin: "6px 0 0", fontSize: isMobile ? 12 : 14, fontWeight: 700, color: highlight ? "rgba(255,255,255,0.9)" : C.body }}>{hint}</p>
+    </div>
+  );
+
   return (
-    <div className="px-4 pt-6 pb-24 max-w-lg mx-auto lg:max-w-7xl lg:px-8 lg:pb-8">
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="mb-5 lg:mb-7"
-      >
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          Admin
-        </p>
-        <h1 className="text-4xl font-display text-foreground lg:text-5xl">Dashboard</h1>
-      </motion.div>
+    <div style={{ background: "#FBF9FB", minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1240, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
+        <div>
+          <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>ADMIN · {format(now, "MMMM yyyy").toUpperCase()}</p>
+          <h1 style={{ margin: "2px 0 0", ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Dashboard</h1>
+        </div>
 
-      {/* Top metrics */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4 mb-5 lg:mb-6">
-        <MetricCard
-          icon={Users}
-          label="Total users"
-          value={String(stats.totalUsers)}
-        />
-        <MetricCard
-          icon={Dumbbell}
-          label="Workouts this month"
-          value={String(stats.workoutsThisMonth)}
-          hint="Exercises completed"
-        />
-        <MetricCard
-          icon={Repeat}
-          label="Weekly retention"
-          value={`${stats.retentionPct.toFixed(0)}%`}
-          hint="Active this week / total users"
-        />
-        <MetricCard
-          icon={DollarSign}
-          label="API cost this month"
-          value={`$${stats.apiCost.toFixed(2)}`}
-        />
-      </div>
-
-      {/* Middle row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-5 lg:mb-6">
-        <motion.section
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Activity className="w-4 h-4 text-primary" />
-            <h3 className="font-display text-lg text-foreground">Workouts per day</h3>
-          </div>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={stats.workoutsPerDay}
-                margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={40}
-                />
-                <ChartTooltip
-                  cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
-                  contentStyle={{
-                    borderRadius: 8,
-                    border: "1px solid hsl(var(--border))",
-                    background: "hsl(var(--card))",
-                    fontSize: 12,
-                  }}
-                  formatter={(value: number) => [`${value}`, "Workouts"]}
-                />
-                <Bar dataKey="count" fill="#FF4D9E" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.section>
-
-        <motion.section
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Users className="w-4 h-4 text-primary" />
-            <h3 className="font-display text-lg text-foreground">Most active this month</h3>
-          </div>
-          {stats.topUsers.length === 0 ? (
-            <p className="text-xs italic text-muted-foreground">No workouts logged yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {stats.topUsers.map((u, idx) => (
-                <li
-                  key={u.userId}
-                  className="flex items-center gap-3 px-2 py-1.5 rounded-lg border border-border bg-background"
-                >
-                  <span className="text-[10px] font-extrabold text-muted-foreground tabular-nums w-4">
-                    #{idx + 1}
-                  </span>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white shrink-0"
-                    style={{ backgroundColor: u.color }}
-                  >
-                    {u.name.slice(0, 1).toUpperCase()}
-                  </div>
-                  <p className="text-sm font-bold text-foreground flex-1 truncate">{u.name}</p>
-                  <p className="text-[11px] font-bold text-muted-foreground tabular-nums shrink-0">
-                    {u.count} day{u.count === 1 ? "" : "s"}
-                  </p>
-                </li>
-              ))}
-            </ul>
+        {/* KPI row */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(auto-fit, minmax(210px, 1fr))", gap: isMobile ? 10 : 16 }}>
+          {kpi("Members", total, signupsOpen ? "Signups are open" : "Signups are closed", undefined, true)}
+          {kpi("Active this week", <>{stats.activeThisWeek} <span style={{ fontFamily: "Nunito, sans-serif", fontSize: isMobile ? 14 : 16, fontWeight: 800, color: C.body }}>of {total}</span></>, `${retention}% weekly retention`)}
+          {kpi("Workouts this month", stats.workoutsThisMonth, "Finished sessions, all members")}
+          {kpi(
+            "AI cost this month",
+            `$${stats.apiCost.toFixed(2)}`,
+            <span style={{ color: overBudget ? "#A3165E" : undefined }}>of ${MONTHLY_BUDGET_USD.toFixed(2)} budget · {stats.apiImports} {stats.apiImports === 1 ? "import" : "imports"}</span>,
+            <div style={{ marginTop: 10, height: 8, borderRadius: 999, background: C.seg }}><div style={{ width: `${budgetPct}%`, height: "100%", borderRadius: 999, background: overBudget ? "#A3165E" : C.magenta }} /></div>,
           )}
-        </motion.section>
-      </div>
+        </div>
 
-      {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        <motion.section
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5 space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <ImagePlus className="w-4 h-4 text-primary" />
-            <h3 className="font-display text-lg text-foreground">AI usage</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Total imports
-              </p>
-              <p className="font-display text-2xl text-foreground tabular-nums">
-                {stats.apiImports}
-              </p>
+        {/* Chart + weekly plan */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "stretch" }}>
+          <section style={{ flex: "3 1 520px", minWidth: 0, ...card, padding: isMobile ? 18 : 24 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 30, letterSpacing: 1 }}>Workouts per day</h2>
+              <span style={{ fontSize: 13, fontWeight: 800, color: C.sub }}>This week · {format(weekStart, "MMM d")} – {format(new Date(weekStart.getTime() + 6 * 864e5), "d")}</span>
             </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Est. cost
-              </p>
-              <p className="font-display text-2xl text-foreground tabular-nums">
-                ${stats.apiCost.toFixed(2)}
-              </p>
+            <div style={{ marginTop: 20, height: isMobile ? 120 : 200, display: "flex", alignItems: "flex-end", gap: isMobile ? 8 : 14, borderBottom: `2px solid ${C.border}`, padding: "0 4px" }}>
+              {stats.perDay.map((v, i) => (
+                <div key={i} style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: v ? C.ink : "#B8AABF" }}>{v}</span>
+                  <div style={{ width: "100%", maxWidth: 56, height: `${(v / maxDay) * 85}%`, minHeight: 4, borderRadius: "10px 10px 0 0", background: v ? "linear-gradient(180deg, #E8308C 0%, #6B2FB3 100%)" : C.seg, outline: i === todayIdx ? `2px solid ${C.ink}` : "none", outlineOffset: 2 }} />
+                </div>
+              ))}
             </div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Monthly budget
-              </p>
-              <p className="text-[11px] font-bold text-muted-foreground tabular-nums">
-                ${stats.apiCost.toFixed(2)} / ${MONTHLY_BUDGET_USD.toFixed(2)}
-              </p>
+            <div style={{ marginTop: 8, display: "flex", gap: isMobile ? 8 : 14, padding: "0 4px" }}>
+              {DAY_LABELS.map((d, i) => <span key={d} style={{ flex: 1, textAlign: "center", fontSize: isMobile ? 11 : 13, fontWeight: 800, color: i === todayIdx ? C.ink : C.body }}>{isMobile ? d[0] : d}</span>)}
             </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div
-                className={cn(
-                  "h-full transition-all",
-                  overBudget
-                    ? "bg-destructive"
-                    : budgetPct > 80
-                    ? "bg-amber-500"
-                    : "bg-primary",
-                )}
-                style={{ width: `${budgetPct}%` }}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-muted-foreground font-bold">
-              Rate-limit hits: {RATE_LIMIT_HITS_PLACEHOLDER}
-            </span>
-          </div>
-        </motion.section>
+          </section>
 
-        <motion.section
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="rounded-2xl border-2 border-[#2B1736] bg-card p-4 lg:p-5"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="font-display text-lg text-foreground">Feature controls</h3>
-          </div>
-          <ul className="space-y-2.5">
-            {FEATURE_CONTROLS.map(({ key, label, description, icon: Icon }) => {
-              const enabled = flags?.[key] ?? true;
-              return (
-                <li
-                  key={key}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-background"
-                >
-                  <Icon className="w-4 h-4 text-primary shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground">{label}</p>
-                    <p className="text-[11px] text-muted-foreground">{description}</p>
+          <section style={{ flex: "2 1 340px", minWidth: 0, ...card, padding: isMobile ? 18 : 24 }}>
+            <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 30, letterSpacing: 1 }}>Weekly plan</h2>
+            <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.body }}>Who's keeping up with their plan this week</p>
+            <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, textAlign: "center" }}>
+              {(["on_plan", "behind", "not_started"] as const).map((k) => (
+                <div key={k} style={{ padding: "12px 8px", borderRadius: 14, background: STATUS_CHIP[k].bg }}>
+                  <p style={{ margin: 0, ...bangers, fontSize: 32, lineHeight: 1, color: k === "not_started" ? C.ink : STATUS_CHIP[k].fg }}>{stats.counts[k]}</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 13, fontWeight: 800 }}>{STATUS_CHIP[k].text}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+              {planList.length === 0 && <p style={{ margin: 0, fontSize: 14, color: C.sub }}>No members have a plan yet.</p>}
+              {planList.map((u) => {
+                const chip = STATUS_CHIP[u.status];
+                return (
+                  <div key={u.user_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, border: `2px solid ${C.border}` }}>
+                    <Avatar u={u} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 800 }}>{u.display_name}</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.body }}>{u.week_workouts} of {u.planned_per_week} this week</p>
+                    </div>
+                    <span style={{ padding: "3px 10px", borderRadius: 999, background: chip.bg, color: chip.fg, fontSize: 12, fontWeight: 800 }}>{chip.text}</span>
                   </div>
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={(next) => handleToggle(key, next)}
-                    disabled={setSetting.isPending}
-                    aria-label={`Toggle ${label}`}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-          <p className="text-[10px] font-bold text-muted-foreground mt-3">
-            Changes apply to all users within ~30 seconds.
-          </p>
-        </motion.section>
-      </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
 
-      <div className="mt-5 lg:mt-6">
-        <AdminUsersTable />
+        {/* Members + feature switches */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
+          <div style={{ flex: "3 1 560px", minWidth: 0 }}>
+            <AdminUsersTable />
+          </div>
+
+          <section style={{ flex: "2 1 340px", minWidth: 0, ...card, padding: isMobile ? 18 : 24 }}>
+            <h2 style={{ margin: 0, ...bangers, fontSize: isMobile ? 26 : 30, letterSpacing: 1 }}>Feature switches</h2>
+            <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.body }}>Members get changes the next time a page loads.</p>
+            <div style={{ marginTop: 14, display: "flex", flexDirection: "column" }}>
+              {FEATURE_CONTROLS.map(({ key, label, description }) => {
+                const on = flags?.[key] ?? true;
+                return (
+                  <div key={key} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderTop: `1px solid ${C.seg}` }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 800 }}>{label}</p>
+                      <p style={{ margin: 0, fontSize: 13, color: C.body }}>{description}</p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={on}
+                      aria-label={label}
+                      disabled={setSetting.isPending}
+                      onClick={() => handleToggle(key, !on, label)}
+                      style={{ flex: "none", width: 56, height: 32, borderRadius: 999, border: `2px solid ${C.ink}`, background: on ? C.magenta : C.border, cursor: setSetting.isPending ? "wait" : "pointer", padding: 0, position: "relative" }}
+                    >
+                      <span style={{ position: "absolute", top: 2, left: on ? 26 : 2, width: 24, height: 24, borderRadius: 999, background: "#FFFFFF", border: `2px solid ${C.ink}`, boxSizing: "border-box", transition: "left 0.15s" }} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

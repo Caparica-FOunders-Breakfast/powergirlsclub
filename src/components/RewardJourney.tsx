@@ -74,7 +74,7 @@ const RewardWeekItem = ({
       setRewardInput("");
       setIsEditing(false);
       confetti({ particleCount: 60, spread: 60, colors: ["#FF2D87", "#A855F7", "#5271FF"] });
-      toast({ title: `🎉 Reward set: ${value}` });
+      toast({ title: `Reward set: ${value}` });
     } catch {
       toast({ title: "Error saving reward", variant: "destructive" });
     }
@@ -85,7 +85,7 @@ const RewardWeekItem = ({
     if (!file) return;
     try {
       await updatePhoto.mutateAsync({ challengeId, weekNumber: config.week, file });
-      toast({ title: "📸 Photo uploaded!" });
+      toast({ title: "Photo uploaded!" });
     } catch {
       toast({ title: "Error uploading photo", variant: "destructive" });
     }
@@ -127,7 +127,7 @@ const RewardWeekItem = ({
             )}
             {isCurrent && isWinner && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary">
-                {isTiedReward ? "🤝 Shared reward!" : "🏆 You're winning!"}
+                {isTiedReward ? "Shared reward!" : "You're winning!"}
               </span>
             )}
           </div>
@@ -188,7 +188,7 @@ const RewardWeekItem = ({
                     </p>
                   ) : (
                     <p className="text-xs font-bold text-muted-foreground italic">
-                      No scores yet, complete workouts to become the winner! 💪
+                      No scores yet. Finish workouts to become the winner!
                     </p>
                   )}
                 </>
@@ -282,7 +282,7 @@ const RewardJourney = ({ challengeId, challengeStartDate, currentWeek, status }:
       <h3 className="font-display text-lg text-foreground flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-primary" /> Reward Journey
       </h3>
-      <p className="text-xs text-muted-foreground font-bold">The week's winner picks the reward for everyone! 🏆</p>
+      <p className="text-xs text-muted-foreground font-bold">The week's winner picks the reward for everyone!</p>
 
       <div className="relative">
         <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-border z-0" />

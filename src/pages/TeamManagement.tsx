@@ -57,7 +57,7 @@ const TeamManagement = () => {
     try {
       await createTeam.mutateAsync(newTeamName.trim());
       setNewTeamName("");
-      toast({ title: "Team created! 🎉 You've been added automatically." });
+      toast({ title: "Team created! You're in it already." });
     } catch {
       toast({ title: "Error creating team", variant: "destructive" });
     }
@@ -68,7 +68,7 @@ const TeamManagement = () => {
     try {
       const result = await joinTeam.mutateAsync(joinCode.trim());
       setJoinCode("");
-      toast({ title: `Joined ${result.name}! 🎉` });
+      toast({ title: `Joined ${result.name}!` });
     } catch (err: any) {
       toast({ title: err.message || "Could not join team", variant: "destructive" });
     }
@@ -80,7 +80,7 @@ const TeamManagement = () => {
       navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast({ title: "Team code copied! 📋" });
+      toast({ title: "Team code copied" });
     }
   };
 
@@ -90,7 +90,7 @@ const TeamManagement = () => {
       const ch = await createChallenge.mutateAsync({ name: challengeName.trim(), startDate: selectedStart });
       setShowCreateChallenge(false);
       setSelectedStart(undefined);
-      toast({ title: `Challenge created! 🎉 Code: ${ch.invite_code}` });
+      toast({ title: `Challenge created. Code: ${ch.invite_code}` });
     } catch {
       toast({ title: "Error creating challenge", variant: "destructive" });
     }
@@ -102,7 +102,7 @@ const TeamManagement = () => {
       await joinChallenge.mutateAsync(challengeCode);
       setShowJoinChallenge(false);
       setChallengeCode("");
-      toast({ title: "Joined challenge! 💪" });
+      toast({ title: "Joined the challenge!" });
     } catch (e: any) {
       toast({ title: e.message || "Could not join", variant: "destructive" });
     }
@@ -132,7 +132,7 @@ const TeamManagement = () => {
       navigator.clipboard.writeText(challenge.invite_code);
       setChallengeCopied(true);
       setTimeout(() => setChallengeCopied(false), 2000);
-      toast({ title: "Challenge code copied! 📋" });
+      toast({ title: "Challenge code copied" });
     }
   };
 
@@ -159,7 +159,7 @@ const TeamManagement = () => {
                 progress?.status === "completed" ? "bg-muted text-muted-foreground" :
                 "bg-accent/20 text-accent-foreground"
               )}>
-                {progress?.status === "active" ? "🔥 Active" : progress?.status === "completed" ? "✅ Completed" : "📅 Upcoming"}
+                {progress?.status === "active" ? "Active" : progress?.status === "completed" ? "Completed" : "Upcoming"}
               </span>
             </div>
 
@@ -255,7 +255,7 @@ const TeamManagement = () => {
       ) : (
         <div className="space-y-3 mt-3">
           <div className="rounded-xl bg-muted/50 border border-border p-4 space-y-2">
-            <p className="text-[17px] font-bold text-foreground">How a challenge works 💜</p>
+            <p className="text-[17px] font-bold text-foreground">How a challenge works</p>
             <ul className="text-[15px] font-semibold text-muted-foreground space-y-1.5 list-disc pl-5">
               <li>A challenge runs for <strong>4 weeks</strong> with your friends or team.</li>
               <li>Everyone trains their weekly plan, each completed workout earns points.</li>
@@ -330,7 +330,7 @@ const TeamManagement = () => {
                   disabled={!selectedStart || !challengeName.trim() || createChallenge.isPending}
                   className="flex-1 gradient-primary text-primary-foreground font-bold"
                 >
-                  {createChallenge.isPending ? "Creating..." : "Create Challenge 🚀"}
+                  {createChallenge.isPending ? "Creating..." : "Create challenge"}
                 </Button>
                 <Button variant="ghost" onClick={() => setShowCreateChallenge(false)} className="font-bold">
                   Cancel
@@ -361,7 +361,7 @@ const TeamManagement = () => {
                   disabled={!challengeCode.trim() || joinChallenge.isPending}
                   className="flex-1 bg-secondary text-secondary-foreground font-bold hover:bg-secondary/90"
                 >
-                  {joinChallenge.isPending ? "Joining..." : "Join Challenge 💪"}
+                  {joinChallenge.isPending ? "Joining..." : "Join challenge"}
                 </Button>
                 <Button variant="ghost" onClick={() => setShowJoinChallenge(false)} className="font-bold">
                   Cancel
@@ -414,16 +414,23 @@ const TeamManagement = () => {
         {team ? (
           <>
             <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: isMobile ? 18 : 28 }}>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>{team.name}</h2>
-                {teamCode && (
-                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontFamily: "Bangers, cursive", fontSize: 32, letterSpacing: 4, color: "#C21C70" }}>{teamCode.toUpperCase()}</span>
-                    <button type="button" onClick={copyTeamCode} style={{ minHeight: 44, padding: "0 16px", border: "2px solid #2B1736", borderRadius: 12, background: "#FFFFFF", color: "#2B1736", fontWeight: 800, cursor: "pointer" }}>{copied ? "Copied ✓" : "Copy code"}</button>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: "#77677E" }}>YOUR TEAM</p>
+              <h2 style={{ margin: "2px 0 0", fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>{team.name}</h2>
+              {teamCode && (
+                <div style={{ marginTop: 16, padding: isMobile ? 14 : 18, borderRadius: 16, background: "#FFF5FA", border: "2px solid #E8308C" }}>
+                  <p style={{ margin: 0, fontWeight: 800 }}>Share this code so friends can join:</p>
+                  <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontFamily: "Bangers, cursive", fontSize: isMobile ? 34 : 40, letterSpacing: 6, lineHeight: 1, color: "#C21C70", marginRight: 6 }}>{teamCode.toUpperCase()}</span>
+                    <button type="button" onClick={copyTeamCode} style={{ minHeight: 44, padding: "0 16px", border: "2px solid #2B1736", borderRadius: 12, background: "#FFFFFF", color: "#2B1736", fontWeight: 800, cursor: "pointer" }}>{copied ? "Copied" : "Copy code"}</button>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(`Join my Power Club team "${team.name}"! Code: ${teamCode.toUpperCase()} ${window.location.origin}/teams`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ minHeight: 44, padding: "0 16px", display: "inline-flex", alignItems: "center", border: "2px solid #2B1736", borderRadius: 12, background: "#2B1736", color: "#FFFFFF", fontWeight: 800, textDecoration: "none" }}
+                    >Share on WhatsApp</a>
                   </div>
-                )}
-              </div>
-              <p style={{ margin: "8px 0 0", color: "#5E4E66" }}>Share your code so friends can join your team.</p>
+                </div>
+              )}
             </section>
 
             <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, padding: isMobile ? 18 : 28 }}>
@@ -451,10 +458,16 @@ const TeamManagement = () => {
             </section>
           </>
         ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+          <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24 }}>
             {/* Start a team */}
             <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #E8308C", padding: isMobile ? 18 : 28 }}>
-              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Start a team</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ flex: "none", width: 48, height: 48, borderRadius: 12, background: "#E8308C", border: "2px solid #2B1736", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                </span>
+                <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Start a team</h2>
+              </div>
               <p style={{ margin: "10px 0 0", color: "#5E4E66" }}>You'll get a code to share with your friends.</p>
               <label htmlFor="team" style={{ display: "block", marginTop: 20, fontWeight: 800, fontSize: 15 }}>Team name</label>
               <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -465,7 +478,12 @@ const TeamManagement = () => {
 
             {/* Join a team */}
             <section style={{ flex: "1 1 380px", minWidth: 0, background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, boxShadow: "4px 4px 0 #6B2FB3", padding: isMobile ? 18 : 28 }}>
-              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Join a team</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ flex: "none", width: 48, height: 48, borderRadius: 12, background: "#6B2FB3", border: "2px solid #2B1736", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </span>
+                <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>Join a team</h2>
+              </div>
               <p style={{ margin: "10px 0 0", color: "#5E4E66" }}>Got a code from a friend? Pop it in here.</p>
               <label htmlFor="code" style={{ display: "block", marginTop: 20, fontWeight: 800, fontSize: 15 }}>Team code</label>
               <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -474,6 +492,30 @@ const TeamManagement = () => {
               </div>
             </section>
           </div>
+
+          {/* Example board so members can see what a team looks like before joining. */}
+          <section style={{ background: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 22, padding: isMobile ? 18 : 28 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+              <h2 style={{ margin: 0, fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 26 : 32, letterSpacing: 1 }}>What your team board looks like</h2>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "#77677E" }}>Example · Week 2 of 4</span>
+            </div>
+            <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { rank: 1, name: "You", initial: "Y", color: "#E8308C", count: 3, you: true },
+                { rank: 2, name: "Teammate", initial: "T", color: "#6B2FB3", count: 2, you: false },
+                { rank: 3, name: "Teammate", initial: "T", color: "#2B1736", count: 1, you: false },
+              ].map((r) => (
+                <div key={r.rank} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14, background: r.you ? "#FFF5FA" : "#F6F1F7", border: r.you ? "2px solid #E8308C" : "2px solid transparent" }}>
+                  <span style={{ width: isMobile ? 18 : 32, fontFamily: "Bangers, cursive", fontSize: isMobile ? 22 : 26, color: r.you ? "#C21C70" : "#5E4E66" }}>{r.rank}</span>
+                  {!isMobile && <span style={{ width: 40, height: 40, borderRadius: 999, background: r.color, color: "#FFFFFF", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{r.initial}</span>}
+                  <span style={{ flex: 1, fontWeight: 800 }}>{r.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#5E4E66" }}>{r.count} {r.count === 1 ? "workout" : "workouts"}</span>
+                  {r.rank === 1 && !isMobile && <span style={{ padding: "4px 10px", borderRadius: 999, background: "#FFE14D", border: "1.5px solid #2B1736", fontSize: 12, fontWeight: 800 }}>Leading</span>}
+                </div>
+              ))}
+            </div>
+          </section>
+          </>
         )}
 
         {/* Challenge CRUD (kept) */}

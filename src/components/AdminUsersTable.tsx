@@ -1,445 +1,166 @@
 import { Fragment, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import {
-  CalendarDays,
-  ChevronRight,
-  ListChecks,
-  Mail,
-  Scale,
-  Search,
-  Target,
-  Users,
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { useAdminMembers, formatSupabaseError, type AdminMember } from "@/hooks/useAdminMembers";
 
-interface AdminUserRow {
-  user_id: string;
-  email: string | null;
-  display_name: string;
-  avatar_color: string;
-  joined_at: string | null;
-  last_active_at: string | null;
-  workout_days: number;
-  training_days_per_week: number | null;
-  plan_type: "default" | "custom";
-  body_weight: number | null;
-  progress_goal: string | null;
-  start_date: string | null;
-  team_id: string | null;
-}
+const C = { ink: "#2B1736", sub: "#77677E", body: "#5E4E66", pink: "#C21C70", magenta: "#E8308C", seg: "#EFE6F1", row: "#EFE6F1" };
+const bangers = { fontFamily: "Bangers, cursive", fontWeight: 400 } as const;
 
 const formatDate = (iso: string | null) => {
   if (!iso) return "—";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 };
 
 const formatRelative = (iso: string | null) => {
   if (!iso) return "Never";
-  const d = new Date(iso);
-  const diffMs = Date.now() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 30) return `${diffDay}d ago`;
-  return formatDate(iso);
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (min < 1) return "Just now";
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  return day < 30 ? `${day}d ago` : formatDate(iso);
 };
 
 const initialsOf = (name: string) => {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0 || !parts[0]) return "?";
-  const first = parts[0][0] ?? "";
-  const second = parts.length > 1 ? parts[parts.length - 1][0] : "";
-  return (first + second).toUpperCase() || "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return ((parts[0][0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 };
 
-// Supabase's PostgrestError is a plain object, not an Error instance.
-// Format it for both the console and the UI without losing fields.
-const formatSupabaseError = (err: unknown): string => {
-  if (!err) return "unknown error";
-  if (err instanceof Error) return err.message;
-  if (typeof err === "object") {
-    const e = err as { message?: string; details?: string; hint?: string; code?: string };
-    const parts = [e.message, e.details, e.hint, e.code ? `(code ${e.code})` : null].filter(Boolean);
-    if (parts.length > 0) return parts.join(", ");
-    try {
-      return JSON.stringify(err);
-    } catch {
-      return String(err);
-    }
-  }
-  return String(err);
+const planChip = (u: AdminMember) => {
+  if (!u.planned_per_week) return { text: "No plan", bg: "#F6F1F7", fg: C.body };
+  const kind = u.plan_type === "custom" ? "Custom" : "Default";
+  return { text: `${kind} · ${u.planned_per_week} days`, bg: u.plan_type === "custom" ? "#FFF0F7" : "#F1E9FE", fg: u.plan_type === "custom" ? "#A3165E" : "#5B21B6" };
 };
 
-const AdminUsersTable = () => {
-  const { user } = useAuth();
+/** "This week" mini progress: one segment per planned day. */
+export const WeekProgress = ({ u }: { u: AdminMember }) => {
+  const total = Math.max(u.planned_per_week ?? 0, u.week_workouts);
+  if (!total) return <span style={{ fontSize: 12, fontWeight: 800, color: C.sub }}>—</span>;
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 3, width: 72 }} aria-hidden="true">
+        {Array.from({ length: total }).map((_, i) => (
+          <span key={i} style={{ flex: 1, height: 8, borderRadius: 999, background: i < u.week_workouts ? C.magenta : C.seg }} />
+        ))}
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 800, color: C.body }}>{u.week_workouts} of {u.planned_per_week ?? 0}</span>
+    </div>
+  );
+};
+
+export const Avatar = ({ u, size = 36 }: { u: AdminMember; size?: number }) => (
+  <span style={{ flex: "none", width: size, height: size, borderRadius: 999, background: u.avatar_color, color: "#FFFFFF", fontWeight: 800, fontSize: size < 40 ? 13 : 15, display: "flex", alignItems: "center", justifyContent: "center" }}>{initialsOf(u.display_name)}</span>
+);
+
+const th: React.CSSProperties = { padding: "10px 8px", fontWeight: 800, fontSize: 13, color: C.sub, textAlign: "left", whiteSpace: "nowrap" };
+const td: React.CSSProperties = { padding: "14px 8px", verticalAlign: "middle" };
+
+const AdminUsersTable = ({ title = "Members" }: { title?: string }) => {
+  const { data, isLoading, error } = useAdminMembers();
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
-
-  const { data, isLoading, error } = useQuery<{
-    users: AdminUserRow[];
-    fallback?: "self-only";
-    warnings: string[];
-  }>({
-    queryKey: ["admin-users-direct", user?.id ?? null],
-    queryFn: async () => {
-      const warnings: string[] = [];
-
-      // Step 1: profiles is the only query we *must* succeed. RLS on it is
-      // `USING (true)` for all authenticated users, so this should always work.
-      const profilesRes = await supabase
-        .from("profiles")
-        .select("user_id, display_name, avatar_color, body_weight, team_id, created_at");
-
-      if (profilesRes.error || !profilesRes.data) {
-        console.error("[AdminUsersTable] profiles query failed:", profilesRes.error);
-
-        // Fallback: still surface something, fetch just the signed-in admin's
-        // own row so the page isn't blank while RLS gets fixed.
-        if (user) {
-          const selfRes = await supabase
-            .from("profiles")
-            .select("user_id, display_name, avatar_color, body_weight, team_id, created_at")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          if (!selfRes.error && selfRes.data) {
-            const p = selfRes.data;
-            return {
-              users: [
-                {
-                  user_id: p.user_id,
-                  email: user.email ?? null,
-                  display_name: p.display_name ?? "You",
-                  avatar_color: p.avatar_color ?? "#FF2D87",
-                  joined_at: p.created_at ?? null,
-                  last_active_at: null,
-                  workout_days: 0,
-                  training_days_per_week: null,
-                  plan_type: "default" as const,
-                  body_weight: (p as { body_weight: number | null }).body_weight ?? null,
-                  progress_goal: null,
-                  start_date: null,
-                  team_id: (p as { team_id: string | null }).team_id ?? null,
-                },
-              ],
-              fallback: "self-only" as const,
-              warnings: [
-                `Couldn't load all users: ${formatSupabaseError(profilesRes.error)}`,
-              ],
-            };
-          }
-        }
-        throw new Error(formatSupabaseError(profilesRes.error));
-      }
-
-      // Step 2: best-effort sidecar tables. Any of these can be silently
-      // empty without breaking the page, they just degrade the column data.
-      const [prefsRes, logsRes] = await Promise.all([
-        supabase
-          .from("user_preferences" as never)
-          .select(
-            "user_id, frequency, training_days, progress_goal, start_date, plan_type",
-          ),
-        supabase
-          .from("exercise_logs")
-          .select("user_id, completed_at")
-          .eq("completed", true),
-      ]);
-
-      if (prefsRes.error) {
-        console.warn("[AdminUsersTable] user_preferences read failed:", prefsRes.error);
-        warnings.push(`Preferences: ${formatSupabaseError(prefsRes.error)}`);
-      }
-      if (logsRes.error) {
-        console.warn("[AdminUsersTable] exercise_logs read failed:", logsRes.error);
-        warnings.push(`Workouts: ${formatSupabaseError(logsRes.error)}`);
-      }
-
-      const prefsByUser = new Map<
-        string,
-        {
-          frequency?: number;
-          progress_goal?: string;
-          start_date?: string;
-          plan_type?: string | null;
-        }
-      >();
-      for (const p of (prefsRes.data ?? []) as Array<Record<string, unknown>>) {
-        prefsByUser.set(p.user_id as string, p as never);
-      }
-
-      // workout_days = distinct calendar days the user has ever completed an
-      // exercise (all-time), so this matches the Scorecard's "Workouts" count
-      // instead of only the current month. last_active_at = latest overall.
-      const workoutDays = new Map<string, Set<string>>();
-      const lastActive = new Map<string, string>();
-      for (const log of (logsRes.data ?? []) as Array<{ user_id: string; completed_at: string | null }>) {
-        if (!log.completed_at) continue;
-        const day = log.completed_at.slice(0, 10);
-        if (!workoutDays.has(log.user_id)) workoutDays.set(log.user_id, new Set());
-        workoutDays.get(log.user_id)!.add(day);
-        const prev = lastActive.get(log.user_id);
-        if (!prev || log.completed_at > prev) {
-          lastActive.set(log.user_id, log.completed_at);
-        }
-      }
-
-      const users: AdminUserRow[] = (profilesRes.data ?? []).map((p) => {
-        const prefs = prefsByUser.get(p.user_id);
-        return {
-          user_id: p.user_id,
-          // Email lives in auth.users and isn't reachable from the browser
-          // without an edge function. For the signed-in admin we can fill it
-          // in from the auth session.
-          email: p.user_id === user?.id ? user?.email ?? null : null,
-          display_name: p.display_name ?? "Member",
-          avatar_color: p.avatar_color ?? "#FF2D87",
-          joined_at: p.created_at ?? null,
-          last_active_at: lastActive.get(p.user_id) ?? null,
-          workout_days: workoutDays.get(p.user_id)?.size ?? 0,
-          training_days_per_week: prefs?.frequency ?? null,
-          // Null/empty plan_type = the user hasn't customized → Default.
-          plan_type: prefs?.plan_type === "custom" ? "custom" : "default",
-          body_weight: (p as { body_weight: number | null }).body_weight ?? null,
-          progress_goal: prefs?.progress_goal ?? null,
-          start_date: prefs?.start_date ?? null,
-          team_id: (p as { team_id: string | null }).team_id ?? null,
-        };
-      });
-
-      // Sort by most-recently-active, then by name as a stable tiebreak.
-      users.sort((a, b) => {
-        const av = a.last_active_at ?? a.joined_at ?? "";
-        const bv = b.last_active_at ?? b.joined_at ?? "";
-        if (av !== bv) return bv.localeCompare(av);
-        return a.display_name.localeCompare(b.display_name);
-      });
-
-      return { users, warnings };
-    },
-    staleTime: 60_000,
-  });
 
   const filtered = useMemo(() => {
     const users = data?.users ?? [];
     const q = query.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => {
-      const haystack = `${u.display_name} ${u.email ?? ""}`.toLowerCase();
-      return haystack.includes(q);
-    });
+    return q ? users.filter((u) => `${u.display_name} ${u.email ?? ""}`.toLowerCase().includes(q)) : users;
   }, [data, query]);
 
   return (
-    <motion.section
-      initial={{ y: 10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="rounded-2xl border-2 border-border bg-card p-4 lg:p-5 space-y-4"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" />
-          <h3 className="font-display text-lg text-foreground lg:text-xl">Users</h3>
-          {data && (
-            <span className="text-[11px] font-bold text-muted-foreground tabular-nums">
-              {filtered.length} of {data.users.length}
-            </span>
-          )}
-        </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name or email"
-            className="pl-9 h-9 border-2 border-border"
-          />
-        </div>
+    <section style={{ background: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 22, padding: 24, color: C.ink, fontFamily: "Nunito, system-ui, sans-serif" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <h2 style={{ margin: 0, ...bangers, fontSize: 30, letterSpacing: 1 }}>
+          {title} {data && <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 15, fontWeight: 800, color: C.sub }}>{query ? `${filtered.length} of ${data.users.length}` : data.users.length}</span>}
+        </h2>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, height: 44, padding: "0 14px", border: `2px solid ${C.ink}`, borderRadius: 12, background: "#FFFFFF", minWidth: 0, flex: "0 1 280px" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.4} strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+          <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>Search members</span>
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or email" style={{ flex: 1, minWidth: 0, border: 0, height: "100%", fontSize: 15, color: C.ink, background: "transparent", outline: "none" }} />
+        </label>
       </div>
 
-      {data?.fallback === "self-only" && (
-        <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 break-words">
-          Showing only your own profile, couldn't load all users. Check the console for details.
-        </p>
-      )}
-      {data?.warnings && data.warnings.length > 0 && (
-        <ul className="text-[11px] font-bold text-muted-foreground space-y-0.5">
-          {data.warnings.map((w, i) => (
-            <li key={i}>⚠️ {w}</li>
-          ))}
+      {data?.warnings?.length ? (
+        <ul style={{ margin: "12px 0 0", padding: 0, listStyle: "none", fontSize: 13, fontWeight: 700, color: C.body }}>
+          {data.warnings.map((w, i) => <li key={i}>Some data couldn't load. {w}</li>)}
         </ul>
-      )}
+      ) : null}
 
       {error ? (
-        <p className="text-xs font-bold text-destructive break-words">
-          Couldn't load users: {formatSupabaseError(error)}
-        </p>
+        <p style={{ margin: "16px 0 0", fontWeight: 800, color: "#A3165E" }}>Couldn't load members: {formatSupabaseError(error)}</p>
       ) : isLoading ? (
-        <p className="text-xs italic text-muted-foreground">Loading users…</p>
+        <p style={{ margin: "16px 0 0", color: C.sub }}>Loading members...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-xs italic text-muted-foreground">
-          {query ? "No users match that search." : "No registered users yet."}
-        </p>
+        <p style={{ margin: "16px 0 0", color: C.sub }}>{query ? "No members match that search." : "No members yet."}</p>
       ) : (
-        <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-10" />
-                <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden lg:table-cell">Joined</TableHead>
-                <TableHead className="hidden lg:table-cell">Last active</TableHead>
-                <TableHead className="text-right">Workouts</TableHead>
-                <TableHead className="text-right hidden sm:table-cell">Days/wk</TableHead>
-                <TableHead className="hidden sm:table-cell">Plan</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        <div style={{ marginTop: 16, overflowX: "auto" }}>
+          <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: 15 }}>
+            <thead>
+              <tr>
+                <th style={th}>Member</th>
+                <th style={th}>Joined</th>
+                <th style={th}>Last active</th>
+                <th style={th}>This week</th>
+                <th style={{ ...th, textAlign: "right" }}>Workouts</th>
+                <th style={th}>Plan</th>
+                <th style={th}><span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>Details</span></th>
+              </tr>
+            </thead>
+            <tbody>
               {filtered.map((u) => {
-                const isOpen = expanded === u.user_id;
+                const open = expanded === u.user_id;
+                const chip = planChip(u);
                 return (
                   <Fragment key={u.user_id}>
-                    <TableRow
-                      onClick={() => setExpanded(isOpen ? null : u.user_id)}
-                      className="cursor-pointer"
-                    >
-                      <TableCell className="py-2">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white"
-                          style={{ backgroundColor: u.avatar_color }}
-                        >
-                          {initialsOf(u.display_name)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-2 font-bold text-foreground">
-                        {u.display_name}
-                      </TableCell>
-                      <TableCell className="py-2 hidden md:table-cell text-muted-foreground">
-                        {u.email ?? "—"}
-                      </TableCell>
-                      <TableCell className="py-2 hidden lg:table-cell text-muted-foreground tabular-nums">
-                        {formatDate(u.joined_at)}
-                      </TableCell>
-                      <TableCell className="py-2 hidden lg:table-cell text-muted-foreground tabular-nums">
-                        {formatRelative(u.last_active_at)}
-                      </TableCell>
-                      <TableCell className="py-2 text-right font-bold tabular-nums">
-                        {u.workout_days}
-                      </TableCell>
-                      <TableCell className="py-2 text-right hidden sm:table-cell text-muted-foreground tabular-nums">
-                        {u.training_days_per_week ?? "—"}
-                      </TableCell>
-                      <TableCell className="py-2 hidden sm:table-cell">
-                        <span
-                          className={cn(
-                            "inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider",
-                            u.plan_type === "custom"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground",
-                          )}
-                        >
-                          {u.plan_type}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-2 text-right">
-                        <ChevronRight
-                          className={cn(
-                            "w-4 h-4 text-muted-foreground transition-transform",
-                            isOpen && "rotate-90",
-                          )}
-                        />
-                      </TableCell>
-                    </TableRow>
-                    {isOpen && (
-                      <TableRow className="hover:bg-transparent bg-muted/30">
-                        <TableCell colSpan={9} className="py-3">
-                          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 text-xs">
-                            <div className="flex items-center gap-2">
-                              <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Email:</span>
-                              <span className="font-bold text-foreground truncate">
-                                {u.email ?? "—"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Joined:</span>
-                              <span className="font-bold text-foreground">
-                                {formatDate(u.joined_at)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Last active:</span>
-                              <span className="font-bold text-foreground">
-                                {formatRelative(u.last_active_at)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <ListChecks className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Plan type:</span>
-                              <span className="font-bold text-foreground capitalize">
-                                {u.plan_type}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Target className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Progress goal:</span>
-                              <span className="font-bold text-foreground capitalize">
-                                {u.progress_goal ?? "—"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Program start:</span>
-                              <span className="font-bold text-foreground">
-                                {formatDate(u.start_date)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Scale className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Body weight:</span>
-                              <span className="font-bold text-foreground">
-                                {u.body_weight ? `${u.body_weight} kg` : "—"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-muted-foreground">Team:</span>
-                              <span className="font-bold text-foreground truncate">
-                                {u.team_id ?? "—"}
-                              </span>
-                            </div>
+                    <tr style={{ borderTop: `1px solid ${C.row}`, cursor: "pointer" }} onClick={() => setExpanded(open ? null : u.user_id)}>
+                      <td style={td}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <Avatar u={u} />
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ margin: 0, fontWeight: 800 }}>{u.display_name}</p>
+                            {u.email && <p style={{ margin: 0, fontSize: 13, color: C.sub }}>{u.email}</p>}
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                      </td>
+                      <td style={{ ...td, color: C.body, fontWeight: 600, whiteSpace: "nowrap" }}>{formatDate(u.joined_at)}</td>
+                      <td style={{ ...td, color: C.body, fontWeight: 600, whiteSpace: "nowrap" }}>{formatRelative(u.last_active_at)}</td>
+                      <td style={td}><WeekProgress u={u} /></td>
+                      <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{u.workout_days}</td>
+                      <td style={td}><span style={{ padding: "3px 10px", borderRadius: 999, background: chip.bg, color: chip.fg, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>{chip.text}</span></td>
+                      <td style={{ ...td, textAlign: "right" }}>
+                        <button type="button" aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} details for ${u.display_name}`} onClick={(e) => { e.stopPropagation(); setExpanded(open ? null : u.user_id); }} style={{ width: 36, height: 36, border: 0, background: "transparent", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}><path d="M9 6l6 6-6 6" /></svg>
+                        </button>
+                      </td>
+                    </tr>
+                    {open && (
+                      <tr style={{ background: "#FBF9FB" }}>
+                        <td colSpan={7} style={{ padding: "12px 8px 16px" }}>
+                          <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "8px 16px", fontSize: 14 }}>
+                            {[
+                              ["Email", u.email ?? "Not available"],
+                              ["Program start", formatDate(u.start_date)],
+                              ["Progress goal", u.progress_goal ?? "—"],
+                              ["Body weight", u.body_weight ? `${u.body_weight} kg` : "—"],
+                              ["Team", u.team_id ? "In a team" : "No team"],
+                            ].map(([k, v]) => (
+                              <div key={k}>
+                                <dt style={{ fontSize: 12, fontWeight: 800, color: C.sub }}>{k}</dt>
+                                <dd style={{ margin: 0, fontWeight: 800, textTransform: k === "Progress goal" ? "capitalize" : undefined }}>{v}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </td>
+                      </tr>
                     )}
                   </Fragment>
                 );
               })}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </div>
       )}
-    </motion.section>
+    </section>
   );
 };
 

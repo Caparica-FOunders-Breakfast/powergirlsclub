@@ -1,21 +1,17 @@
-import { motion } from "framer-motion";
 import AdminUsersTable from "@/components/AdminUsersTable";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Users = () => {
+  const isMobile = useIsMobile();
   return (
-    <div className="px-4 pt-6 pb-24 max-w-lg mx-auto lg:max-w-7xl lg:px-8 lg:pb-8">
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="mb-5 lg:mb-7"
-      >
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          Admin
-        </p>
-        <h1 className="text-4xl font-display text-foreground lg:text-5xl">Users</h1>
-      </motion.div>
-
-      <AdminUsersTable />
+    <div style={{ background: "#FBF9FB", minHeight: "100%", color: "#2B1736", fontFamily: "Nunito, system-ui, sans-serif", padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
+      <div style={{ maxWidth: 1240, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
+        <div>
+          <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: "#77677E" }}>ADMIN</p>
+          <h1 style={{ margin: "2px 0 0", fontFamily: "Bangers, cursive", fontWeight: 400, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Users</h1>
+        </div>
+        <AdminUsersTable title="All members" />
+      </div>
     </div>
   );
 };
