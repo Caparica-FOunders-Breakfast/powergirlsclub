@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-16 — "Viewing as" toggle matches the design; admins no longer stranded in User view
+
+- **`ViewModeToggle`** rebuilt to the mockups' segmented control: "Viewing as"
+  in grey sentence case, then **Admin | User** in a 2px plum border with the
+  active side filled plum. It replaces the pink uppercase pill with icons. A
+  `dark` tone (white border, active side white) is used in the plum mobile
+  header, and `compact` drops the label for the 60px bar.
+- **Bug fix**: the mobile/tablet header only rendered the toggle when `isAdmin`,
+  which is false while *viewing as User*. Switching to User on a phone hid the
+  toggle with no way back. It now renders unconditionally; the component hides
+  itself for non-admins.
+
 ## 2026-11-16 — Remove the old onboarding wizard (and fix progression resetting training days)
 
 The new `/plan-setup` flow replaced the old inline onboarding wizard in step 1,

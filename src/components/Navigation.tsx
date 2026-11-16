@@ -265,7 +265,6 @@ export function BottomNav() {
 
 export function AppHeader() {
   const { user } = useAuth();
-  const isAdmin = useIsAdmin();
   const { data: profile } = useProfile();
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "Power Girl";
   const avatarColor = profile?.avatar_color || "#E8308C";
@@ -281,7 +280,9 @@ export function AppHeader() {
         <div className="h-[60px] flex items-center justify-between gap-3 px-4">
           <Link to="/" className="font-display text-[28px] tracking-wider text-[#FF8AC4] leading-none">Power Club</Link>
           <div className="flex items-center gap-2">
-            {isAdmin && <ViewModeToggle />}
+            {/* Self-hides for non-admins. Not gated on isAdmin: that's false in
+                "User" view, which hid the toggle and stranded admins there. */}
+            <ViewModeToggle tone="dark" compact />
             <Link
               to="/profile"
               aria-label="Your profile"
