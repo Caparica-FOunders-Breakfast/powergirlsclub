@@ -140,19 +140,19 @@ const TeamManagement = () => {
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.15 }}
-      className="mb-6 p-5 rounded-2xl bg-card border-2 border-border"
+      className="mb-6 p-7 rounded-[22px] bg-card border-2 border-[#2B1736]"
     >
-      <h2 className="font-display text-xl text-foreground mb-1">
-        <CalendarIcon className="inline w-5 h-5 mr-1 text-primary" /> Challenge
+      <h2 className="font-display text-[32px] tracking-[1px] text-foreground mb-1 flex items-center gap-2">
+        <CalendarIcon className="w-6 h-6 text-primary" /> Challenge
       </h2>
 
       {challenge ? (
         <div className="space-y-4 mt-3">
           <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-extrabold text-foreground">{challenge.name}</h3>
+              <h3 className="font-extrabold text-foreground text-lg">{challenge.name}</h3>
               <span className={cn(
-                "text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full",
+                "text-[12px] font-extrabold uppercase px-2.5 py-0.5 rounded-full",
                 progress?.status === "active" ? "bg-secondary/20 text-secondary" :
                 progress?.status === "completed" ? "bg-muted text-muted-foreground" :
                 "bg-accent/20 text-accent-foreground"
@@ -161,7 +161,7 @@ const TeamManagement = () => {
               </span>
             </div>
 
-            <div className="text-sm font-bold text-muted-foreground mb-2">
+            <div className="text-[15px] font-bold text-muted-foreground mb-2">
               {format(new Date(challenge.start_date + "T00:00:00"), "MMM d")} → {format(new Date(challenge.end_date + "T00:00:00"), "MMM d, yyyy")}
             </div>
 
@@ -190,8 +190,8 @@ const TeamManagement = () => {
           {/* Invite code */}
           <div className="flex items-center gap-2">
             <div className="flex-1 p-3 rounded-xl bg-muted text-center">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Invite Code</p>
-              <p className="font-display text-2xl text-foreground tracking-widest">{challenge.invite_code?.toUpperCase()}</p>
+              <p className="text-[13px] font-bold text-muted-foreground uppercase mb-1">Invite Code</p>
+              <p className="font-display text-[32px] text-foreground tracking-widest">{challenge.invite_code?.toUpperCase()}</p>
             </div>
             <Button variant="outline" size="icon" onClick={copyChallengeCode} className="h-12 w-12 shrink-0">
               {challengeCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -201,8 +201,8 @@ const TeamManagement = () => {
           {/* Participants */}
           {challengeParticipants && challengeParticipants.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">
-                <Users className="inline w-3 h-3 mr-1" /> {challengeParticipants.length} Participant{challengeParticipants.length !== 1 ? "s" : ""}
+              <p className="text-[13px] font-bold text-muted-foreground uppercase mb-2">
+                <Users className="inline w-3.5 h-3.5 mr-1" /> {challengeParticipants.length} Participant{challengeParticipants.length !== 1 ? "s" : ""}
               </p>
               <div className="flex flex-wrap gap-2">
                 {challengeParticipants.map((p) => (
@@ -213,7 +213,7 @@ const TeamManagement = () => {
                     >
                       {p.display_name?.[0]?.toUpperCase()}
                     </div>
-                    <span className="text-xs font-bold text-foreground">{p.display_name}</span>
+                    <span className="text-sm font-bold text-foreground">{p.display_name}</span>
                   </div>
                 ))}
               </div>
@@ -252,29 +252,29 @@ const TeamManagement = () => {
         </div>
       ) : (
         <div className="space-y-3 mt-3">
-          <div className="rounded-xl bg-muted/50 border border-border p-3 space-y-1.5">
-            <p className="text-xs font-bold text-foreground">How a challenge works 💜</p>
-            <ul className="text-[11px] font-semibold text-muted-foreground space-y-1 list-disc pl-4">
+          <div className="rounded-xl bg-muted/50 border border-border p-4 space-y-2">
+            <p className="text-[17px] font-bold text-foreground">How a challenge works 💜</p>
+            <ul className="text-[15px] font-semibold text-muted-foreground space-y-1.5 list-disc pl-5">
               <li>A challenge runs for <strong>4 weeks</strong> with your friends or team.</li>
               <li>Everyone trains their weekly plan, each completed workout earns points.</li>
               <li>There's a <strong>weekly winner</strong>, and you unlock rewards as you go.</li>
               <li>Start your own and share the code, or join one with a friend's code.</li>
             </ul>
           </div>
-          <p className="text-xs text-muted-foreground font-bold">Create a new 4-week challenge or join one with a code</p>
+          <p className="text-[15px] text-muted-foreground font-bold">Create a new 4-week challenge or join one with a code</p>
 
           {!showCreateChallenge && !showJoinChallenge && (
             <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => setShowCreateChallenge(true)}
-                className="gradient-primary text-primary-foreground font-bold"
+                className="gradient-primary text-primary-foreground font-bold h-12 text-base"
               >
                 <Plus className="w-4 h-4 mr-1" /> Create
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowJoinChallenge(true)}
-                className="font-bold border-primary/30"
+                className="font-bold border-primary/30 h-12 text-base"
               >
                 <ArrowRight className="w-4 h-4 mr-1" /> Join
               </Button>
@@ -288,7 +288,7 @@ const TeamManagement = () => {
               className="space-y-3 p-4 rounded-xl border-2 border-primary/20 bg-primary/5"
             >
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Challenge Name</label>
+                <label className="text-[13px] font-bold text-muted-foreground uppercase">Challenge Name</label>
                 <Input
                   value={challengeName}
                   onChange={(e) => setChallengeName(e.target.value)}
@@ -297,7 +297,7 @@ const TeamManagement = () => {
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Start Date</label>
+                <label className="text-[13px] font-bold text-muted-foreground uppercase">Start Date</label>
                 <Popover open={startOpen} onOpenChange={setStartOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -344,7 +344,7 @@ const TeamManagement = () => {
               className="space-y-3 p-4 rounded-xl border-2 border-secondary/20 bg-secondary/5"
             >
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Invite Code</label>
+                <label className="text-[13px] font-bold text-muted-foreground uppercase">Invite Code</label>
                 <Input
                   value={challengeCode}
                   onChange={(e) => setChallengeCode(e.target.value)}

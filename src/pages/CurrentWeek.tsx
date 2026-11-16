@@ -248,7 +248,9 @@ const CurrentWeek = () => {
   }
 
   const selectedDay = weeklyPlan[selectedDayIndex] ?? weeklyPlan[0];
-  const weekRangeLabel = `${format(selectedWeekDate, "MMM d")} – ${format(addDays(selectedWeekDate, 6), "MMM d")}`;
+  const weekEndDate = addDays(selectedWeekDate, 6);
+  const sameMonth = format(selectedWeekDate, "MMM") === format(weekEndDate, "MMM");
+  const weekRangeLabel = `${format(selectedWeekDate, "MMM d")} – ${sameMonth ? format(weekEndDate, "d") : format(weekEndDate, "MMM d")}`;
 
   // Editing takes over the view.
   if (editingDay !== null) {
@@ -299,13 +301,19 @@ const CurrentWeek = () => {
     .slice(0, 2)
     .map(({ d, i }) => ({ day: d, index: i, rel: i === todayIndex + 1 && isCurrentWeek ? "Tomorrow" : format(addDays(selectedWeekDate, i), "MMM d") }));
 
+  const plannedWorkouts = weeklyPlan
+    .map((d, i) => ({ d, i }))
+    .filter(({ d }) => !d.isRest && !d.isRecovery && d.exercises.length > 0);
+  const plannedCount = plannedWorkouts.length;
+  const leftCount = plannedWorkouts.filter(({ d, i }) => getDayCompletion(i, d) < 100).length;
+
   return (
     <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: "32px 24px 64px" }}>
       <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Header */}
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 20 }}>
           <h1 style={{ margin: 0, ...bangers, fontSize: 52, letterSpacing: 1, lineHeight: 1 }}>This week</h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, border: `2px solid ${C.ink}`, borderRadius: 12, background: "#FFFFFF" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, border: `2px solid ${C.ink}`, borderRadius: 999, background: "#FFFFFF" }}>
             <button type="button" aria-label="Previous week" onClick={() => setWeekOffset((o) => o - 1)} style={{ width: 44, height: 40, border: 0, background: "transparent", cursor: "pointer", fontSize: 18, fontWeight: 800 }}>‹</button>
             <span style={{ fontWeight: 800, fontSize: 15, padding: "0 4px", whiteSpace: "nowrap" }}>{weekRangeLabel}</span>
             <button type="button" aria-label="Next week" onClick={() => setWeekOffset((o) => o + 1)} style={{ width: 44, height: 40, border: 0, background: "transparent", cursor: "pointer", fontSize: 18, fontWeight: 800 }}>›</button>
@@ -315,30 +323,70 @@ const CurrentWeek = () => {
           )}
         </div>
 
-        {/* Week strip */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 10, overflowX: "auto" }}>
-          {weeklyPlan.map((d, i) => {
-            const comp = getDayCompletion(i, d);
-            const isSel = i === selectedDayIndex;
-            const isToday = isCurrentWeek && i === todayIndex;
-            const isRest = (d.isRest || d.isRecovery) && d.exercises.length === 0;
-            const done = comp === 100;
-            const bg = isToday ? (done ? C.magenta : C.ink) : isRest ? C.tile : "#FFFFFF";
-            const fg = isToday ? "#FFFFFF" : isRest ? C.body : C.ink;
-            const border = isToday ? C.ink : isSel ? C.magenta : isRest ? C.tile : C.border;
-            const status = done ? "Done" : isToday ? "Today" : isRest ? "Rest day" : "Not logged";
-            return (
-              <button key={i} type="button" onClick={() => setSelectedDayIndex(i)} style={{ minWidth: 96, textAlign: "left", background: bg, color: fg, border: `2px solid ${border}`, borderRadius: 16, padding: "12px 14px", cursor: "pointer", boxShadow: isSel && !isToday ? `3px 3px 0 ${C.magenta}` : isToday ? `4px 4px 0 ${C.magenta}` : "none" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontWeight: 800, fontSize: 14 }}>{d.day.slice(0, 3)}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>{format(addDays(selectedWeekDate, i), "MMM d")}</span>
-                </div>
-                <p style={{ margin: "8px 0 0", fontWeight: 800, fontSize: 15, lineHeight: 1.25 }}>{isRest ? (d.isRecovery ? "Recovery" : "Rest") : d.label}</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, fontWeight: 700, opacity: 0.85 }}>{status}</p>
-              </button>
-            );
-          })}
-        </div>
+        {/* Week overview */}
+        <section style={{ ...card }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "18px 22px", borderBottom: `2px solid ${C.ink}` }}>
+            <p style={{ margin: 0, fontWeight: 800, fontSize: 17 }}>
+              {plannedCount} workout{plannedCount === 1 ? "" : "s"} planned
+              <span style={{ color: C.sub }}> · {leftCount} left this week</span>
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+              {[
+                { label: "Lower body", color: C.magenta },
+                { label: "Upper body", color: C.purple },
+                { label: "Core", color: C.ink },
+              ].map((l) => (
+                <span key={l.label} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: C.body }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 999, background: l.color }} />
+                  {l.label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 10, padding: 18, overflowX: "auto" }}>
+            {weeklyPlan.map((d, i) => {
+              const isSel = i === selectedDayIndex;
+              const isToday = isCurrentWeek && i === todayIndex;
+              const isRest = (d.isRest || d.isRecovery) && d.exercises.length === 0;
+              const total = d.exercises.length;
+              const done = d.exercises.filter((_, k) => localCompleted[getExKey(i, k)]).length;
+              const fullyDone = total > 0 ? done === total : getDayCompletion(i, d) === 100;
+              const dashCount = total > 0 ? total : 5;
+              const status = isToday
+                ? isRest ? "Today · recover" : `Today · ${done} of ${total}`
+                : isRest ? "Recover"
+                : fullyDone ? "Done ✓"
+                : done > 0 ? `${done} of ${total}`
+                : "Not logged";
+              const bg = isToday ? C.grad : isRest ? C.tile : "#FFF6FB";
+              const fg = isToday ? "#FFFFFF" : C.ink;
+              const dateFg = isToday ? "rgba(255,255,255,0.82)" : C.sub;
+              const border = isToday ? C.ink : isSel ? C.magenta : C.border;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSelectedDayIndex(i)}
+                  style={{ minWidth: 128, textAlign: "left", background: bg, color: fg, border: `2px solid ${border}`, borderRadius: 18, padding: "14px 14px 12px", cursor: "pointer", display: "flex", flexDirection: "column", gap: 10, boxShadow: isToday ? `4px 4px 0 ${C.ink}` : isSel ? `3px 3px 0 ${C.magenta}` : "none" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6 }}>
+                    <span style={{ fontWeight: 800, fontSize: 15 }}>{d.day.slice(0, 3)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: dateFg }}>{format(addDays(selectedWeekDate, i), "MMM d")}</span>
+                  </div>
+                  <p style={{ margin: 0, fontWeight: 800, fontSize: 15, lineHeight: 1.2, minHeight: 36 }}>{isRest ? (d.isRecovery ? "Recovery" : "Rest") : d.label}</p>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {Array.from({ length: dashCount }).map((_, k) => {
+                      const filled = total > 0 && localCompleted[getExKey(i, k)];
+                      const dashBg = isToday ? (filled ? "#FFFFFF" : "rgba(255,255,255,0.4)") : filled ? C.magenta : "#E7DCEA";
+                      return <span key={k} style={{ flex: 1, height: 6, borderRadius: 999, background: dashBg }} />;
+                    })}
+                  </div>
+                  <span style={{ alignSelf: "flex-start", marginTop: 2, padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap", background: isToday ? "rgba(43,23,54,0.55)" : isRest ? "#FFFFFF" : fullyDone ? C.magenta : "#F3EDF4", color: isToday ? "#FFFFFF" : isRest ? C.sub : fullyDone ? "#FFFFFF" : C.body, border: isRest && !isToday ? `1px solid ${C.border}` : "none" }}>{status}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
           {/* Focused day */}
