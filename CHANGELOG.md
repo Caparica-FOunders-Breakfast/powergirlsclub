@@ -1,6 +1,33 @@
 # Changelog
 
-## 2026-11-16 — Faster load, part 2: split vendor bundle + loading skeleton
+## 2026-11-16 — Training plan feature, step 1 (Profile plan + setup flow)
+
+New training-plan system from the `power-club-design` brief. Step 1 only:
+Profile plan card + the `/plan-setup` wizard. Later pages untouched.
+
+- **New Supabase tables** (`supabase/migrations/20261116120000_plan_feature.sql`,
+  apply via dashboard): `exercises` (library), `plan_templates` /
+  `plan_template_days` / `plan_template_items` (2/3/4-day recommended plans),
+  `member_plans` (plan header). Seeded from `plans-data.json`. `tracking` is
+  inferred (not in the source).
+- **Bridge, not a rewrite**: saving a plan writes the member header and projects
+  the chosen days into the existing `user_workout_plans` JSONB + numeric
+  `training_days`, so This Week and Scorecard keep working unchanged
+  (`src/lib/plan.ts`, `src/hooks/usePlan.ts`).
+- **`/plan-setup`** (`src/pages/PlanSetup.tsx`): full-page wizard Days -> Plan ->
+  Check -> Start. Sources: recommended (with swap), upload a screenshot (reuses
+  the `analyze-workout-image` function, inline review + per-line day assignment +
+  unclear flags), or build your own (library search, up to 5/day). Starting
+  weights auto or manual.
+- **Profile** (`TrainingPlanCard`): "Your training plan" card with source/days/
+  started tags, per-day exercise lists with how-to video play buttons, and a
+  "Set up / Change plan" entry to `/plan-setup`. The old inline onboarding
+  wizard is bypassed; body weight and progression stay as settings rows.
+- **Bug fix**: strength-level progress no longer targets 1.6x bodyweight (the
+  "101 kg at 63 kg" bug) — Very strong (>=1.2x) now reads as a full bar.
+
+Not yet applied/verified: the migration must be run in the dashboard, and the
+member-area screens need a logged-in smoke test (can't be done from here).
 
 - **Split the vendor bundle** (`vite.config.ts` `manualChunks`): React,
   react-router, `@supabase/supabase-js` and react-query each get their own
