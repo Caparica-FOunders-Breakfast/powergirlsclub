@@ -13,6 +13,7 @@ import { VocabLibrary } from "@/components/language/VocabLibrary";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 
 export default function LearnLanguage() {
   const { data: languages = [], isLoading } = useUserLanguages();
@@ -92,6 +93,7 @@ export default function LearnLanguage() {
 
   return (
     <div className="p-4 pb-24 max-w-lg mx-auto space-y-4 lg:max-w-5xl lg:px-8 lg:pb-8">
+      <PageViewToggle row />
       {/* Language toggle */}
       {languages.length > 0 && (
         <motion.div

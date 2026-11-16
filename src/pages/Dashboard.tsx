@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminUsersTable, { Avatar } from "@/components/AdminUsersTable";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 import { FEATURE_FLAGS, useFeatureFlags, useSetAppSetting, type FeatureFlagKey } from "@/hooks/useAppSettings";
 import { useAdminMembers, isRestCheckIn, localDateKey, mondayOfThisWeek, type AdminMember } from "@/hooks/useAdminMembers";
 
@@ -135,9 +136,12 @@ const Dashboard = () => {
   return (
     <div style={{ background: "#FBF9FB", minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
       <div style={{ maxWidth: 1240, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
-        <div>
-          <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>ADMIN · {format(now, "MMMM yyyy").toUpperCase()}</p>
-          <h1 style={{ margin: "2px 0 0", ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Dashboard</h1>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: 1, color: C.sub }}>ADMIN · {format(now, "MMMM yyyy").toUpperCase()}</p>
+            <h1 style={{ margin: "2px 0 0", ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Dashboard</h1>
+          </div>
+          <PageViewToggle />
         </div>
 
         {/* KPI row */}

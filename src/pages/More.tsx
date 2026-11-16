@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Heart, User, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 import { useUserRole } from "@/hooks/useProfile";
 import AdminDefaultPlanEditor from "@/components/AdminDefaultPlanEditor";
 
@@ -15,8 +16,9 @@ const More = () => {
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto lg:max-w-5xl lg:px-8 lg:pb-8">
-      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-6">
+      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-6 flex flex-wrap items-center gap-4">
         <h1 className="text-4xl font-display text-foreground">More</h1>
+        <PageViewToggle />
       </motion.div>
 
       <div className="flex flex-col gap-3">

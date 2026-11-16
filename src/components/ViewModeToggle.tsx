@@ -69,4 +69,23 @@ const ViewModeToggle = ({ tone = "light", compact = false }: { tone?: "light" | 
   );
 };
 
+/**
+ * The toggle as it sits on a page's title row (desktop, lg+), per the mockups.
+ * Renders nothing at all for non-admins, so it never leaves an empty row or an
+ * extra flex gap. Below lg the toggle lives in the dark mobile header instead.
+ *
+ * - `row`: a full-width, right-aligned row, for pages whose title sits inside a
+ *   hero card (Challenge, Profile) or that have no title row.
+ * - default: an inline item that pushes itself to the right of a flex title row.
+ */
+export const PageViewToggle = ({ row = false }: { row?: boolean }) => {
+  const { isRealAdmin } = useAdminView();
+  if (!isRealAdmin) return null;
+  return (
+    <div className="hidden lg:flex" style={{ alignItems: "center", justifyContent: "flex-end", marginLeft: row ? undefined : "auto" }}>
+      <ViewModeToggle />
+    </div>
+  );
+};
+
 export default ViewModeToggle;

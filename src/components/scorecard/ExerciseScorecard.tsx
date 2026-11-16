@@ -30,6 +30,7 @@ import {
   isSameDay,
 } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 
 // ── Palette (ported from the "Harley" scorecard design) ──
@@ -303,7 +304,10 @@ export function ExerciseScorecard() {
 
   return (
     <div style={{ color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
-      <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Scorecard</h1>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+        <h1 style={{ margin: 0, ...bangers, fontSize: isMobile ? 40 : 52, letterSpacing: 1, lineHeight: 1 }}>Scorecard</h1>
+        <PageViewToggle />
+      </div>
 
       {/* Row 1: This month + Streak */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24 }}>

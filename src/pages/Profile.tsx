@@ -17,6 +17,7 @@ import AdminApiUsage from "@/components/AdminApiUsage";
 import { ProgressionEditor } from "@/components/profile-plan/ProgressionEditor";
 import { TrainingPlanCard } from "@/components/profile-plan/TrainingPlanCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -289,6 +290,7 @@ const Profile = () => {
   return (
     <div style={{ background: C.bg, minHeight: "100%", color: C.ink, fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
       <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
+        <PageViewToggle row />
         {/* Header */}
         <section style={{ background: C.grad, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 24, boxShadow: isMobile ? `4px 4px 0 ${C.ink}` : `6px 6px 0 ${C.ink}`, padding: isMobile ? 18 : "28px 32px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: isMobile ? 14 : 24 }}>
           <span style={{ flex: "none", width: isMobile ? 64 : 96, height: isMobile ? 64 : 96, borderRadius: 999, background: "#FFFFFF", color: C.pink, border: `3px solid ${C.ink}`, ...bangers, fontSize: isMobile ? 36 : 52, display: "flex", alignItems: "center", justifyContent: "center" }}>{initials}</span>

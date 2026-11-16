@@ -294,10 +294,9 @@ export function AppHeader() {
           </div>
         </div>
       </header>
-      {/* Desktop header (lg+): just the view toggle (the sidebar carries branding). */}
-      <div className="hidden lg:flex sticky top-0 z-40 h-12 items-center justify-end px-6 bg-transparent">
-        <ViewModeToggle />
-      </div>
+      {/* Desktop (lg+) has no header bar: the sidebar carries branding and the
+          "Viewing as" toggle sits on each page's title row (PageViewToggle),
+          as in the mockups. */}
     </>
   );
 }
