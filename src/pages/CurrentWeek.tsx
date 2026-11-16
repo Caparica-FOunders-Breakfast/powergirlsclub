@@ -16,6 +16,7 @@ import { type WorkoutDay, type Exercise } from "@/data/workoutPlan";
 import { startOfWeek, addWeeks, addDays, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 import { firstNumber } from "@/lib/plan";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
@@ -347,6 +348,7 @@ const CurrentWeek = () => {
           {!isCurrentWeek && (
             <button type="button" onClick={() => setWeekOffset(0)} style={{ fontWeight: 800, fontSize: 14, color: C.pink, background: "transparent", border: 0, cursor: "pointer" }}>Go to this week</button>
           )}
+          <PageViewToggle />
         </div>
 
         {/* Week overview */}

@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-16 — "Viewing as" toggle matches the design and moves onto the title row
+
+- **`ViewModeToggle`** rebuilt to the mockups' segmented control: "Viewing as"
+  in grey sentence case, then **Admin | User** in a 2px plum border with the
+  active side filled plum. It replaces the pink uppercase pill with icons. A
+  `dark` tone (white border, active side white) is used in the plum mobile
+  header, and `compact` drops the label for the 60px bar.
+- **Bug fix**: the mobile/tablet header only rendered the toggle when `isAdmin`,
+  which is false while *viewing as User*. Switching to User on a phone hid the
+  toggle with no way back. It now renders unconditionally; the component hides
+  itself for non-admins.
+- **Placement**: on desktop the toggle sat alone in a sticky strip above every
+  page. It now sits on each page's title row, as in the mockups (This week,
+  Scorecard, Dashboard, Users, More), or in a right-aligned row above the hero
+  card where the title lives inside one (Challenge, Profile, Language, Meals).
+  New `PageViewToggle` renders nothing for non-admins (no empty row or gap) and
+  only on desktop; phones keep it in the dark header. Removing the strip also
+  drops 48px from the top of every desktop page, matching the mockups' 32px.
+
 ## 2026-11-16 — Remove the old onboarding wizard (and fix progression resetting training days)
 
 The new `/plan-setup` flow replaced the old inline onboarding wizard in step 1,

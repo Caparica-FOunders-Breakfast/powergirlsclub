@@ -265,7 +265,6 @@ export function BottomNav() {
 
 export function AppHeader() {
   const { user } = useAuth();
-  const isAdmin = useIsAdmin();
   const { data: profile } = useProfile();
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "Power Girl";
   const avatarColor = profile?.avatar_color || "#E8308C";
@@ -281,7 +280,9 @@ export function AppHeader() {
         <div className="h-[60px] flex items-center justify-between gap-3 px-4">
           <Link to="/" className="font-display text-[28px] tracking-wider text-[#FF8AC4] leading-none">Power Club</Link>
           <div className="flex items-center gap-2">
-            {isAdmin && <ViewModeToggle />}
+            {/* Self-hides for non-admins. Not gated on isAdmin: that's false in
+                "User" view, which hid the toggle and stranded admins there. */}
+            <ViewModeToggle tone="dark" compact />
             <Link
               to="/profile"
               aria-label="Your profile"
@@ -293,10 +294,9 @@ export function AppHeader() {
           </div>
         </div>
       </header>
-      {/* Desktop header (lg+): just the view toggle (the sidebar carries branding). */}
-      <div className="hidden lg:flex sticky top-0 z-40 h-12 items-center justify-end px-6 bg-transparent">
-        <ViewModeToggle />
-      </div>
+      {/* Desktop (lg+) has no header bar: the sidebar carries branding and the
+          "Viewing as" toggle sits on each page's title row (PageViewToggle),
+          as in the mockups. */}
     </>
   );
 }

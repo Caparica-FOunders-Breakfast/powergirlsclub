@@ -16,6 +16,7 @@ import { GroceryListView } from "@/components/meals/GroceryListView";
 import { SavedMealsView } from "@/components/meals/SavedMealsView";
 import { MealBuilder } from "@/components/meals/MealBuilder";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 
 // ─── 7-Day Plan built from Power Routine ───
 
@@ -328,6 +329,7 @@ export default function MealPlan() {
 
   return (
     <div className="p-4 pb-24 max-w-lg mx-auto space-y-4 lg:max-w-7xl lg:px-8 lg:pb-8">
+      <PageViewToggle row />
       <div className="flex rounded-xl border-2 border-[#2B1736] overflow-hidden">
         <button
           onClick={() => setMode("power")}

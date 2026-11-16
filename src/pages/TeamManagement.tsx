@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PageViewToggle } from "@/components/ViewModeToggle";
 
 const TeamManagement = () => {
   const { data: team } = useMyTeam();
@@ -380,6 +381,7 @@ const TeamManagement = () => {
   return (
     <div style={{ background: "#FBF9FB", minHeight: "100%", color: "#2B1736", fontFamily: "Nunito, system-ui, sans-serif", fontSize: 16, lineHeight: 1.5, padding: isMobile ? "20px 16px 28px" : "32px 24px 64px" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 28 }}>
+        <PageViewToggle row />
         {/* HERO */}
         <section style={{ background: "linear-gradient(135deg, #D1207A 0%, #6B2FB3 100%)", color: "#FFFFFF", border: "2px solid #2B1736", borderRadius: 24, boxShadow: isMobile ? "4px 4px 0 #2B1736" : "6px 6px 0 #2B1736", padding: isMobile ? "22px 18px" : "36px 36px 32px" }}>
           <p style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, color: "rgba(255,255,255,0.88)" }}>4-WEEK TEAM CHALLENGE</p>
