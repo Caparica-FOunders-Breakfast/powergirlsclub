@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-17 — Saved plans: main lifts 3x10
+
+Members' saved plans now also use 3x10 for Barbell squat, Dumbbell shoulder
+press, Push ups and Assisted pull ups. Migration
+`20261117130000_saved_plans_3x10_main_lifts.sql` (Supabase SQL editor) matches
+the free-text names loosely, changes only sets and reps, skips travel rows and
+leaves plain "Pull ups" alone.
+**Why:** the templates changed for new members; existing members should train
+the same 3x10 that the week 1 base test uses.
+
 ## 2026-11-17 — Main lifts are 3x10 in the recommended plans
 
 Barbell squat, Dumbbell shoulder press, Push ups and Assisted pull ups are now
