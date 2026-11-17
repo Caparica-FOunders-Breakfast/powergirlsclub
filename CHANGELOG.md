@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-17 — Strength levels show kg ranges on the Scorecard
+
+The Scorecard's "Strength levels" card listed the five levels without numbers,
+even after the member set a body weight. Each level now shows its kg range for
+that body weight (at 63 kg: under 22, 22–38, 38–54, 54–76, 76 kg and up), and
+the member's overall level is marked "You", matching the Profile card.
+**Why:** the levels are body-weight ratios, so without kg values a member
+couldn't tell what weight gets her to the next level. The bounds and range text
+now live in one helper (`levelKgRange`) used by both Profile and Scorecard.
+
 ## 2026-11-16 — New member fixes (live sign-up test)
 
 From the sign-up test video in the power-club-design 2 brief, fixed in order:
