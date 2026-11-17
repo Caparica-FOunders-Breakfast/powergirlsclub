@@ -7,6 +7,7 @@ import { useMemberPlan } from "@/hooks/usePlan";
 import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 import { useProfile, signUpFirstName } from "@/hooks/useProfile";
 import { SignUpMobileBar, SignUpSidePanel } from "@/components/auth/SignUpWizard";
+import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { clearJustSignedUp, readOnboarding } from "@/lib/onboarding";
 import { WEEKDAYS, WEEKDAY_FULL } from "@/lib/plan";
 
@@ -74,6 +75,7 @@ export default function Welcome() {
           <p style={{ margin: 0 }}><strong>Starting weights:</strong> {baseText}</p>
         </div>
       </div>
+      <AddToHomeScreen variant="welcome" />
     </>
   );
 

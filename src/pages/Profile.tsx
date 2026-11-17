@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile, useUpdateProfile, useMemberName } from "@/hooks/useProfile";
 import { BodyWeightBox } from "@/components/BodyWeightBox";
+import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { addDays, format } from "date-fns";
 import { firstMonthRange } from "@/lib/memberMonth";
 import {
@@ -310,6 +311,9 @@ const Profile = () => {
           </div>
         </section>
 
+          {/* Mobile: right under the header, before Membership. Desktop: side column. */}
+          {isMobile && <AddToHomeScreen variant="profile" />}
+
           <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* LEFT */}
             <div style={{ flex: "3 1 520px", minWidth: 0, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
@@ -403,6 +407,8 @@ const Profile = () => {
                 <p style={{ margin: "6px 0 0", fontWeight: 800, color: C.ink }}>+{progressionKg} kg added per week</p>
                 <p style={{ margin: "2px 0 0", fontSize: 14, color: C.body }}>In {PROJECTION_WEEKS} weeks that's +{progressionKg * PROJECTION_WEEKS} kg on your lifts.</p>
               </section>
+
+              {!isMobile && <AddToHomeScreen variant="profile" />}
 
               {/* Membership: €5 a month, the first payment at the end of the first month. */}
               <section style={{ ...card, padding: 20 }}>
