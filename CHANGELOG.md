@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-17 — Week 1 base test: 3 rounds of 10
+
+"How week 1 works" told members to start light (empty bar), which gave starting
+weights that were too low. The base test is now: pick a weight you can lift 10
+times with good form, do 3 rounds of 10, and reps 8, 9 and 10 should feel
+challenging with form intact. The box explains Too light (reps 8 to 10 felt
+easy) and Too heavy (couldn't finish 10 with good form). The feel question is
+now "How did reps 8 to 10 feel?", the exercise tag "Test: 3 × 10" (was "Start
+light"), and the Welcome and Plan setup texts match.
+**Why:** a starting weight is only useful if it's near a real working weight;
+"challenging only on the last 3 reps" is the cue members can actually feel.
 ## 2026-11-17 — Strength levels show kg ranges on the Scorecard
 
 The Scorecard's "Strength levels" card listed the five levels without numbers,

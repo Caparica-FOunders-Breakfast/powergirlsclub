@@ -51,7 +51,7 @@ const SOURCES: { id: PlanSource; name: string; desc: string; tag: string; iconBg
 ];
 
 const BASE_OPTS: { id: BaseMode; name: string; desc: string }[] = [
-  { id: "auto", name: "Find my base in week 1", desc: "Your first session of each day is a light test. The app suggests your starting weights from how it went." },
+  { id: "auto", name: "Find my base in week 1", desc: "Your first session of each day is a test: 3 rounds of 10, where the last 3 reps feel challenging. The app sets your starting weights from how it went." },
   { id: "manual", name: "I know my weights", desc: "Type in the weight you use now for each exercise and start from there." },
 ];
 

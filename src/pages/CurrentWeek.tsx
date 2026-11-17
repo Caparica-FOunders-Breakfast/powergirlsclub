@@ -78,8 +78,9 @@ const dayTint = (label: string) => {
 
 type Mood = "Ready" | "So-so" | "Not ready";
 
-// Week 1 "Find your base": after a test set the member says how it felt and we
-// set the starting weight from what they used.
+// Week 1 "Find your base": 3 rounds of 10 where reps 8 to 10 should feel
+// challenging. The member says how those reps felt and we set the starting
+// weight from what they used.
 type Feel = "light" | "right" | "heavy";
 const FEELS: { k: Feel; label: string; adj: number }[] = [
   { k: "light", label: "Too light", adj: 2.5 },
@@ -533,11 +534,12 @@ const CurrentWeek = () => {
                     <div style={{ padding: "16px 18px", borderRadius: 16, background: "#F4EDFE" }}>
                       <p style={{ margin: 0, fontWeight: 800 }}>How week 1 works</p>
                       <ol style={{ margin: "8px 0 0", paddingLeft: 20, display: "flex", flexDirection: "column", gap: 4, fontSize: 15, listStyle: "decimal" }}>
-                        <li>Start light: an empty bar or light dumbbells.</li>
-                        <li>Do the sets. Stop if your form breaks.</li>
-                        <li>Tell us how it felt. We set your starting weight.</li>
+                        <li>Pick a weight you think you can lift 10 times with good form.</li>
+                        <li>Do 3 rounds of 10 reps. Reps 1 to 7 feel steady. Reps 8, 9 and 10 feel challenging, but your form holds.</li>
+                        <li>Tell us how it felt. We save that weight as your starting weight.</li>
                       </ol>
-                      <p style={{ margin: "10px 0 0", fontSize: 14, color: C.body }}>The readiness check (Ready, So-so, Not ready) starts in week 2, once we know your base.</p>
+                      <p style={{ margin: "10px 0 0", fontSize: 14, color: C.body }}><strong style={{ color: C.ink }}>Too light:</strong> reps 8 to 10 felt easy. <strong style={{ color: C.ink }}>Too heavy:</strong> you couldn't finish 10 with good form. We adjust your starting weight either way.</p>
+                      <p style={{ margin: "6px 0 0", fontSize: 14, color: C.body }}>The readiness check (Ready, So-so, Not ready) starts in week 2, once we know your base.</p>
                     </div>
                   </div>
                 ) : (
@@ -753,7 +755,7 @@ function FocusedExerciseRow({
   }
   const tag = MOOD_TAG[mood];
   const lastLabel = baseSession
-    ? isKgTested(exercise) ? "Start light" : "First time"
+    ? isKgTested(exercise) ? "Test: 3 × 10" : "First time"
     : fromBase ? `Starting weight ${effectiveLast} ${unit}`
     : lastWeekFailed ? "Failed last time" : effectiveLast != null ? `Last time ${effectiveLast} ${unit}` : "First time";
   // Placeholder: today's target, else a typed starting weight. Never the unit
@@ -810,7 +812,7 @@ function FocusedExerciseRow({
     </div>
     {askFeel && (
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: `2px dashed ${C.border}`, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-        <span style={{ fontWeight: 800, fontSize: 14, marginRight: 4 }}>How did it feel?</span>
+        <span style={{ fontWeight: 800, fontSize: 14, marginRight: 4 }}>How did reps 8 to 10 feel?</span>
         {FEELS.map((f) => {
           const on = feel === f.k;
           return (
