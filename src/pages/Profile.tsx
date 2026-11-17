@@ -13,7 +13,7 @@ import {
   useSetTravelMode,
 } from "@/hooks/useUserPreferences";
 import { useActivityData } from "@/hooks/useActivityData";
-import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
+import { useExerciseScorecard, getLevel, levelKgRange } from "@/hooks/useExerciseScorecard";
 import { usePersonalWorkoutPlan } from "@/hooks/usePersonalWorkoutPlan";
 import { supabase } from "@/integrations/supabase/client";
 import AdminApiUsage from "@/components/AdminApiUsage";
@@ -53,9 +53,6 @@ const STRENGTH_LEVELS = [
   { icon: "🔥", label: "Advanced" },
   { icon: "👑", label: "Very strong" },
 ] as const;
-// Upper bounds (× body weight) for Beginner/Leveling up/Strong/Advanced; the
-// top level (Very strong) starts at the last one.
-const STRENGTH_BOUNDS = [0.35, 0.6, 0.85, 1.2] as const;
 const PROJECTION_WEEKS = 12;
 // Exercises not measured in kg — excluded from the overall-level average.
 const NON_KG_NAMES = new Set([
@@ -380,10 +377,7 @@ const Profile = () => {
                       {/* Highest level first, matching the design. */}
                       {STRENGTH_LEVELS.map((_, i) => STRENGTH_LEVELS.length - 1 - i).map((idx) => {
                         const level = STRENGTH_LEVELS[idx];
-                        const range =
-                          idx === 0 ? `under ${Math.round(STRENGTH_BOUNDS[0] * bw)} kg`
-                          : idx === STRENGTH_LEVELS.length - 1 ? `${Math.round(STRENGTH_BOUNDS[3] * bw)} kg and up`
-                          : `${Math.round(STRENGTH_BOUNDS[idx - 1] * bw)}–${Math.round(STRENGTH_BOUNDS[idx] * bw)} kg`;
+                        const range = levelKgRange(idx, bw);
                         const you = idx === overallLevelIndex;
                         return (
                           <div key={level.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: you ? "#FFF5FA" : "#FFFFFF", border: `2px solid ${you ? C.magenta : C.rowBorder}` }}>

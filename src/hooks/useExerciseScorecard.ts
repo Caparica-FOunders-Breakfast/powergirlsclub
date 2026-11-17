@@ -30,6 +30,17 @@ const LEVELS: { max: number; label: ExerciseLevel; icon: string }[] = [
   { max: Infinity, label: "Very strong", icon: "👑" },
 ];
 
+/** Upper bounds (× body weight) for Beginner, Leveling up, Strong, Advanced. */
+export const LEVEL_BOUNDS = [0.35, 0.6, 0.85, 1.2] as const;
+
+/** The kg range for a level at a body weight: "under 22 kg", "22–38 kg", "76 kg and up". */
+export function levelKgRange(index: number, bodyWeight: number): string {
+  const kg = (r: number) => Math.round(r * bodyWeight);
+  if (index <= 0) return `under ${kg(LEVEL_BOUNDS[0])} kg`;
+  if (index >= LEVEL_BOUNDS.length) return `${kg(LEVEL_BOUNDS[LEVEL_BOUNDS.length - 1])} kg and up`;
+  return `${kg(LEVEL_BOUNDS[index - 1])}–${kg(LEVEL_BOUNDS[index])} kg`;
+}
+
 export function getLevel(ratio: number): { label: ExerciseLevel; icon: string; index: number } {
   for (let i = 0; i < LEVELS.length; i++) {
     if (ratio < LEVELS[i].max) return { label: LEVELS[i].label, icon: LEVELS[i].icon, index: i };

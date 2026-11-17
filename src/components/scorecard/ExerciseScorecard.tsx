@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { useExerciseScorecard, getLevel } from "@/hooks/useExerciseScorecard";
+import { useExerciseScorecard, getLevel, levelKgRange } from "@/hooks/useExerciseScorecard";
 import { useActivityData } from "@/hooks/useActivityData";
 import { useStreaks } from "@/hooks/useActivityData";
 import { useProfile } from "@/hooks/useProfile";
@@ -435,16 +435,26 @@ export function ExerciseScorecard() {
             {/* Missing body weight: the "What's your body weight?" box; set: an editable row. */}
             <BodyWeightBox />
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10, opacity: bw ? 1 : 0.45 }}>
-              {["Very strong", "Advanced", "Strong", "Leveling up", "Beginner"].map((name, i) => (
-                <div key={name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ display: "flex", gap: 3, width: 80 }}>
-                    {segsFor(5 - i).map((sg, j) => <span key={j} style={{ flex: 1, height: 8, borderRadius: 999, background: sg.bg }} />)}
+              {["Very strong", "Advanced", "Strong", "Leveling up", "Beginner"].map((name, i) => {
+                const idx = 4 - i;
+                const you = !!bw && strength?.overall.index === idx;
+                return (
+                  <div key={name} style={{ display: "flex", alignItems: "center", gap: 12, ...(you ? { margin: "-6px -10px", padding: "6px 10px", borderRadius: 12, background: "#FFF5FA", border: `2px solid ${C.magenta}` } : {}) }}>
+                    <div style={{ display: "flex", gap: 3, width: 80, flex: "none" }}>
+                      {segsFor(5 - i).map((sg, j) => <span key={j} style={{ flex: 1, height: 8, borderRadius: 999, background: sg.bg }} />)}
+                    </div>
+                    <span style={{ flex: 1, fontWeight: 800, fontSize: 15 }}>{name}</span>
+                    {you && <span style={{ padding: "2px 8px", borderRadius: 999, background: C.ink, color: "#FFFFFF", fontSize: 12, fontWeight: 800 }}>You</span>}
+                    {bw && <span style={{ fontWeight: 700, fontSize: 14, color: C.body, whiteSpace: "nowrap" }}>{levelKgRange(idx, bw)}</span>}
                   </div>
-                  <span style={{ fontWeight: 800, fontSize: 15 }}>{name}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <p style={{ margin: "14px 0 0", fontSize: 14, color: C.body }}>Levels compare your best weight to your bodyweight for each exercise.</p>
+            <p style={{ margin: "14px 0 0", fontSize: 14, color: C.body }}>
+              {bw
+                ? `Your best weight on an exercise sets its level. Ranges are for your body weight of ${bw} kg.`
+                : "Levels compare your best weight to your bodyweight for each exercise."}
+            </p>
           </div>
         </section>
 
