@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-17 — Main lifts are 3x10 in the recommended plans
+
+Barbell squat, Dumbbell shoulder press, Push ups and Assisted pull ups are now
+3 sets of 10 in the 2, 3 and 4-day templates (they were 4x6 or 3x8).
+Migration `20261117120000_template_3x10_main_lifts.sql`, run in the Supabase
+SQL editor. Plans members already saved are not changed.
+**Why:** the week 1 base test is 3 rounds of 10 with reps 8 to 10 challenging;
+the plan should use the same numbers so the starting weight fits the workout.
+
 ## 2026-11-17 — Week 1 base test: 3 rounds of 10
 
 "How week 1 works" told members to start light (empty bar), which gave starting
