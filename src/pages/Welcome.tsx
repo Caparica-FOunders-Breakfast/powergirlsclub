@@ -41,7 +41,7 @@ export default function Welcome() {
   const manual = memberPlan?.base_mode === "manual" || answers?.lifting_level === "regular";
   const baseText = manual
     ? "type in the weights you use now, or let week 1 find them."
-    : "your first session is a light test. The app suggests weights from how it went.";
+    : "your first session is a test: 3 rounds of 10, where the last 3 reps feel challenging. The app sets your weights from how it went.";
 
   const body = !ready ? (
     <div role="status" style={{ textAlign: "center" }}>

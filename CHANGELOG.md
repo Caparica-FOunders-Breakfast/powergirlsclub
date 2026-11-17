@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-11-17 — Saved plans: main lifts 3x10
+
+Members' saved plans now also use 3x10 for Barbell squat, Dumbbell shoulder
+press, Push ups and Assisted pull ups. Migration
+`20261117130000_saved_plans_3x10_main_lifts.sql` (Supabase SQL editor) matches
+the free-text names loosely, changes only sets and reps, skips travel rows and
+leaves plain "Pull ups" alone.
+**Why:** the templates changed for new members; existing members should train
+the same 3x10 that the week 1 base test uses.
+
+## 2026-11-17 — Main lifts are 3x10 in the recommended plans
+
+Barbell squat, Dumbbell shoulder press, Push ups and Assisted pull ups are now
+3 sets of 10 in the 2, 3 and 4-day templates (they were 4x6 or 3x8).
+Migration `20261117120000_template_3x10_main_lifts.sql`, run in the Supabase
+SQL editor. Plans members already saved are not changed.
+**Why:** the week 1 base test is 3 rounds of 10 with reps 8 to 10 challenging;
+the plan should use the same numbers so the starting weight fits the workout.
+
+## 2026-11-17 — Week 1 base test: 3 rounds of 10
+
+"How week 1 works" told members to start light (empty bar), which gave starting
+weights that were too low. The base test is now: pick a weight you can lift 10
+times with good form, do 3 rounds of 10, and reps 8, 9 and 10 should feel
+challenging with form intact. The box explains Too light (reps 8 to 10 felt
+easy) and Too heavy (couldn't finish 10 with good form). The feel question is
+now "How did reps 8 to 10 feel?", the exercise tag "Test: 3 × 10" (was "Start
+light"), and the Welcome and Plan setup texts match.
+**Why:** a starting weight is only useful if it's near a real working weight;
+"challenging only on the last 3 reps" is the cue members can actually feel.
 ## 2026-11-17 — Strength levels show kg ranges on the Scorecard
 
 The Scorecard's "Strength levels" card listed the five levels without numbers,
