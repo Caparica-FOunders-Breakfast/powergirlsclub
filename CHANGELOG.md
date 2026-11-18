@@ -1,5 +1,58 @@
 # Changelog
 
+## 2026-11-18 — Club: feed + challenges
+
+From the power-club-club-feed brief.
+
+**Navigation.** Club is a main tab (brief's icon). Members' bar is This week,
+Club, Scorecard, Profile; Challenge is gone from the bar and sidebar and lives
+in Club. `/club` = Feed, `/club/challenges` = Challenges, `/teams` redirects
+there (query and hash kept). Admin phone bar: This week, Club, Scorecard,
+Admin, More; Language moved into More to make room.
+
+**Database** (`20261118120000_club_feed.sql`, run in the Supabase SQL editor):
+- `workout_sessions`: one row per finished workout. **Why:** exercise logs
+  only record ticks and can't tell a finished day from a half-done one, so
+  "workouts this week" and team points need their own record. Written when the
+  last exercise is ticked or on Finish workout; removed when a finished day is
+  un-ticked. Backfilled for the last 5 weeks from the logs.
+- `feed_posts` (+ `dedupe_key` so a workout, a streak week or a sign-up posts
+  once; `has_best` for the New bests filter) and `feed_cheers`.
+- `profiles.feed_share`, `profiles.feed_show_weights` (default on).
+- RLS: members read visible posts, insert/delete only their own posts and
+  cheers; admins update `hidden`.
+- Feed, stats, team week and admin list go through SECURITY DEFINER functions
+  that return only first name, initial colour and the post. **Why:** profiles
+  are currently readable by every member (body weight included), so the feed
+  never reads them from the client. Hidden weights are removed on the server.
+- Notes are trimmed, links stripped and capped at 140 in a trigger (and in
+  the app).
+
+**Feed.** Team card (in a team), club stats for Monday to Sunday, Everyone /
+New bests chips, posts 20 at a time with load-on-scroll, optimistic cheers
+("Welcome" on joined posts), "..." menu to delete your own post, empty state.
+Desktop side column: New bests this week (top 5) and Your posts.
+
+**Posts.** Workout: on "Share with the club" in the new "Workout done!" sheet
+(preview of the post, optional note, Show my weights for this post only).
+Up to 3 lifts in plan order, lifts with a new best always included; a new best
+is a higher weight than any earlier log (weighted lifts only), never in a
+week 1 base session. "Share with the club" stays under Workout complete! if
+the sheet was skipped. Streak: automatic at 3, 6, 9 or 12 weeks of every
+planned day. Joined: automatic on the Welcome step. All respect
+"Share my workouts"; when it's off the sheet is skipped.
+
+**Challenges.** Rebuilt to the design: team card (Week n of 4 from the 4-week
+challenge when one is running, otherwise days left this week), team ranking
+(1 point per finished workout), your team this week counted against each
+member's planned days, team code with Copy and WhatsApp; or the explainer with
+Start a team / Join with a code. The challenge dates, rewards and the admin
+team assignment from the old page stay below.
+
+**Profile.** CLUB FEED card with the two switches and "Delete my past posts"
+(confirm step). **Admin dashboard:** Club feed list with Hide / Show.
+
+Not in v1: the "3 new cheers" count on the Club tab (optional in the brief).
 ## 2026-11-17 — Add Power Club to the home screen
 
 From the power-club-home-screen brief:

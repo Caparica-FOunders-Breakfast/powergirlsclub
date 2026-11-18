@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { Heart, User, ChevronRight } from "lucide-react";
+import { Globe, User, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PageViewToggle } from "@/components/ViewModeToggle";
 import { useUserRole } from "@/hooks/useProfile";
 import AdminDefaultPlanEditor from "@/components/AdminDefaultPlanEditor";
 
 const items = [
-  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜", description: "Team challenges & competitions" },
+  { path: "/learn", icon: Globe, label: "Language", emoji: "🌍", description: "Language coaching" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤", description: "Your account & settings" },
 ];
 

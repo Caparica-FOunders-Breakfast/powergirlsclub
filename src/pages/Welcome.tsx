@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,6 +9,7 @@ import { useProfile, signUpFirstName } from "@/hooks/useProfile";
 import { SignUpMobileBar, SignUpSidePanel } from "@/components/auth/SignUpWizard";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { clearJustSignedUp, readOnboarding } from "@/lib/onboarding";
+import { useCreatePost, useFeedSettings } from "@/hooks/useClub";
 import { WEEKDAYS, WEEKDAY_FULL } from "@/lib/plan";
 
 const C = { bg: "#FBF9FB", ink: "#2B1736", sub: "#77677E", body: "#5E4E66", pink: "#C21C70", magenta: "#E8308C", border: "#E4DAE7", yellow: "#FFE14D" };
@@ -30,7 +31,10 @@ export default function Welcome() {
 
   useEffect(() => { clearJustSignedUp(); }, []);
 
-  if (status === "needs-plan") return <Navigate to="/plan-setup" replace />;
+  // "{name} joined the club" in the club feed, once, unless sharing is off.
+  const feed = useFeedSettings();
+  const createPost = useCreatePost();
+  const postedJoin = useRef(false);
 
   const firstName = profile?.display_name?.trim() || signUpFirstName(user);
   const ready = status === "ready";
@@ -39,6 +43,14 @@ export default function Welcome() {
   const firstDay = firstIdx !== undefined ? WEEKDAY_FULL[WEEKDAYS[firstIdx]] : "";
   const firstLabel = firstIdx !== undefined ? plan[firstIdx].label : "";
   const weekText = trainingIdx.map((i) => WEEKDAY_FULL[WEEKDAYS[i]]).join(", ");
+  useEffect(() => {
+    if (!ready || !feed.loaded || !feed.share || postedJoin.current) return;
+    postedJoin.current = true;
+    createPost.mutate({ kind: "joined", dedupeKey: "joined", showWeights: feed.showWeights, payload: { first_day: firstDay || null } });
+  }, [ready, feed.loaded, feed.share, feed.showWeights, firstDay, createPost]);
+
+  if (status === "needs-plan") return <Navigate to="/plan-setup" replace />;
+
   const manual = memberPlan?.base_mode === "manual" || answers?.lifting_level === "regular";
   const baseText = manual
     ? "type in the weights you use now, or let week 1 find them."

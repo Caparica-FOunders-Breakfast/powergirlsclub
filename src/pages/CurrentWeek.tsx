@@ -21,6 +21,27 @@ import { firstNumber, makeLibraryLookup, looseExerciseKey, POWER_COLORS } from "
 import { useExerciseLibrary, useMemberPlan } from "@/hooks/usePlan";
 import { ExerciseInfo } from "@/components/profile-plan/ExerciseInfo";
 import { travelVideoFor } from "@/data/travelPlan";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMemberName } from "@/hooks/useProfile";
+import {
+  fetchMySessionWeeks,
+  useCreatePost,
+  useFeedSettings,
+  useMyWorkoutPost,
+  useRecordSession,
+  useRemoveSession,
+  workoutDedupeKey,
+} from "@/hooks/useClub";
+import { WorkoutDoneSheet } from "@/components/club/WorkoutDoneSheet";
+import {
+  STREAK_MILESTONES,
+  buildWorkoutPayload,
+  moodToReadiness,
+  parseLogged,
+  planWeekNumber,
+  type Readiness,
+  type WorkoutPayload,
+} from "@/lib/club";
 
 // Accepts the common YouTube URL shapes and returns a clean /embed/ URL.
 function toYouTubeEmbedUrl(url: string | undefined): string | null {
@@ -151,6 +172,20 @@ const CurrentWeek = () => {
   const { data: memberPlan } = useMemberPlan();
   const embedUrl = toYouTubeEmbedUrl(videoModal?.url);
 
+  // Club: finishing a workout records it (team points, club stats) and, when
+  // the member shares workouts, opens "Workout done!" to post it.
+  const { user } = useAuth();
+  const { firstName } = useMemberName();
+  const feed = useFeedSettings();
+  const recordSession = useRecordSession();
+  const removeSession = useRemoveSession();
+  const createPost = useCreatePost();
+  const [doneSheet, setDoneSheet] = useState<{
+    dayIdx: number; heading: string; dayName: string; minutes: number | null; payload: WorkoutPayload;
+    readiness: Readiness | null; weekNumber: number | null; sessionId: string | null;
+  } | null>(null);
+  const { data: alreadyPosted } = useMyWorkoutPost(weekStart, selectedDayIndex);
+
   // Reset state when the week changes.
   useEffect(() => {
     setInitialized(false);
@@ -218,16 +253,23 @@ const CurrentWeek = () => {
     [saveLog],
   );
 
-  const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string, requiresValue = true) => {
+  const toggleExercise = (dayIdx: number, exIdx: number, exerciseName: string, requiresValue = true, baseSession = false) => {
     const key = getExKey(dayIdx, exIdx);
     const newVal = !localCompleted[key];
     if (newVal && requiresValue && !localWeights[key]?.trim()) {
       toast({ title: "Enter a value first", description: "Add weight, reps or time, or F for failed." });
       return;
     }
+    const day = weeklyPlan[dayIdx];
+    const othersDone = day.exercises.every((_, i) => i === exIdx || localCompleted[getExKey(dayIdx, i)]);
     setLocalCompleted((prev) => ({ ...prev, [key]: newVal }));
     saveExercise(dayIdx, exIdx, exerciseName, localWeights[key] || "", newVal);
     if (newVal) confetti({ particleCount: 30, spread: 50, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.8 }, gravity: 1.2 });
+    // Last tick finishes the workout; un-ticking a finished day takes it off the board.
+    if (othersDone && day.exercises.length > 0) {
+      if (newVal) void finishDay(dayIdx, day, baseSession);
+      else removeSession.mutate({ weekStart, dayIndex: dayIdx });
+    }
   };
 
   // Week 1: save the starting weight from how the test weight felt.
@@ -245,6 +287,93 @@ const CurrentWeek = () => {
     );
   };
 
+  /** The post for a finished day: lifts, new bests and the session length. */
+  const buildPost = (dayIdx: number, day: WorkoutDay, baseSession: boolean) => {
+    // Best earlier weight per exercise: any earlier week, plus earlier days this week.
+    const bestBefore = (name: string): number | null => {
+      const key = looseExerciseKey(name);
+      const earlier = [
+        ...(priorWeights?.weights[key] ?? []),
+        ...Object.values(logs ?? {})
+          .filter((l) => l.day_index < dayIdx && l.exercise_name && looseExerciseKey(l.exercise_name) === key)
+          .map((l) => Number(l.weight_used)),
+      ].filter((w) => Number.isFinite(w) && w > 0);
+      return earlier.length ? Math.max(...earlier) : null;
+    };
+    // Minutes: from the first value saved for this day until now.
+    const started = Object.values(logs ?? {})
+      .filter((l) => l.day_index === dayIdx)
+      .map((l) => new Date(l.created_at).getTime())
+      .filter(Number.isFinite);
+    const mins = started.length ? Math.round((Date.now() - Math.min(...started)) / 60000) : null;
+    const minutes = mins != null && mins >= 5 && mins <= 180 ? mins : null;
+    const payload = buildWorkoutPayload(
+      day.exercises.map((ex, i) => ({ exercise: ex, value: parseLogged(localWeights[getExKey(dayIdx, i)]), previousBest: bestBefore(ex.name) })),
+      { baseSession, minutes },
+    );
+    return {
+      dayIdx,
+      heading: `${day.day} · ${day.label}`.toUpperCase(),
+      dayName: day.label,
+      minutes,
+      payload,
+      readiness: baseSession ? null : moodToReadiness(moodByDay[dayIdx] ?? "Ready"),
+      weekNumber: planWeekNumber(memberPlan?.started_at ?? user?.created_at, weekStart),
+    };
+  };
+
+  /** Streak post when every planned day is done 3, 6, 9 or 12 weeks in a row. */
+  const checkStreak = async () => {
+    const planned = weeklyPlan.filter((d) => !d.isRest && !d.isRecovery && d.exercises.length > 0).length;
+    if (!user || !feed.share || planned === 0) return;
+    const since = format(addWeeks(currentWeekDate, -13), "yyyy-MM-dd");
+    const perWeek = await fetchMySessionWeeks(user.id, since);
+    let weeks = 0;
+    let workouts = 0;
+    for (let k = 0; k <= 13; k++) {
+      const wk = format(addWeeks(currentWeekDate, -k), "yyyy-MM-dd");
+      if ((perWeek[wk] ?? 0) < planned) break;
+      weeks++;
+      workouts += perWeek[wk];
+    }
+    if (!STREAK_MILESTONES.includes(weeks)) return;
+    createPost.mutate({ kind: "streak", dedupeKey: `streak:${getWeekStart(currentWeekDate)}`, showWeights: feed.showWeights, payload: { weeks, workouts } });
+  };
+
+  /** A day just got its last tick: record it, then offer to share it. */
+  const finishDay = async (dayIdx: number, day: WorkoutDay, baseSession: boolean) => {
+    const post = buildPost(dayIdx, day, baseSession);
+    const sessionId = await recordSession.mutateAsync({ weekStart, dayIndex: dayIdx, dayName: day.label, minutes: post.minutes });
+    if (feed.share) setDoneSheet({ ...post, sessionId });
+    if (isCurrentWeek) void checkStreak();
+  };
+
+  const shareWorkout = (note: string, showWeights: boolean) => {
+    if (!doneSheet) return;
+    createPost.mutate(
+      {
+        kind: "workout",
+        dedupeKey: workoutDedupeKey(weekStart, doneSheet.dayIdx),
+        weekStart,
+        dayIndex: doneSheet.dayIdx,
+        dayName: doneSheet.dayName,
+        weekNumber: doneSheet.weekNumber,
+        readiness: doneSheet.readiness,
+        showWeights,
+        note,
+        payload: doneSheet.payload as unknown as Record<string, unknown>,
+        workoutId: doneSheet.sessionId,
+      },
+      {
+        onSuccess: () => {
+          setDoneSheet(null);
+          toast({ title: "Shared with the club", description: "Your club can cheer you on now." });
+        },
+        onError: () => toast({ title: "Couldn't share your workout", description: "Check your connection and try again.", variant: "destructive" }),
+      },
+    );
+  };
+
   const handleWeightChange = (dayIdx: number, exIdx: number, value: string) => {
     setLocalWeights((prev) => ({ ...prev, [getExKey(dayIdx, exIdx)]: value }));
   };
@@ -253,7 +382,7 @@ const CurrentWeek = () => {
     saveExercise(dayIdx, exIdx, exerciseName, localWeights[key] || "", localCompleted[key] || false);
   };
 
-  const handleCompleteDay = (dayIdx: number, day: WorkoutDay) => {
+  const handleCompleteDay = (dayIdx: number, day: WorkoutDay, baseSession = false) => {
     const missing = day.exercises.filter((ex, i) => needsValue(ex) && !localWeights[getExKey(dayIdx, i)]?.trim());
     if (missing.length > 0) {
       toast({ title: "Fill in all values first", description: `${missing.length} exercise${missing.length > 1 ? "s" : ""} missing weight, reps or time (or F for failed).` });
@@ -267,7 +396,8 @@ const CurrentWeek = () => {
     });
     setLocalCompleted((prev) => ({ ...prev, ...updates }));
     confetti({ particleCount: 120, spread: 80, colors: ["#FF2D87", "#00F5D4", "#FFE600", "#5271FF"], origin: { y: 0.6 } });
-    toast({ title: "Workout complete!" });
+    void finishDay(dayIdx, day, baseSession);
+    if (!feed.share) toast({ title: "Workout complete!" });
   };
 
   const toggleRestDone = (dayIdx: number, day: WorkoutDay) => {
@@ -605,7 +735,7 @@ const CurrentWeek = () => {
                         prevPrevWeekWeight={prevPrevWeightMap[looseExerciseKey(ex.name)]}
                         onWeightChange={(v) => handleWeightChange(selectedDayIndex, i, v)}
                         onWeightBlur={() => handleWeightBlur(selectedDayIndex, i, ex.name)}
-                        onToggle={() => toggleExercise(selectedDayIndex, i, ex.name, needsValue(ex))}
+                        onToggle={() => toggleExercise(selectedDayIndex, i, ex.name, needsValue(ex), isBaseSession)}
                         onVideoClick={(url) => setVideoModal({ name: ex.name, url })}
                       />
                     );
@@ -617,8 +747,14 @@ const CurrentWeek = () => {
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "inline-block" }}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                       Workout complete!
                     </div>
-                  ) : (
-                    <button type="button" onClick={() => handleCompleteDay(selectedDayIndex, selectedDay)} style={{ width: "100%", minHeight: 56, background: C.pink, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
+                  ) : null}
+                  {allDone && feed.share && alreadyPosted === false && (
+                    <button type="button" onClick={() => setDoneSheet({ ...buildPost(selectedDayIndex, selectedDay, isBaseSession), sessionId: null })} style={{ marginTop: 10, width: "100%", minHeight: 44, border: 0, background: "transparent", color: C.pink, fontWeight: 800, fontSize: 15, cursor: "pointer", textDecoration: "underline" }}>
+                      Share with the club
+                    </button>
+                  )}
+                  {!allDone && (
+                    <button type="button" onClick={() => handleCompleteDay(selectedDayIndex, selectedDay, isBaseSession)} style={{ width: "100%", minHeight: 56, background: C.pink, color: "#FFFFFF", border: `2px solid ${C.ink}`, borderRadius: 14, boxShadow: `4px 4px 0 ${C.ink}`, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
                       Finish workout
                     </button>
                   )}
@@ -676,6 +812,23 @@ const CurrentWeek = () => {
           </aside>
         </div>
       </div>
+
+      {doneSheet && (
+        <WorkoutDoneSheet
+          heading={doneSheet.heading}
+          dayName={doneSheet.dayName}
+          minutes={doneSheet.minutes}
+          payload={doneSheet.payload}
+          weekNumber={doneSheet.weekNumber}
+          readiness={doneSheet.readiness}
+          authorName={firstName || "You"}
+          authorColor={profile?.avatar_color || "#E8308C"}
+          defaultShowWeights={feed.showWeights}
+          busy={createPost.isPending}
+          onShare={shareWorkout}
+          onSkip={() => setDoneSheet(null)}
+        />
+      )}
 
       <Dialog open={!!videoModal} onOpenChange={(o) => !o && setVideoModal(null)}>
         <DialogContent className="max-w-2xl p-0 overflow-hidden">

@@ -6,6 +6,7 @@ import { useIsAdmin } from "@/contexts/AdminContext";
 import { useProfile, useUpdateProfile, useMemberName } from "@/hooks/useProfile";
 import { BodyWeightBox } from "@/components/BodyWeightBox";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
+import { ClubFeedSettings } from "@/components/club/ClubFeedSettings";
 import { addDays, format } from "date-fns";
 import { firstMonthRange } from "@/lib/memberMonth";
 import {
@@ -307,7 +308,7 @@ const Profile = () => {
           <div style={{ flex: "2 1 380px", minWidth: 0, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
             {headerStat(String(stats.workouts), "Workouts")}
             {headerStat(String(stats.bestStreak), "Best streak")}
-            {headerStat("—", isMobile ? "Weeks won" : <>Weeks won · <a href="/teams" onClick={(e) => { e.preventDefault(); navigate("/teams"); }} style={{ color: "#FFFFFF" }}>join a challenge</a></>)}
+            {headerStat("—", isMobile ? "Weeks won" : <>Weeks won · <a href="/club/challenges" onClick={(e) => { e.preventDefault(); navigate("/club/challenges"); }} style={{ color: "#FFFFFF" }}>join a challenge</a></>)}
           </div>
         </section>
 
@@ -409,6 +410,9 @@ const Profile = () => {
               </section>
 
               {!isMobile && <AddToHomeScreen variant="profile" />}
+
+              {/* What the club feed shows about you. */}
+              <ClubFeedSettings />
 
               {/* Membership: €5 a month, the first payment at the end of the first month. */}
               <section style={{ ...card, padding: 20 }}>

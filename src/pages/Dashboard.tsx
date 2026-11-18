@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PageViewToggle } from "@/components/ViewModeToggle";
 import { FEATURE_FLAGS, useFeatureFlags, useSetAppSetting, type FeatureFlagKey } from "@/hooks/useAppSettings";
+import { ClubFeedAdmin } from "@/components/club/ClubFeedAdmin";
 import { useAdminMembers, isRestCheckIn, localDateKey, mondayOfThisWeek, type AdminMember } from "@/hooks/useAdminMembers";
 
 const C = {
@@ -243,6 +244,8 @@ const Dashboard = () => {
             </div>
           </section>
         </div>
+
+        <ClubFeedAdmin compact={isMobile} />
       </div>
     </div>
   );
