@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-11-17 — Add Power Club to the home screen
+
+From the power-club-home-screen brief:
+- **App icon and manifest.** `apple-touch-icon.png`, `icon-192/512.png` and
+  `manifest.webmanifest` (standalone, opens on /week). `theme-color` is now plum
+  #2B1736 (was #FF2D87), matching the manifest.
+- **AddToHomeScreen** card plus sheet (bottom sheet on phones, centered modal
+  from 700 px): iPhone / Android switch, looping how-to video, the 4 steps as
+  text, Done. Closes with X, Done, Escape or a backdrop tap. Default tab follows
+  the device (iPhone otherwise). Desktop gets "Do this on your phone". Videos
+  load only when the sheet opens.
+- **Already added** (standalone mode): hidden on the Welcome step; Profile shows
+  "On your home screen" with a green check.
+- **Android shortcut.** `beforeinstallprompt` is caught from main.tsx (it fires
+  once, before pages mount); when available the Android tab's button becomes
+  "Install now".
+- **Placement:** Welcome step below the first workout card, above "See my first
+  week"; Profile under the header on mobile, in the side column above
+  Membership on desktop.
+**Why:** without an icon or manifest, phones showed a generic letter, and most
+members didn't know they could open Power Club like an app.
+
 ## 2026-11-17 — Saved plans: main lifts 3x10
 
 Members' saved plans now also use 3x10 for Barbell squat, Dumbbell shoulder
