@@ -2,12 +2,12 @@ import {
   BarChart3,
   Dumbbell,
   Globe,
-  Heart,
   LayoutDashboard,
   MoreHorizontal,
   User,
   Users,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,16 +32,29 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-type NavItem = { path: string; icon: typeof Dumbbell; label: string; emoji: string };
+type NavIcon = ComponentType<{ className?: string; strokeWidth?: number | string }>;
+type NavItem = { path: string; icon: NavIcon; label: string; emoji: string };
+
+/** Club tab icon (power-club-club-feed brief): two people, same stroke style as the other tabs. */
+const ClubIcon: NavIcon = ({ className, strokeWidth = 2.2 }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M8 3a2.2 2.2 0 1 1 0 4.4a2.2 2.2 0 1 1 0-4.4M16 3a2.2 2.2 0 1 1 0 4.4a2.2 2.2 0 1 1 0-4.4M3.5 13c.6-2.4 2.3-3.6 4.5-3.6M20.5 13c-.6-2.4-2.3-3.6-4.5-3.6M7 16v6M17 16v6M4.5 17.5v3M19.5 17.5v3M7 19h10" />
+  </svg>
+);
+
+const CLUB: NavItem = { path: "/club", icon: ClubIcon, label: "Club", emoji: "" };
+/** Club covers /club and /club/challenges; other tabs match exactly. */
+const isTabActive = (tabPath: string, pathname: string) =>
+  tabPath === "/club" ? pathname === "/club" || pathname.startsWith("/club/") : pathname === tabPath;
 
 // Meals is intentionally omitted until the feature is ready, it can be
 // re-added here once meals_enabled is flipped on for real. Admins can still
 // reach /meals directly by URL.
 const adminSidebarTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  CLUB,
   { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
   { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
-  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
@@ -50,25 +63,27 @@ const adminOnlySidebarTabs: NavItem[] = [
   { path: "/users", icon: Users, label: "Users", emoji: "👥" },
 ];
 
+// Members: This week, Club, Scorecard, Profile (Challenge lives inside Club).
 const memberSidebarTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  CLUB,
   { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
-  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
+// Admins: Language moved into More to make room for Club.
 const adminMobileTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  CLUB,
   { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
   { path: "/dashboard", icon: LayoutDashboard, label: "Admin", emoji: "📊" },
-  { path: "/learn", icon: Globe, label: "Language", emoji: "🌍" },
   { path: "/more", icon: MoreHorizontal, label: "More", emoji: "⋯" },
 ];
 
 const memberMobileTabs: NavItem[] = [
   { path: "/week", icon: Dumbbell, label: "This week", emoji: "💪" },
+  CLUB,
   { path: "/", icon: BarChart3, label: "Scorecard", emoji: "🏆" },
-  { path: "/teams", icon: Heart, label: "Challenge", emoji: "💜" },
   { path: "/profile", icon: User, label: "Profile", emoji: "👤" },
 ];
 
@@ -103,7 +118,7 @@ export function AppSidebar() {
                       <SidebarMenuButton asChild>
                         <NavLink
                           to={item.path}
-                          end
+                          end={item.path !== "/club"}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-white/80 hover:bg-white/5 hover:text-white transition-colors"
                           activeClassName="bg-[#E8308C] text-white"
                         >
@@ -168,7 +183,7 @@ export function AppSidebar() {
               <NavLink
                 key={item.path}
                 to={item.path}
-                end
+                end={item.path !== "/club"}
                 className="flex items-center gap-3.5 px-5 py-3.5 rounded-2xl font-bold text-base text-white/80 hover:bg-white/5 hover:text-white transition-colors"
                 activeClassName="bg-[#E8308C] text-white"
               >
@@ -243,8 +258,8 @@ export function BottomNav() {
       <div className="h-[72px] flex">
         {tabs.map(({ path, icon: Icon, label }) => {
           const isActive = path === "/more"
-            ? ["/more", "/teams", "/profile"].includes(location.pathname)
-            : location.pathname === path;
+            ? ["/more", "/learn", "/profile"].includes(location.pathname)
+            : isTabActive(path, location.pathname);
           return (
             <Link
               key={path}

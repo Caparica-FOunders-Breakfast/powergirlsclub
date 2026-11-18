@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { isJustSignedUp } from "@/lib/onboarding";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -20,7 +20,7 @@ const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const CurrentWeek = lazy(() => import("@/pages/CurrentWeek"));
 const LearnLanguage = lazy(() => import("@/pages/LearnLanguage"));
-const TeamManagement = lazy(() => import("@/pages/TeamManagement"));
+const Club = lazy(() => import("@/pages/Club"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const MealPlan = lazy(() => import("@/pages/MealPlan"));
 const More = lazy(() => import("@/pages/More"));
@@ -67,6 +67,8 @@ const PROTECTED_PATHS = [
   "/learn",
   "/meals",
   "/teams",
+  "/club",
+  "/club/challenges",
   "/profile",
   "/more",
   "/dashboard",
@@ -93,6 +95,12 @@ const OnboardingGate = ({ children }: { children: JSX.Element }) => {
   if (status === "loading" || status === "setting-up") return <PageFallback />;
   if (status === "needs-plan") return <Navigate to="/plan-setup" replace />;
   return children;
+};
+
+/** Redirect that keeps ?query and #hash (old /teams links with a join code). */
+const RedirectKeepQuery = ({ to }: { to: string }) => {
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to}${search}${hash}`} replace />;
 };
 
 const ProtectedLayout = () => {
@@ -135,8 +143,11 @@ const ProtectedLayout = () => {
                   </AdminOnly>
                 }
               />
-              {/* Teams & Challenges are open to all members, not admin-only. */}
-              <Route path="/teams" element={<TeamManagement />} />
+              {/* Club: the feed and, inside it, the team challenge (open to all members). */}
+              <Route path="/club" element={<Club />} />
+              <Route path="/club/challenges" element={<Club />} />
+              {/* The old Challenge page: keep links and shared join codes working. */}
+              <Route path="/teams" element={<RedirectKeepQuery to="/club/challenges" />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/more" element={<AdminOnly><More /></AdminOnly>} />
               <Route path="/dashboard" element={<AdminOnly><Dashboard /></AdminOnly>} />
